@@ -2137,9 +2137,9 @@
       /* Pickup drop */
       if (!enemy.isMini && (enemy.isBoss || Math.random() < 0.15)) {
         const is1hp = this.ps.is1hp;
-        const types = enemy.isBoss ? ['shield','speed'] : (is1hp ? ['speed','shield'] : ['speed','hp','shield']);
+        const types = enemy.isBoss ? ['shield','hp'] : (is1hp ? ['shield'] : ['hp','shield']);
         const pType = types[Math.floor(Math.random()*types.length)];
-        const pCol = {speed:0x22d3ee, shield:0x3b82f6, hp:0x4ade80}[pType];
+        const pCol = {shield:0x3b82f6, hp:0x4ade80}[pType];
         const px2 = enemy.x + Phaser.Math.Between(-16,16), py2 = enemy.y + Phaser.Math.Between(-16,16);
         const pu = this.add.circle(px2, py2, 8, pCol, 1);
         const inner = this.add.circle(px2, py2, 4, 0xffffff, 0.75);
