@@ -569,6 +569,11 @@
       rare:      { desc:'AOE slam every 3s, 65 dmg',  fn: p => { p.slamDmg=(p.slamDmg||0)+65;  p.slamCd=3000; p.b.slam=`${p.slamDmg} dmg`; } },
       legendary: { desc:'AOE slam every 2s, 140 dmg', fn: p => { p.slamDmg=(p.slamDmg||0)+140; p.slamCd=2000; p.b.slam=`${p.slamDmg} dmg`; } },
       fmt: b => b.slam  ? `Ground Slam    ${b.slam}`  : null },
+    { id:'haste', name:'Haste',
+      common:    { desc:'Kills grant +30% speed for 2s',  fn:p=>{ p.hasteBonus=(p.hasteBonus||0)+0.30; p.hasteDur=Math.min(8000,(p.hasteDur||0)+2000); p.b.haste=`+${Math.round(p.hasteBonus*100)}% ${p.hasteDur/1000}s`; } },
+      rare:      { desc:'Kills grant +60% speed for 3s',  fn:p=>{ p.hasteBonus=(p.hasteBonus||0)+0.60; p.hasteDur=Math.min(8000,(p.hasteDur||0)+3000); p.b.haste=`+${Math.round(p.hasteBonus*100)}% ${p.hasteDur/1000}s`; } },
+      legendary: { desc:'Kills grant +120% speed for 5s', fn:p=>{ p.hasteBonus=(p.hasteBonus||0)+1.20; p.hasteDur=Math.min(10000,(p.hasteDur||0)+5000);p.b.haste=`+${Math.round(p.hasteBonus*100)}% ${p.hasteDur/1000}s`; } },
+      fmt:b=>b.haste?`Haste          ${b.haste}`:null },
     /* â”€â”€ General (all classes) â”€â”€ */
     { id:'aura', name:'Cursed Aura',
       common:    { desc:'+5 dmg/s aura, +15px range',   fn:p=>{ p.auraDmg=(p.auraDmg||0)+5;  p.auraRange=(p.auraRange||65)+15; p.b.aura=`${p.auraDmg}/s ${p.auraRange}px`; } },
