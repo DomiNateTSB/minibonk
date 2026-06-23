@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -38,7 +38,7 @@
     <p style="color:#a78bfa;font-size:13px;letter-spacing:3px;margin-bottom:12px;font-weight:bold;">HALLS OF AURORA</p>
     <h2 style="color:#fff;font-size:26px;font-weight:bold;margin-bottom:6px;">Enter your name</h2>
     <p style="color:rgba(255,255,255,0.35);font-size:13px;margin-bottom:22px;">It will appear on the leaderboard</p>
-    <input id="name-input" type="text" maxlength="16" autocomplete="off" placeholder="Your name…"
+    <input id="name-input" type="text" maxlength="16" autocomplete="off" placeholder="Your nameâ€¦"
       style="background:#1a1a2e;border:1.5px solid #7c3aed;border-radius:8px;color:#fff;font-size:18px;padding:10px 18px;width:260px;outline:none;text-align:center;font-family:system-ui;" />
     <button id="name-submit"
       style="margin-top:14px;background:#7c3aed;border:none;border-radius:8px;color:#fff;font-size:16px;font-weight:bold;padding:10px 36px;cursor:pointer;font-family:system-ui;letter-spacing:1px;">
@@ -55,11 +55,11 @@
     <div id="tc-base"></div>
     <div id="tc-stick"></div>
     <div id="tc-dash">DASH</div>
-    <div id="tc-pause">⏸</div>
+    <div id="tc-pause">â¸</div>
   </div>
 
   <script>
-  /* ── TOUCH CONTROLS ── */
+  /* â”€â”€ TOUCH CONTROLS â”€â”€ */
   window._isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
   window._touch = { vx: 0, vy: 0, dashPressed: false, _dashWas: false };
 
@@ -140,7 +140,7 @@
   })();
   </script>
 
-  <!-- ── GLOBAL LEADERBOARD OVERLAY ── -->
+  <!-- â”€â”€ GLOBAL LEADERBOARD OVERLAY â”€â”€ -->
   <div id="lb-btn" title="Leaderboard" style="
     position:fixed; top:14px; left:14px; z-index:200;
     background:rgba(15,7,30,0.88); border:1px solid rgba(124,58,237,0.6);
@@ -152,7 +152,7 @@
   " onmouseenter="this.style.borderColor='rgba(167,139,250,0.9)';this.style.color='#fff'"
      onmouseleave="this.style.borderColor='rgba(124,58,237,0.6)';this.style.color='#a78bfa'"
      onclick="window._lbToggle()">
-    🏆 <span>LEADERBOARD</span> <span id="lb-caret" style="font-size:10px">▼</span>
+    ðŸ† <span>LEADERBOARD</span> <span id="lb-caret" style="font-size:10px">â–¼</span>
   </div>
 
   <div id="lb-panel" style="
@@ -167,29 +167,29 @@
         flex:1; padding:10px; text-align:center; font-size:11px; font-weight:bold;
         letter-spacing:1.5px; cursor:pointer; color:#a78bfa;
         border-bottom:2px solid #7c3aed; transition:color .15s;
-      ">⚔ NORMAL</div>
+      ">âš” NORMAL</div>
       <div id="lb-tab-1hp" onclick="window._lbTab('1hp')" style="
         flex:1; padding:10px; text-align:center; font-size:11px; font-weight:bold;
         letter-spacing:1.5px; cursor:pointer; color:rgba(167,139,250,0.4);
         border-bottom:2px solid transparent; transition:color .15s;
-      ">☠ 1HP MODE</div>
+      ">â˜  1HP MODE</div>
     </div>
-    <!-- Rows container — top 10 visible, scroll for more -->
+    <!-- Rows container â€” top 10 visible, scroll for more -->
     <div id="lb-rows" style="
       max-height:320px; overflow-y:auto; padding:8px 0;
       scrollbar-width:thin; scrollbar-color:rgba(124,58,237,0.4) transparent;
     ">
-      <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:12px;">Loading…</div>
+      <div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:12px;">Loadingâ€¦</div>
     </div>
     <!-- Hint -->
     <div style="text-align:center;padding:6px;font-size:10px;color:rgba(255,255,255,0.18);border-top:1px solid rgba(124,58,237,0.15);">
-      Best score per player • scroll for full list
+      Best score per player â€¢ scroll for full list
     </div>
   </div>
 
   <script>
   (function(){
-    const CLASS_EMOJI_DOM = { hunter:'🏹', knight:'⚔️', wizard:'🔮', necromancer:'💀' };
+    const CLASS_EMOJI_DOM = { hunter:'ðŸ¹', knight:'âš”ï¸', wizard:'ðŸ”®', necromancer:'ðŸ’€' };
     let _open = false, _activeTab = 'normal', _cache = { normal: null, '1hp': null };
 
     function renderRows(scores) {
@@ -197,13 +197,13 @@
       const you = localStorage.getItem('hoa_name') || '';
       const is1hp = _activeTab === '1hp';
       if (!Array.isArray(scores) || scores.length === 0) {
-        rows.innerHTML = `<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:12px;">${is1hp ? 'No 1HP runs yet — dare to try?' : 'No scores yet.'}</div>`;
+        rows.innerHTML = `<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:12px;">${is1hp ? 'No 1HP runs yet â€” dare to try?' : 'No scores yet.'}</div>`;
         return;
       }
-      const medals = ['🥇','🥈','🥉'];
+      const medals = ['ðŸ¥‡','ðŸ¥ˆ','ðŸ¥‰'];
       rows.innerHTML = scores.map((s, i) => {
         const medal  = medals[i] || `<span style="color:rgba(255,255,255,0.35);font-size:11px">${i+1}.</span>`;
-        const emoji  = CLASS_EMOJI_DOM[s.class_name] || '❓';
+        const emoji  = CLASS_EMOJI_DOM[s.class_name] || 'â“';
         const isYou  = s.name === you;
         const divider = i === 9 ? 'border-top:1px dashed rgba(124,58,237,0.3);margin-top:4px;padding-top:4px;' : '';
         return `<div style="
@@ -216,7 +216,7 @@
           <span style="font-size:13px">${emoji}</span>
           <span style="flex:1;font-size:12px;color:${isYou ? '#c4b5fd' : 'rgba(255,255,255,0.8)'};
             white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:${isYou?'bold':'normal'}">
-            ${s.name}${isYou?' ◀':''}
+            ${s.name}${isYou?' â—€':''}
           </span>
           <span style="font-size:11px;color:rgba(255,255,255,0.5);white-space:nowrap">
             Wave <b style="color:#e2e8f0">${s.wave}</b>
@@ -231,7 +231,7 @@
     async function loadTab(tab) {
       if (_cache[tab]) { renderRows(_cache[tab]); return; }
       document.getElementById('lb-rows').innerHTML =
-        '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:12px;">Loading…</div>';
+        '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:12px;">Loadingâ€¦</div>';
       try {
         const SB_URL = 'https://biclaeemulhkdejyeysv.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpY2xhZWVtdWxoa2RlanlleXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxOTkzODIsImV4cCI6MjA5Nzc3NTM4Mn0.VkFCPzroqgPgUkxXfLjrWbWBXoOONV6OFHBuyrRm7l0';
@@ -247,7 +247,7 @@
     window._lbToggle = function() {
       _open = !_open;
       document.getElementById('lb-panel').style.display = _open ? 'block' : 'none';
-      document.getElementById('lb-caret').textContent = _open ? '▲' : '▼';
+      document.getElementById('lb-caret').textContent = _open ? 'â–²' : 'â–¼';
       if (_open) { _cache = { normal: null, '1hp': null }; loadTab(_activeTab); }
     };
 
@@ -267,7 +267,7 @@
       if (_open && !e.target.closest('#lb-btn') && !e.target.closest('#lb-panel')) {
         _open = false;
         document.getElementById('lb-panel').style.display = 'none';
-        document.getElementById('lb-caret').textContent = '▼';
+        document.getElementById('lb-caret').textContent = 'â–¼';
       }
     });
   })();
@@ -278,10 +278,10 @@
   const W = window.innerWidth;
   const H = window.innerHeight;
 
-  /* ── SUPABASE LEADERBOARD ── */
+  /* â”€â”€ SUPABASE LEADERBOARD â”€â”€ */
   /*
-    Run this SQL once in Supabase Dashboard → SQL Editor to set up:
-    ─────────────────────────────────────────────────────────────────
+    Run this SQL once in Supabase Dashboard â†’ SQL Editor to set up:
+    â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     DELETE FROM aurora_leaderboard;
     ALTER TABLE aurora_leaderboard ADD COLUMN IF NOT EXISTS class_name text;
     CREATE UNIQUE INDEX IF NOT EXISTS lb_name_unique ON aurora_leaderboard(name);
@@ -295,13 +295,13 @@
     );
     ALTER TABLE aurora_leaderboard_1hp ENABLE ROW LEVEL SECURITY;
     CREATE POLICY "pub" ON aurora_leaderboard_1hp FOR ALL USING (true) WITH CHECK (true);
-    ─────────────────────────────────────────────────────────────────
+    â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   */
   const SB_URL = 'https://biclaeemulhkdejyeysv.supabase.co';
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpY2xhZWVtdWxoa2RlanlleXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxOTkzODIsImV4cCI6MjA5Nzc3NTM4Mn0.VkFCPzroqgPgUkxXfLjrWbWBXoOONV6OFHBuyrRm7l0';
   const SB_HDR = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' };
 
-  const CLASS_EMOJI = { hunter:'🏹', knight:'⚔️', wizard:'🔮', necromancer:'💀' };
+  const CLASS_EMOJI = { hunter:'ðŸ¹', knight:'âš”ï¸', wizard:'ðŸ”®', necromancer:'ðŸ’€' };
 
   async function postScore(name, wave, kills, level, cls, is1hp) {
     const table = is1hp ? 'aurora_leaderboard_1hp' : 'aurora_leaderboard';
@@ -340,7 +340,7 @@
     } catch { return []; }
   }
 
-  /* ── META SYSTEM ── */
+  /* â”€â”€ META SYSTEM â”€â”€ */
   const SAVE_KEY = 'hoa_meta';
   const META_UPGRADES = [
     { id:'hp',         name:'Fortitude',    desc:'+20 starting HP',           apply:(p,r)=>{ p.maxHp+=r*20; p.hp=p.maxHp; } },
@@ -355,60 +355,23 @@
     { id:'vitality',   name:'Vitality',     desc:'+0.4 HP regen per sec',     apply:(p,r)=>{ p.regen=(p.regen||0)+r*0.4; } },
     { id:'arcanePow',  name:'Arcane Power', desc:'+15% starting proj size',   apply:(p,r)=>{ p.projSize*=Math.pow(1.15,r); } },
     { id:'fortune',    name:'Fortune',      desc:'+30 starting XP range',     apply:(p,r)=>{ p.xpRange+=r*30; } },
-    { id:'unlock_hunter', name:'🏹 Hunter: Eagle Eyes',   desc:'Hunter starts with infinite proj range', apply:(p,r)=>{ if(r>0&&p.class==='hunter') p.projLifetime=999999; } },
-    { id:'unlock_knight', name:'⚔️ Knight: Iron Will',    desc:'Knight starts with +100 max HP',         apply:(p,r)=>{ if(r>0&&p.class==='knight'){ p.maxHp+=100; p.hp+=100; } } },
-    { id:'unlock_wizard', name:'🔮 Wizard: Arcane Power', desc:'Wizard starts with +25% damage',         apply:(p,r)=>{ if(r>0&&p.class==='wizard') p.dmg*=1.25; } },
-    { id:'unlock_necro',  name:'💀 Necro: Dark Pact',     desc:'Necromancer starts with Raise Dead',     apply:(p,r)=>{ if(r>0&&p.class==='necromancer'){ p.raiseDead=true; p.raiseChance=0.35; } } },
+    { id:'unlock_hunter', name:'ðŸ¹ Hunter: Eagle Eyes',   desc:'Hunter starts with infinite proj range', apply:(p,r)=>{ if(r>0&&p.class==='hunter') p.projLifetime=999999; } },
+    { id:'unlock_knight', name:'âš”ï¸ Knight: Iron Will',    desc:'Knight starts with +100 max HP',         apply:(p,r)=>{ if(r>0&&p.class==='knight'){ p.maxHp+=100; p.hp+=100; } } },
+    { id:'unlock_wizard', name:'ðŸ”® Wizard: Arcane Power', desc:'Wizard starts with +25% damage',         apply:(p,r)=>{ if(r>0&&p.class==='wizard') p.dmg*=1.25; } },
+    { id:'unlock_necro',  name:'ðŸ’€ Necro: Dark Pact',     desc:'Necromancer starts with Raise Dead',     apply:(p,r)=>{ if(r>0&&p.class==='necromancer'){ p.raiseDead=true; p.raiseChance=0.35; } } },
   ];
   const META_COSTS = [200, 600, 1800, 5000, 14000];
   const META_MAX   = META_COSTS.length;
   function loadMeta() {
     try {
       const d = JSON.parse(localStorage.getItem(SAVE_KEY)) || { souls:0, upgrades:{} };
-      /* v2 economy reset — wipes all progress once for the new pricing */
+      /* v2 economy reset â€” wipes all progress once for the new pricing */
       if (!d._econV2) { d.souls = 0; d.upgrades = {}; d._econV2 = true; saveMeta(d); }
       return d;
     }
     catch { return { souls:0, upgrades:{}, _econV2:true }; }
   }
   function saveMeta(d) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(d)); } catch {} }
-
-  /* ── SFX ENGINE (Web Audio API, no external files) ── */
-  const SFX = {
-    ctx: null, vol: 0.32,
-    init() { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch {} },
-    tone(freq, dur, type='sine', vol, delay=0) {
-      if (!this.ctx) return;
-      const v = vol ?? this.vol;
-      const g = this.ctx.createGain();
-      g.gain.setValueAtTime(0, this.ctx.currentTime + delay);
-      g.gain.linearRampToValueAtTime(v, this.ctx.currentTime + delay + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + delay + dur);
-      const o = this.ctx.createOscillator(); o.type = type; o.frequency.value = freq;
-      o.connect(g); g.connect(this.ctx.destination);
-      o.start(this.ctx.currentTime + delay); o.stop(this.ctx.currentTime + delay + dur);
-    },
-    noise(dur, vol=0.15, delay=0) {
-      if (!this.ctx) return;
-      const buf = this.ctx.createBuffer(1, Math.ceil(this.ctx.sampleRate * dur), this.ctx.sampleRate);
-      const data = buf.getChannelData(0); for (let i=0;i<data.length;i++) data[i]=(Math.random()*2-1);
-      const src = this.ctx.createBufferSource(); src.buffer = buf;
-      const g2 = this.ctx.createGain(); g2.gain.setValueAtTime(vol, this.ctx.currentTime+delay);
-      g2.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime+delay+dur);
-      src.connect(g2); g2.connect(this.ctx.destination); src.start(this.ctx.currentTime+delay);
-    },
-    shoot()    { this.tone(920,0.07,'sawtooth',0.1); this.tone(680,0.05,'sine',0.07,0.02); },
-    hitEnemy() { this.noise(0.06,0.16); this.tone(180,0.08,'square',0.08); },
-    kill()     { this.tone(480,0.05,'sine',0.14); this.tone(720,0.07,'sine',0.1,0.04); },
-    levelUp()  { [523,659,784,1047].forEach((f,i)=>this.tone(f,0.2,'sine',0.18,i*0.09)); },
-    hurt()     { this.noise(0.12,0.38); this.tone(110,0.14,'sawtooth',0.18); },
-    wave()     { [200,280,380].forEach((f,i)=>this.tone(f,0.28,'sine',0.13,i*0.11)); },
-    boss()     { [75,55,95].forEach((f,i)=>this.tone(f,0.55,'sawtooth',0.27,i*0.18)); this.noise(0.4,0.17,0.1); },
-    pickup()   { [880,1100,1320].forEach((f,i)=>this.tone(f,0.1,'sine',0.14,i*0.05)); },
-    dash()     { this.tone(420,0.04,'sine',0.09); this.tone(640,0.07,'sine',0.07,0.03); },
-    death()    { this.noise(0.35,0.42); [280,190,110].forEach((f,i)=>this.tone(f,0.38,'sawtooth',0.22,i*0.14)); },
-    pauseSfx() { this.tone(300,0.1,'sine',0.12); this.tone(200,0.12,'sine',0.1,0.08); },
-  };
 
   /* ── SEEDED RNG for Daily Challenge ── */
   function mulberry32(seed) {
@@ -448,7 +411,7 @@
     };
   }
 
-  /* ── TRAIT BLUEPRINTS (tiered) ── */
+  /* â”€â”€ TRAIT BLUEPRINTS (tiered) â”€â”€ */
   const BLUEPRINTS = [
     { id:'dmg',       name:'Damage',
       common:    { desc:'+20% damage',            fn: p => { p.dmg*=1.20;  p.b.dmg=(p.b.dmg||0)+20; } },
@@ -501,9 +464,9 @@
       legendary: { desc:'+180% proj size',        fn: p => { p.projSize*=2.80; p.b.projSize=(p.b.projSize||0)+180; } },
       fmt: b => b.projSize!=null?`Proj Size      +${b.projSize}%`        : null },
     { id:'crit',      name:'Critical Hit',
-      common:    { desc:'+15% crit chance (2×)',  fn: p => { p.critChance=(p.critChance||0)+0.15; p.b.crit=Math.round(p.critChance*100); } },
-      rare:      { desc:'+28% crit chance (2×)',  fn: p => { p.critChance=(p.critChance||0)+0.28; p.b.crit=Math.round(p.critChance*100); } },
-      legendary: { desc:'+55% crit (3× damage)',  fn: p => { p.critChance=(p.critChance||0)+0.55; p.critMult=3; p.b.crit=Math.round(p.critChance*100); } },
+      common:    { desc:'+15% crit chance (2Ã—)',  fn: p => { p.critChance=(p.critChance||0)+0.15; p.b.crit=Math.round(p.critChance*100); } },
+      rare:      { desc:'+28% crit chance (2Ã—)',  fn: p => { p.critChance=(p.critChance||0)+0.28; p.b.crit=Math.round(p.critChance*100); } },
+      legendary: { desc:'+55% crit (3Ã— damage)',  fn: p => { p.critChance=(p.critChance||0)+0.55; p.critMult=3; p.b.crit=Math.round(p.critChance*100); } },
       fmt: b => b.crit  != null ? `Crit Chance    ${b.crit}%`            : null },
     { id:'slow',      name:'Frost',
       common:    { desc:'Slow enemies 20% on hit',fn: p => { p.slowOnHit=(p.slowOnHit||0)+0.20; p.b.slow=Math.round(p.slowOnHit*100); } },
@@ -525,7 +488,7 @@
       rare:      { desc:'+65% XP gain',           fn: p => { p.xpMult=(p.xpMult||1)*1.65; p.b.xpMult=(p.b.xpMult||0)+65; } },
       legendary: { desc:'+150% XP gain',          fn: p => { p.xpMult=(p.xpMult||1)*2.50; p.b.xpMult=(p.b.xpMult||0)+150; } },
       fmt: b => b.xpMult!= null ? `XP Bonus       +${b.xpMult}%`        : null },
-    /* ── General weapons ── */
+    /* â”€â”€ General weapons â”€â”€ */
     { id:'chain', name:'Chain Lightning',
       common:    { desc:'+1 chain arc to nearby enemy, 50% dmg',   fn:p=>{ p.chainCount=(p.chainCount||0)+1; p.chainMult=Math.min(0.80,(p.chainMult||0.45)+0.05); p.b.chain=`${p.chainCount} chain`; } },
       rare:      { desc:'+2 chain arcs to nearby enemies, 60% dmg',fn:p=>{ p.chainCount=(p.chainCount||0)+2; p.chainMult=Math.min(0.85,(p.chainMult||0.55)+0.05); p.b.chain=`${p.chainCount} chains`; } },
@@ -536,7 +499,7 @@
       rare:      { desc:'+55 pulse dmg, -1s CD',             fn:p=>{ p.pulseDmg=(p.pulseDmg||0)+55;  p.pulseCd=Math.max(2000,(p.pulseCd||6000)-1000); p.b.pulse=`${p.pulseDmg}dmg ${p.pulseCd/1000}s`; } },
       legendary: { desc:'+110 pulse dmg, -1.5s CD',          fn:p=>{ p.pulseDmg=(p.pulseDmg||0)+110; p.pulseCd=Math.max(1500,(p.pulseCd||5000)-1500); p.b.pulse=`${p.pulseDmg}dmg ${p.pulseCd/1000}s`; } },
       fmt:b=>b.pulse?`Void Pulse       ${b.pulse}`:null },
-    /* ── Hunter-only ── */
+    /* â”€â”€ Hunter-only â”€â”€ */
     { id:'volley', name:'Volley', cls:'hunter',
       common:    { desc:'Fire at 2 extra targets',  fn:p=>{ p.multi+=2; p.b.multi=(p.b.multi||0)+2; } },
       rare:      { desc:'Fire at 4 extra targets',  fn:p=>{ p.multi+=4; p.b.multi=(p.b.multi||0)+4; } },
@@ -545,14 +508,14 @@
     { id:'trueshot', name:'Trueshot', cls:'hunter',
       common:    { desc:'+2 crit pierce, +5% crit chance',              fn:p=>{ p.critPierce=(p.critPierce||0)+2; p.critChance=(p.critChance||0)+0.05; p.b.trueshot=`pierce ${p.critPierce}`; } },
       rare:      { desc:'+4 crit pierce, +20% crit chance',             fn:p=>{ p.critPierce=(p.critPierce||0)+4; p.critChance=(p.critChance||0)+0.20; p.b.trueshot=`pierce ${p.critPierce}`; } },
-      legendary: { desc:'Crits pierce everything, +3 base pierce',      fn:p=>{ p.critPierce=99; p.pierce=(p.pierce||0)+3; p.b.trueshot='∞ pierce'; } },
+      legendary: { desc:'Crits pierce everything, +3 base pierce',      fn:p=>{ p.critPierce=99; p.pierce=(p.pierce||0)+3; p.b.trueshot='âˆž pierce'; } },
       fmt:b=>b.trueshot?`Trueshot       ${b.trueshot}`:null },
     { id:'eagleEye', name:'Eagle Eye', cls:'hunter',
       common:    { desc:'+60% projectile range',    fn:p=>{ p.projLifetime=(p.projLifetime||1800)+700;  p.b.eagleEye='+range'; } },
       rare:      { desc:'+140% projectile range',   fn:p=>{ p.projLifetime=(p.projLifetime||1800)+1400; p.b.eagleEye='++range'; } },
-      legendary: { desc:'Projectiles never expire', fn:p=>{ p.projLifetime=999999; p.b.eagleEye='∞ range'; } },
+      legendary: { desc:'Projectiles never expire', fn:p=>{ p.projLifetime=999999; p.b.eagleEye='âˆž range'; } },
       fmt:b=>b.eagleEye?`Eagle Eye      ${b.eagleEye}`:null },
-    /* ── Knight-only ── */
+    /* â”€â”€ Knight-only â”€â”€ */
     { id:'ironShield', name:'Iron Shield', cls:'knight',
       common:    { desc:'Reduce damage taken 15%',  fn:p=>{ p.dmgReduce=(p.dmgReduce||0)+0.15; p.b.shield=`-${Math.round(p.dmgReduce*100)}%`; } },
       rare:      { desc:'Reduce damage taken 30%',  fn:p=>{ p.dmgReduce=(p.dmgReduce||0)+0.30; p.b.shield=`-${Math.round(p.dmgReduce*100)}%`; } },
@@ -573,16 +536,16 @@
       rare:      { desc:'+65% melee range', fn:p=>{ p.meleeRange=(p.meleeRange||90)*1.65; p.b.swing='+65%'; } },
       legendary: { desc:'+160% melee range',fn:p=>{ p.meleeRange=(p.meleeRange||90)*2.60; p.b.swing='+160%'; } },
       fmt:b=>b.swing?`Wide Swing     ${b.swing} range`:null },
-    /* ── Wizard-only ── */
+    /* â”€â”€ Wizard-only â”€â”€ */
     { id:'combustion', name:'Combustion', cls:'wizard',
       common:    { desc:'+20px splash radius, +15% splash dmg',  fn:p=>{ p.splashR=(p.splashR||30)+20; p.splashMult=Math.min(0.95,(p.splashMult||0.25)+0.15); p.b.combust=`${p.splashR}px ${Math.round(p.splashMult*100)}%`; } },
       rare:      { desc:'+30px splash radius, +25% splash dmg',  fn:p=>{ p.splashR=(p.splashR||50)+30; p.splashMult=Math.min(0.95,(p.splashMult||0.40)+0.25); p.b.combust=`${p.splashR}px ${Math.round(p.splashMult*100)}%`; } },
       legendary: { desc:'+40px splash radius, +25% dmg + fire',  fn:p=>{ p.splashR=(p.splashR||80)+40; p.splashMult=Math.min(0.95,(p.splashMult||0.65)+0.25); p.leaveFire=true; p.b.combust=`${p.splashR}px+fire`; } },
       fmt:b=>b.combust?`Combustion     ${b.combust}`:null },
     { id:'arcaneSurge', name:'Arcane Surge', cls:'wizard',
-      common:    { desc:'Surge shot deals +1 dmg mult, -1 shot interval', fn:p=>{ p.surgeEvery=Math.max(2,(p.surgeEvery||5)-1); p.surgeMult=(p.surgeMult||1)+0.50; if(!p.surgeCount)p.surgeCount=0; p.b.surge=`${p.surgeMult}× / ${p.surgeEvery}th`; } },
-      rare:      { desc:'Surge shot deals +1 dmg mult, -1 shot interval', fn:p=>{ p.surgeEvery=Math.max(2,(p.surgeEvery||4)-1); p.surgeMult=(p.surgeMult||1)+0.75; if(!p.surgeCount)p.surgeCount=0; p.b.surge=`${p.surgeMult}× / ${p.surgeEvery}th`; } },
-      legendary: { desc:'Surge shot deals +1.5 dmg mult, -1 interval',   fn:p=>{ p.surgeEvery=Math.max(2,(p.surgeEvery||3)-1); p.surgeMult=(p.surgeMult||1)+1.50; if(!p.surgeCount)p.surgeCount=0; p.b.surge=`${p.surgeMult}× / ${p.surgeEvery}th`; } },
+      common:    { desc:'Surge shot deals +1 dmg mult, -1 shot interval', fn:p=>{ p.surgeEvery=Math.max(2,(p.surgeEvery||5)-1); p.surgeMult=(p.surgeMult||1)+0.50; if(!p.surgeCount)p.surgeCount=0; p.b.surge=`${p.surgeMult}Ã— / ${p.surgeEvery}th`; } },
+      rare:      { desc:'Surge shot deals +1 dmg mult, -1 shot interval', fn:p=>{ p.surgeEvery=Math.max(2,(p.surgeEvery||4)-1); p.surgeMult=(p.surgeMult||1)+0.75; if(!p.surgeCount)p.surgeCount=0; p.b.surge=`${p.surgeMult}Ã— / ${p.surgeEvery}th`; } },
+      legendary: { desc:'Surge shot deals +1.5 dmg mult, -1 interval',   fn:p=>{ p.surgeEvery=Math.max(2,(p.surgeEvery||3)-1); p.surgeMult=(p.surgeMult||1)+1.50; if(!p.surgeCount)p.surgeCount=0; p.b.surge=`${p.surgeMult}Ã— / ${p.surgeEvery}th`; } },
       fmt:b=>b.surge?`Arcane Surge   ${b.surge}`:null },
     { id:'meteor', name:'Meteor Strike', cls:'wizard',
       common:    { desc:'+75 meteor dmg, -1.5s CD', fn:p=>{ p.meteorDmg=(p.meteorDmg||75)+75;  p.meteorCd=Math.max(4000,(p.meteorCd||13500)-1500); p.b.meteor=`${p.meteorDmg}dmg ${p.meteorCd/1000}s`; } },
@@ -594,7 +557,7 @@
       rare:      { desc:'At <20% HP, freeze ALL enemies; +60 dmg',  fn:p=>{ p.frostNova=true; p.frostNovaAll=true; p.frostNovaDmg=(p.frostNovaDmg||0)+60; p.b.frost=`freeze all+${p.frostNovaDmg}`; } },
       legendary: { desc:'Freeze all; +100 nova dmg, longer freeze', fn:p=>{ p.frostNova=true; p.frostNovaAll=true; p.frostNovaDmg=(p.frostNovaDmg||0)+100; p.frostNovaDur=5000; p.b.frost=`freeze all+${p.frostNovaDmg}`; } },
       fmt:b=>b.frost?`Frost Nova     ${b.frost}`:null },
-    /* ── existing special weapons ── */
+    /* â”€â”€ existing special weapons â”€â”€ */
     { id:'orbit',     name:'Arcane Orbit',
       common:    { desc:'3 orbiting shards, 8 dmg',  fn: p => { p.orbitCount=(p.orbitCount||0)+3; p.orbitDmg=(p.orbitDmg||0)+8;  p.b.orbit=`${p.orbitCount} shards`; } },
       rare:      { desc:'4 orbiting shards, 16 dmg', fn: p => { p.orbitCount=(p.orbitCount||0)+4; p.orbitDmg=(p.orbitDmg||0)+16; p.b.orbit=`${p.orbitCount} shards`; } },
@@ -605,7 +568,7 @@
       rare:      { desc:'AOE slam every 3s, 65 dmg',  fn: p => { p.slamDmg=(p.slamDmg||0)+65;  p.slamCd=3000; p.b.slam=`${p.slamDmg} dmg`; } },
       legendary: { desc:'AOE slam every 2s, 140 dmg', fn: p => { p.slamDmg=(p.slamDmg||0)+140; p.slamCd=2000; p.b.slam=`${p.slamDmg} dmg`; } },
       fmt: b => b.slam  ? `Ground Slam    ${b.slam}`  : null },
-    /* ── General (all classes) ── */
+    /* â”€â”€ General (all classes) â”€â”€ */
     { id:'haste', name:'Haste',
       common:    { desc:'Kills grant +30% speed for 2s',  fn:p=>{ p.hasteBonus=(p.hasteBonus||0)+0.30; p.hasteDur=Math.min(8000,(p.hasteDur||0)+2000); p.b.haste=`+${Math.round(p.hasteBonus*100)}% ${p.hasteDur/1000}s`; } },
       rare:      { desc:'Kills grant +60% speed for 3s',  fn:p=>{ p.hasteBonus=(p.hasteBonus||0)+0.60; p.hasteDur=Math.min(8000,(p.hasteDur||0)+3000); p.b.haste=`+${Math.round(p.hasteBonus*100)}% ${p.hasteDur/1000}s`; } },
@@ -622,9 +585,9 @@
       legendary: { desc:'Block 1 hit; -4s cooldown',          fn:p=>{ p.shieldCd=Math.max(1000,(p.shieldCd||7000)-4000);  p.b.shieldTrait=`${p.shieldCd/1000}s`; } },
       fmt:b=>b.shieldTrait?`Sp. Shield     ${b.shieldTrait} cd`:null },
     { id:'venom', name:'Venomous',
-      common:    { desc:'+5 poison dmg/s, +0.5s duration',  fn:p=>{ p.poisonDmg=(p.poisonDmg||0)+5;  p.poisonDur=Math.min(12000,(p.poisonDur||2500)+500);  p.b.venom=`${p.poisonDmg}/s×${p.poisonDur/1000}s`; } },
-      rare:      { desc:'+12 poison dmg/s, +1s duration',   fn:p=>{ p.poisonDmg=(p.poisonDmg||0)+12; p.poisonDur=Math.min(12000,(p.poisonDur||3000)+1000); p.b.venom=`${p.poisonDmg}/s×${p.poisonDur/1000}s`; } },
-      legendary: { desc:'+28 poison dmg/s, +2s duration',   fn:p=>{ p.poisonDmg=(p.poisonDmg||0)+28; p.poisonDur=Math.min(12000,(p.poisonDur||4000)+2000); p.b.venom=`${p.poisonDmg}/s×${p.poisonDur/1000}s`; } },
+      common:    { desc:'+5 poison dmg/s, +0.5s duration',  fn:p=>{ p.poisonDmg=(p.poisonDmg||0)+5;  p.poisonDur=Math.min(12000,(p.poisonDur||2500)+500);  p.b.venom=`${p.poisonDmg}/sÃ—${p.poisonDur/1000}s`; } },
+      rare:      { desc:'+12 poison dmg/s, +1s duration',   fn:p=>{ p.poisonDmg=(p.poisonDmg||0)+12; p.poisonDur=Math.min(12000,(p.poisonDur||3000)+1000); p.b.venom=`${p.poisonDmg}/sÃ—${p.poisonDur/1000}s`; } },
+      legendary: { desc:'+28 poison dmg/s, +2s duration',   fn:p=>{ p.poisonDmg=(p.poisonDmg||0)+28; p.poisonDur=Math.min(12000,(p.poisonDur||4000)+2000); p.b.venom=`${p.poisonDmg}/sÃ—${p.poisonDur/1000}s`; } },
       fmt:b=>b.venom?`Venomous       ${b.venom}`:null },
     { id:'reaper', name:'Reaper',
       common:    { desc:'+20 kill-explosion dmg, +10px range',  fn:p=>{ p.reaperDmg=(p.reaperDmg||0)+20;  p.reaperRange=(p.reaperRange||60)+10;  p.b.reaper=`${p.reaperDmg}dmg ${p.reaperRange}px`; } },
@@ -637,27 +600,27 @@
       legendary: { desc:'+12% dmg/kill this wave, +120% cap',fn:p=>{ p.bsrkPerKill=(p.bsrkPerKill||0)+0.12; p.bsrkMax=(p.bsrkMax||1.20)+1.20; p.b.bsrk=`+${Math.round(p.bsrkPerKill*100)}%/kill`; } },
       fmt:b=>b.bsrk?`Berserker      ${b.bsrk}`:null },
     { id:'magnet', name:'Magnetism',
-      common:    { desc:'+150px XP magnet range, +60 pull speed', fn:p=>{ p.magnetRange=(p.magnetRange||50)+150; p.magnetSpd=(p.magnetSpd||120)+60; p.b.magnet=p.magnetRange>=9999?'∞':`${p.magnetRange}px`; } },
-      rare:      { desc:'+250px XP magnet range, +100 pull speed',fn:p=>{ p.magnetRange=(p.magnetRange||100)+250;p.magnetSpd=(p.magnetSpd||160)+100;p.b.magnet=p.magnetRange>=9999?'∞':`${p.magnetRange}px`; } },
-      legendary: { desc:'XP orbs fly to you from anywhere',       fn:p=>{ p.magnetRange=9999; p.magnetSpd=Math.max(380,p.magnetSpd||380); p.b.magnet='∞'; } },
+      common:    { desc:'+150px XP magnet range, +60 pull speed', fn:p=>{ p.magnetRange=(p.magnetRange||50)+150; p.magnetSpd=(p.magnetSpd||120)+60; p.b.magnet=p.magnetRange>=9999?'âˆž':`${p.magnetRange}px`; } },
+      rare:      { desc:'+250px XP magnet range, +100 pull speed',fn:p=>{ p.magnetRange=(p.magnetRange||100)+250;p.magnetSpd=(p.magnetSpd||160)+100;p.b.magnet=p.magnetRange>=9999?'âˆž':`${p.magnetRange}px`; } },
+      legendary: { desc:'XP orbs fly to you from anywhere',       fn:p=>{ p.magnetRange=9999; p.magnetSpd=Math.max(380,p.magnetSpd||380); p.b.magnet='âˆž'; } },
       fmt:b=>b.magnet?`Magnetism      ${b.magnet}`:null },
     { id:'glasscannon', name:'Glass Cannon',
       common:    { desc:'+40% dmg, -15% max HP', fn:p=>{ p.dmg*=1.40; p.maxHp=Math.max(1,Math.floor(p.maxHp*0.85)); p.hp=Math.min(p.hp,p.maxHp); p.b.glass='+40%/-15%HP'; } },
       rare:      { desc:'+80% dmg, -25% max HP', fn:p=>{ p.dmg*=1.80; p.maxHp=Math.max(1,Math.floor(p.maxHp*0.75)); p.hp=Math.min(p.hp,p.maxHp); p.b.glass='+80%/-25%HP'; } },
       legendary: { desc:'+180% dmg, -40% max HP',fn:p=>{ p.dmg*=2.80; p.maxHp=Math.max(1,Math.floor(p.maxHp*0.60)); p.hp=Math.min(p.hp,p.maxHp); p.b.glass='+180%/-40%HP'; } },
       fmt:b=>b.glass?`Glass Cannon   ${b.glass}`:null },
-    /* ── Hunter-only ── */
+    /* â”€â”€ Hunter-only â”€â”€ */
     { id:'ricochet', name:'Ricochet', cls:'hunter',
-      common:    { desc:'+1 ricochet bounce, +5% dmg',  fn:p=>{ p.ricochetCount=(p.ricochetCount||0)+1; p.ricochetMult=Math.min(0.90,(p.ricochetMult||0.35)+0.05); p.b.rico=`${p.ricochetCount}×${Math.round(p.ricochetMult*100)}%`; } },
-      rare:      { desc:'+2 ricochet bounces, +10% dmg',fn:p=>{ p.ricochetCount=(p.ricochetCount||0)+2; p.ricochetMult=Math.min(0.90,(p.ricochetMult||0.45)+0.10); p.b.rico=`${p.ricochetCount}×${Math.round(p.ricochetMult*100)}%`; } },
-      legendary: { desc:'+4 ricochet bounces, +15% dmg',fn:p=>{ p.ricochetCount=(p.ricochetCount||0)+4; p.ricochetMult=Math.min(0.90,(p.ricochetMult||0.55)+0.15); p.b.rico=`${p.ricochetCount}×${Math.round(p.ricochetMult*100)}%`; } },
+      common:    { desc:'+1 ricochet bounce, +5% dmg',  fn:p=>{ p.ricochetCount=(p.ricochetCount||0)+1; p.ricochetMult=Math.min(0.90,(p.ricochetMult||0.35)+0.05); p.b.rico=`${p.ricochetCount}Ã—${Math.round(p.ricochetMult*100)}%`; } },
+      rare:      { desc:'+2 ricochet bounces, +10% dmg',fn:p=>{ p.ricochetCount=(p.ricochetCount||0)+2; p.ricochetMult=Math.min(0.90,(p.ricochetMult||0.45)+0.10); p.b.rico=`${p.ricochetCount}Ã—${Math.round(p.ricochetMult*100)}%`; } },
+      legendary: { desc:'+4 ricochet bounces, +15% dmg',fn:p=>{ p.ricochetCount=(p.ricochetCount||0)+4; p.ricochetMult=Math.min(0.90,(p.ricochetMult||0.55)+0.15); p.b.rico=`${p.ricochetCount}Ã—${Math.round(p.ricochetMult*100)}%`; } },
       fmt:b=>b.rico?`Ricochet       ${b.rico}`:null },
     { id:'barrage', name:'Barrage', cls:'hunter',
       common:    { desc:'+4 barrage shots, -2s CD (min 6s)', fn:p=>{ p.barrageShots=(p.barrageShots||4)+4;  p.barrageCd=Math.max(6000,(p.barrageCd||20000)-2000); p.b.barrage=`${p.barrageShots}sh ${p.barrageCd/1000}s`; } },
       rare:      { desc:'+6 barrage shots, -3s CD',          fn:p=>{ p.barrageShots=(p.barrageShots||8)+6;  p.barrageCd=Math.max(5000,(p.barrageCd||16000)-3000); p.b.barrage=`${p.barrageShots}sh ${p.barrageCd/1000}s`; } },
       legendary: { desc:'+10 barrage shots, -4s CD',         fn:p=>{ p.barrageShots=(p.barrageShots||14)+10; p.barrageCd=Math.max(4000,(p.barrageCd||12000)-4000);p.b.barrage=`${p.barrageShots}sh ${p.barrageCd/1000}s`; } },
       fmt:b=>b.barrage?`Barrage        ${b.barrage}`:null },
-    /* ── Knight-only ── */
+    /* â”€â”€ Knight-only â”€â”€ */
     { id:'undying', name:'Undying', cls:'knight', givesHp:true,
       common:    { desc:'Revive once per run at 25% HP', fn:p=>{ p.undying=true; p.undyingHp=0.25; p.reviveCount=(p.reviveCount||0)+1; p.b.undying='1 revive'; } },
       rare:      { desc:'Revive once at 50% HP',         fn:p=>{ p.undying=true; p.undyingHp=0.50; p.reviveCount=(p.reviveCount||0)+1; p.b.undying='1 revive 50%HP'; } },
@@ -668,7 +631,7 @@
       rare:      { desc:'+90% warcry dmg, +1s dur, -2s CD',   fn:p=>{ p.warcryMult=(p.warcryMult||1)+0.90; p.warcryDur=Math.min(10000,(p.warcryDur||2000)+1000);p.warcryCd=Math.max(3000,(p.warcryCd||9000)-2000);  p.b.warcry=`+${Math.round((p.warcryMult-1)*100)}% ${p.warcryDur/1000}s`; } },
       legendary: { desc:'+180% warcry dmg, +2s dur, -3s CD',  fn:p=>{ p.warcryMult=(p.warcryMult||1)+1.80; p.warcryDur=Math.min(10000,(p.warcryDur||3000)+2000);p.warcryCd=Math.max(3000,(p.warcryCd||7000)-3000);  p.b.warcry=`+${Math.round((p.warcryMult-1)*100)}% ${p.warcryDur/1000}s`; } },
       fmt:b=>b.warcry?`Warcry         ${b.warcry}`:null },
-    /* ── Wizard-only ── */
+    /* â”€â”€ Wizard-only â”€â”€ */
     { id:'blizzard', name:'Blizzard', cls:'wizard',
       common:    { desc:'+20% slow, +0.5s duration, -1.5s CD', fn:p=>{ p.blizzardSlow=Math.min(0.95,(p.blizzardSlow||0.40)+0.20); p.blizzardDur=Math.min(8000,(p.blizzardDur||1500)+500); p.blizzardCd=Math.max(3000,(p.blizzardCd||13500)-1500); p.b.blizzard=`${Math.round(p.blizzardSlow*100)}% ${p.blizzardDur/1000}s`; } },
       rare:      { desc:'+25% slow, +1s duration, -2.5s CD',   fn:p=>{ p.blizzardSlow=Math.min(0.95,(p.blizzardSlow||0.55)+0.25); p.blizzardDur=Math.min(8000,(p.blizzardDur||2000)+1000);p.blizzardCd=Math.max(3000,(p.blizzardCd||11000)-2500);p.b.blizzard=`${Math.round(p.blizzardSlow*100)}% ${p.blizzardDur/1000}s`; } },
@@ -680,11 +643,11 @@
       legendary: { desc:'+50px blast radius, +25% blast dmg', fn:p=>{ p.chainReact=(p.chainReact||90)+50; p.chainReactMult=Math.min(0.80,(p.chainReactMult||0.50)+0.25); p.b.cReact=`${p.chainReact}px ${Math.round(p.chainReactMult*100)}%`; } },
       fmt:b=>b.cReact?`Chain React    ${b.cReact}`:null },
 
-    // ── NEW GENERAL TRAITS ──────────────────────────────────────────────────
+    // â”€â”€ NEW GENERAL TRAITS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     { id:'stormcaller', name:'Stormcaller',
-      common:    { desc:'+2 storm strikes, +30 dmg per strike, -0.2s CD', fn:p=>{ p.stormCount=(p.stormCount||0)+2; p.stormDmg=(p.stormDmg||30)+30; p.stormCd=Math.max(1000,(p.stormCd||3200)-200); p.b.storm=`${p.stormCount}×${p.stormDmg}`; } },
-      rare:      { desc:'+3 storm strikes, +60 dmg per strike, -0.3s CD', fn:p=>{ p.stormCount=(p.stormCount||0)+3; p.stormDmg=(p.stormDmg||50)+60; p.stormCd=Math.max(1000,(p.stormCd||3000)-300); p.b.storm=`${p.stormCount}×${p.stormDmg}`; } },
-      legendary: { desc:'+5 storm strikes, +120 dmg, -0.5s CD',          fn:p=>{ p.stormCount=(p.stormCount||0)+5; p.stormDmg=(p.stormDmg||80)+120;p.stormCd=Math.max(1000,(p.stormCd||2700)-500); p.b.storm=`${p.stormCount}×${p.stormDmg}`; } },
+      common:    { desc:'+2 storm strikes, +30 dmg per strike, -0.2s CD', fn:p=>{ p.stormCount=(p.stormCount||0)+2; p.stormDmg=(p.stormDmg||30)+30; p.stormCd=Math.max(1000,(p.stormCd||3200)-200); p.b.storm=`${p.stormCount}Ã—${p.stormDmg}`; } },
+      rare:      { desc:'+3 storm strikes, +60 dmg per strike, -0.3s CD', fn:p=>{ p.stormCount=(p.stormCount||0)+3; p.stormDmg=(p.stormDmg||50)+60; p.stormCd=Math.max(1000,(p.stormCd||3000)-300); p.b.storm=`${p.stormCount}Ã—${p.stormDmg}`; } },
+      legendary: { desc:'+5 storm strikes, +120 dmg, -0.5s CD',          fn:p=>{ p.stormCount=(p.stormCount||0)+5; p.stormDmg=(p.stormDmg||80)+120;p.stormCd=Math.max(1000,(p.stormCd||2700)-500); p.b.storm=`${p.stormCount}Ã—${p.stormDmg}`; } },
       fmt:b=>b.storm?`Stormcaller    ${b.storm}`:null },
 
     { id:'ironWill', name:'Iron Will',
@@ -717,7 +680,7 @@
       legendary: { desc:'Boss kill: full heal, +25% dmg',     fn:p=>{ p.bossHeal=9999; p.bossDmgBonus=(p.bossDmgBonus||0)+0.25; p.bossDmgDur=Math.max(p.bossDmgDur||0,60000); p.b.lastRites=`fullhp+${Math.round(p.bossDmgBonus*100)}%`; } },
       fmt:b=>b.lastRites?`Last Rites     ${b.lastRites} on boss`:null },
 
-    // ── NEW HUNTER TRAITS ────────────────────────────────────────────────────
+    // â”€â”€ NEW HUNTER TRAITS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     { id:'explosive', name:'Explosive Rounds', cls:'hunter',
       common:    { desc:'+25px explosion radius, +15% splash dmg',  fn:p=>{ p.explodeRange=(p.explodeRange||25)+25; p.explodeMult=Math.min(0.95,(p.explodeMult||0.25)+0.15); p.b.explosive=`${Math.round(p.explodeMult*100)}% ${p.explodeRange}px`; } },
       rare:      { desc:'+35px explosion radius, +20% splash dmg',  fn:p=>{ p.explodeRange=(p.explodeRange||40)+35; p.explodeMult=Math.min(0.95,(p.explodeMult||0.40)+0.20); p.b.explosive=`${Math.round(p.explodeMult*100)}% ${p.explodeRange}px`; } },
@@ -727,10 +690,10 @@
     { id:'phantom', name:'Phantom Shot', cls:'hunter',
       common:    { desc:'Pierce shot every Nth; -1 interval (min 2)', fn:p=>{ p.phantomEvery=Math.max(2,(p.phantomEvery||7)-1); p.b.phantom=`every ${p.phantomEvery}th`; } },
       rare:      { desc:'Pierce shot every Nth; -2 interval, +slow',   fn:p=>{ p.phantomEvery=Math.max(2,(p.phantomEvery||6)-2); p.b.phantom=`every ${p.phantomEvery}th+slow`; } },
-      legendary: { desc:'Pierce shot every Nth; -1 interval, +2× dmg', fn:p=>{ p.phantomEvery=Math.max(2,(p.phantomEvery||4)-1); p.phantomDmgMult=(p.phantomDmgMult||1)+0.5; p.b.phantom=`every ${p.phantomEvery}th ×${p.phantomDmgMult}`; } },
+      legendary: { desc:'Pierce shot every Nth; -1 interval, +2Ã— dmg', fn:p=>{ p.phantomEvery=Math.max(2,(p.phantomEvery||4)-1); p.phantomDmgMult=(p.phantomDmgMult||1)+0.5; p.b.phantom=`every ${p.phantomEvery}th Ã—${p.phantomDmgMult}`; } },
       fmt:b=>b.phantom?`Phantom Shot   ${b.phantom}`:null },
 
-    // ── NEW KNIGHT TRAITS ────────────────────────────────────────────────────
+    // â”€â”€ NEW KNIGHT TRAITS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     { id:'sentinel', name:'Sentinel', cls:'knight',
       common:    { desc:'+20% slow aura, +25px range',  fn:p=>{ p.sentinelSlow=Math.min(0.95,(p.sentinelSlow||0.20)+0.20); p.sentinelRange=(p.sentinelRange||65)+25; p.b.sentinel=`${p.sentinelRange}px ${Math.round(p.sentinelSlow*100)}%`; } },
       rare:      { desc:'+25% slow aura, +35px range',  fn:p=>{ p.sentinelSlow=Math.min(0.95,(p.sentinelSlow||0.40)+0.25); p.sentinelRange=(p.sentinelRange||90)+35;  p.b.sentinel=`${p.sentinelRange}px ${Math.round(p.sentinelSlow*100)}%`; } },
@@ -743,7 +706,7 @@
       legendary: { desc:'+60% max HP, and melee range +60%', fn:p=>{ p.maxHp=Math.floor(p.maxHp*1.60); p.hp=Math.min(p.hp+Math.floor(p.maxHp*0.60),p.maxHp); p.meleeRange*=1.60; p.b.juggernaut='+60%'; } },
       fmt:b=>b.juggernaut?`Juggernaut     ${b.juggernaut} HP+range`:null },
 
-    // ── NEW WIZARD TRAITS ────────────────────────────────────────────────────
+    // â”€â”€ NEW WIZARD TRAITS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     { id:'overload', name:'Overload', cls:'wizard',
       common:    { desc:'Frost Nova auto-triggers every Nth fireball; -1 interval', fn:p=>{ p.overloadEvery=Math.max(2,(p.overloadEvery||8)-1); p.b.overload=`every ${p.overloadEvery}th`; } },
       rare:      { desc:'Frost Nova trigger; -2 interval',                          fn:p=>{ p.overloadEvery=Math.max(2,(p.overloadEvery||7)-2); p.b.overload=`every ${p.overloadEvery}th`; } },
@@ -756,11 +719,11 @@
       legendary: { desc:'+25 void zone dmg/s, +3s duration', fn:p=>{ p.voidRift=true; p.voidDmg=(p.voidDmg||30)+25; p.voidDur=Math.min(14000,(p.voidDur||6000)+3000); p.b.voidRift=`${p.voidDmg}/s ${p.voidDur/1000}s`; } },
       fmt:b=>b.voidRift?`Void Rift      ${b.voidRift}`:null },
 
-    // ── NECROMANCER TRAITS ───────────────────────────────────────────────────
+    // â”€â”€ NECROMANCER TRAITS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     { id:'deathNova', name:'Death Nova', cls:'necromancer',
-      common:    { desc:'Minion expires → explodes 80 dmg in 45px',  fn:p=>{ p.deathNovaDmg=80;  p.b.dNova='80 dmg'; } },
-      rare:      { desc:'Minion expires → explodes 160 dmg in 65px', fn:p=>{ p.deathNovaDmg=160; p.b.dNova='160 dmg'; } },
-      legendary: { desc:'Minion expires → explodes 350 dmg in 90px', fn:p=>{ p.deathNovaDmg=350; p.b.dNova='350 dmg'; } },
+      common:    { desc:'Minion expires â†’ explodes 80 dmg in 45px',  fn:p=>{ p.deathNovaDmg=80;  p.b.dNova='80 dmg'; } },
+      rare:      { desc:'Minion expires â†’ explodes 160 dmg in 65px', fn:p=>{ p.deathNovaDmg=160; p.b.dNova='160 dmg'; } },
+      legendary: { desc:'Minion expires â†’ explodes 350 dmg in 90px', fn:p=>{ p.deathNovaDmg=350; p.b.dNova='350 dmg'; } },
       fmt:b=>b.dNova?`Death Nova     ${b.dNova}`:null },
     { id:'undeadHorde', name:'Undead Horde', cls:'necromancer',
       common:    { desc:'+2 max minions, last 6s longer',  fn:p=>{ p.maxMinions=(p.maxMinions||3)+2; p.minionDur=(p.minionDur||12000)+6000; p.b.horde='+2 cap'; } },
@@ -768,42 +731,42 @@
       legendary: { desc:'+5 max minions, minions never expire', fn:p=>{ p.maxMinions=(p.maxMinions||3)+5; p.minionDur=9999999; p.b.horde='+5 immortal'; } },
       fmt:b=>b.horde?`Undead Horde   ${b.horde}`:null },
 
-    // ── SYNERGY TRAITS (require 2 other traits) ──────────────────────────────
+    // â”€â”€ SYNERGY TRAITS (require 2 other traits) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     { id:'plagueStorm', name:'Plague Storm', requires:['venom','stormcaller'],
       common:    { desc:'Storm strikes apply poison (5 dmg/s 3s)',  fn:p=>{ p.stormPoison=true; p.stormPoisonDmg=5;  p.stormPoisonDur=3000; p.b.plgStorm='storm+poison'; } },
-      rare:      { desc:'Storm strikes apply poison (12 dmg/s 4s)', fn:p=>{ p.stormPoison=true; p.stormPoisonDmg=12; p.stormPoisonDur=4000; p.b.plgStorm='storm+poison×2'; } },
-      legendary: { desc:'Storm strikes apply poison (28 dmg/s 6s)', fn:p=>{ p.stormPoison=true; p.stormPoisonDmg=28; p.stormPoisonDur=6000; p.b.plgStorm='storm+poison×3'; } },
+      rare:      { desc:'Storm strikes apply poison (12 dmg/s 4s)', fn:p=>{ p.stormPoison=true; p.stormPoisonDmg=12; p.stormPoisonDur=4000; p.b.plgStorm='storm+poisonÃ—2'; } },
+      legendary: { desc:'Storm strikes apply poison (28 dmg/s 6s)', fn:p=>{ p.stormPoison=true; p.stormPoisonDmg=28; p.stormPoisonDur=6000; p.b.plgStorm='storm+poisonÃ—3'; } },
       fmt:b=>b.plgStorm?`Plague Storm   ${b.plgStorm}`:null },
     { id:'infernalAura', name:'Infernal Aura', requires:['aura','venom'],
       common:    { desc:'Cursed Aura also poisons nearby enemies (5 dmg/s)',  fn:p=>{ p.auraPoison=true; p.auraPoisonDmg=5;  p.b.infAura='aura+poison'; } },
-      rare:      { desc:'Cursed Aura also poisons nearby enemies (12 dmg/s)', fn:p=>{ p.auraPoison=true; p.auraPoisonDmg=12; p.b.infAura='aura+poison×2'; } },
+      rare:      { desc:'Cursed Aura also poisons nearby enemies (12 dmg/s)', fn:p=>{ p.auraPoison=true; p.auraPoisonDmg=12; p.b.infAura='aura+poisonÃ—2'; } },
       legendary: { desc:'Cursed Aura poisons AND deals +50% aura damage',     fn:p=>{ p.auraPoison=true; p.auraPoisonDmg=20; p.auraDmg=(p.auraDmg||10)*1.5; p.b.infAura='aura+fire'; } },
       fmt:b=>b.infAura?`Infernal Aura  ${b.infAura}`:null },
     { id:'soulReaper', name:'Soul Reaper', requires:['soulEater','reaper'],
-      common:    { desc:'Reaper kills count double for Soul Eater stacks',       fn:p=>{ p.reaperSoulDouble=true; p.b.soulRpr='2× stacks'; } },
+      common:    { desc:'Reaper kills count double for Soul Eater stacks',       fn:p=>{ p.reaperSoulDouble=true; p.b.soulRpr='2Ã— stacks'; } },
       rare:      { desc:'Reaper range +40px + double soul stacks',               fn:p=>{ p.reaperSoulDouble=true; p.reaperRange=(p.reaperRange||70)+40; p.b.soulRpr='+range'; } },
       legendary: { desc:'Every Reaper kill permanently grants +2 damage',        fn:p=>{ p.reaperSoulDouble=true; p.reaperPermDmg=2; p.b.soulRpr='perm+2dmg'; } },
       fmt:b=>b.soulRpr?`Soul Reaper    ${b.soulRpr}`:null },
     { id:'bloodPact', name:'Blood Pact', givesHp:true, requires:['vampiricStrike','ironWill'],
-      common:    { desc:'Below 30% HP: lifesteal is tripled',              fn:p=>{ p.bloodPact=3;  p.b.bloodPact='3× leech'; } },
-      rare:      { desc:'Below 30% HP: lifesteal ×5 + 2 HP regen/s',      fn:p=>{ p.bloodPact=5;  p.bloodPactRegen=2; p.b.bloodPact='5× leech'; } },
+      common:    { desc:'Below 30% HP: lifesteal is tripled',              fn:p=>{ p.bloodPact=3;  p.b.bloodPact='3Ã— leech'; } },
+      rare:      { desc:'Below 30% HP: lifesteal Ã—5 + 2 HP regen/s',      fn:p=>{ p.bloodPact=5;  p.bloodPactRegen=2; p.b.bloodPact='5Ã— leech'; } },
       legendary: { desc:'Below 30% HP: kills heal 20% max HP',             fn:p=>{ p.bloodPact=5;  p.bloodPactKillHeal=0.20; p.b.bloodPact='kill heal'; } },
       fmt:b=>b.bloodPact?`Blood Pact     ${b.bloodPact}`:null },
     { id:'phantomReaper', name:'Phantom Reaper', requires:['phantom','reaper'],
       common:    { desc:'Phantom shots trigger Reaper explosions on each pierce', fn:p=>{ p.phantomReaper=true; p.b.pRpr='phantom+reaper'; } },
-      rare:      { desc:'Phantom+Reaper — also slows pierced enemies 60%',        fn:p=>{ p.phantomReaper=true; p.phantomReaperSlow=true; p.b.pRpr='reaper+slow'; } },
-      legendary: { desc:'Phantom+Reaper explosions deal 150% damage',             fn:p=>{ p.phantomReaper=true; p.phantomReaperMult=1.5; p.b.pRpr='reaper×1.5'; } },
+      rare:      { desc:'Phantom+Reaper â€” also slows pierced enemies 60%',        fn:p=>{ p.phantomReaper=true; p.phantomReaperSlow=true; p.b.pRpr='reaper+slow'; } },
+      legendary: { desc:'Phantom+Reaper explosions deal 150% damage',             fn:p=>{ p.phantomReaper=true; p.phantomReaperMult=1.5; p.b.pRpr='reaperÃ—1.5'; } },
       fmt:b=>b.pRpr?`Phantom Reaper ${b.pRpr}`:null },
-    /* ── NECROMANCER CLASS TRAITS ── */
+    /* â”€â”€ NECROMANCER CLASS TRAITS â”€â”€ */
     { id:'raiseDead', name:'Raise Dead', cls:'necromancer',
       common:    { desc:'35% chance to raise slain enemies as minions (18s)',         fn:p=>{ p.raiseDead=true; p.raiseChance=0.35; p.minionDur=18000; p.b.raise='35%'; } },
       rare:      { desc:'55% raise chance, minions last 28s and deal +30% damage',    fn:p=>{ p.raiseDead=true; p.raiseChance=0.55; p.minionDur=28000; p.minionDmg=1.3; p.b.raise='55%+'; } },
       legendary: { desc:'75% raise chance, minions are permanent (until wave ends)',   fn:p=>{ p.raiseDead=true; p.raiseChance=0.75; p.minionDur=999999; p.minionDmg=1.6; p.b.raise='perm'; } },
       fmt:b=>b.raise?`Raise Dead  ${b.raise}`:null },
     { id:'boneArmor', name:'Bone Armor', cls:'necromancer',
-      common:    { desc:'Gain 1 Bone stack per kill; each stack absorbs 3 damage (max 5)', fn:p=>{ p.boneArmor=true; p.boneMax=5; p.bonePerStack=3; p.boneStacks=0; p.b.bone='5×3'; } },
-      rare:      { desc:'Bone stacks absorb 6 damage each (max 8)',                        fn:p=>{ p.boneArmor=true; p.boneMax=8; p.bonePerStack=6; p.boneStacks=0; p.b.bone='8×6'; } },
-      legendary: { desc:'Bone stacks absorb 12 each (max 12) + reflect 5 dmg on break',   fn:p=>{ p.boneArmor=true; p.boneMax=12; p.bonePerStack=12; p.boneReflect=5; p.boneStacks=0; p.b.bone='12×12'; } },
+      common:    { desc:'Gain 1 Bone stack per kill; each stack absorbs 3 damage (max 5)', fn:p=>{ p.boneArmor=true; p.boneMax=5; p.bonePerStack=3; p.boneStacks=0; p.b.bone='5Ã—3'; } },
+      rare:      { desc:'Bone stacks absorb 6 damage each (max 8)',                        fn:p=>{ p.boneArmor=true; p.boneMax=8; p.bonePerStack=6; p.boneStacks=0; p.b.bone='8Ã—6'; } },
+      legendary: { desc:'Bone stacks absorb 12 each (max 12) + reflect 5 dmg on break',   fn:p=>{ p.boneArmor=true; p.boneMax=12; p.bonePerStack=12; p.boneReflect=5; p.boneStacks=0; p.b.bone='12Ã—12'; } },
       fmt:b=>b.bone?`Bone Armor  ${b.bone}`:null },
     { id:'undeadSurge', name:'Undead Surge', cls:'necromancer',
       common:    { desc:'+1 minion can exist at a time; minion speed +20%',           fn:p=>{ p.minionLimit=(p.minionLimit||3)+1; p.minionSpeed=(p.minionSpeed||1)*1.2; p.b.surge='+1 cap'; } },
@@ -853,7 +816,7 @@
     });
   }
 
-  /* ── MENU ── */
+  /* â”€â”€ MENU â”€â”€ */
   class MenuScene extends Phaser.Scene {
     constructor() { super('Menu'); }
     create() {
@@ -875,12 +838,12 @@
       if (meta.bestKills) scores.push(`Most kills: ${meta.bestKills}`);
       if (meta.bestLevel) scores.push(`Highest level: ${meta.bestLevel}`);
       if (scores.length) {
-        this.add.text(cx, cy + 95, scores.join('   ·   '), {
+        this.add.text(cx, cy + 95, scores.join('   Â·   '), {
           fontSize: '12px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.4)',
         }).setOrigin(0.5);
       }
       if (meta.souls > 0) {
-        this.add.text(cx, cy + 118, `✦ ${meta.souls} souls saved`, {
+        this.add.text(cx, cy + 118, `âœ¦ ${meta.souls} souls saved`, {
           fontSize: '13px', fontFamily: 'system-ui', color: '#fbbf24',
         }).setOrigin(0.5).setAlpha(0.85);
       }
@@ -892,7 +855,7 @@
       });
 
       /* Daily Challenge button */
-      const dailyBtn = this.add.text(cx, cy + 148, '🗓  Daily Challenge', {
+      const dailyBtn = this.add.text(cx, cy + 148, 'ðŸ—“  Daily Challenge', {
         fontSize:'14px', fontFamily:'system-ui', fontStyle:'bold', color:'#fbbf24',
       }).setOrigin(0.5).setInteractive({ useHandCursor:true }).setAlpha(0);
       dailyBtn.on('pointerover', ()=>dailyBtn.setAlpha(1));
@@ -942,7 +905,7 @@
   }
 
 
-  /* ── CLASS SELECT ── */
+  /* â”€â”€ CLASS SELECT â”€â”€ */
   const CLASSES = {
     hunter: {
       name:'Hunter', color:0x2563eb, labelCol:'#60a5fa', hex:'#2563eb',
@@ -973,7 +936,7 @@
   class ClassSelectScene extends Phaser.Scene {
     constructor() { super('ClassSelect'); }
 
-    /* ── ElectricBorder noise helpers ── */
+    /* â”€â”€ ElectricBorder noise helpers â”€â”€ */
     _ebRnd(x) { return (Math.sin(x * 12.9898) * 43758.5453) % 1; }
     _ebN2(x, y) {
       const i=Math.floor(x),j=Math.floor(y),fx=x-i,fy=y-j;
@@ -1044,7 +1007,7 @@
         const cx = startX + i * (cardW + gap) + cardW / 2;
         const cy = H / 2 + 15;
 
-        /* Background fill — interactive hit area */
+        /* Background fill â€” interactive hit area */
         const bg = this.add.rectangle(cx, cy, cardW, cardH, cls.color, 0.13)
           .setInteractive({ useHandCursor: true });
 
@@ -1052,10 +1015,10 @@
         const ebg = this.add.graphics();
         this._ebCards.push({ g: ebg, cx, cy, w: cardW, h: cardH, color: cls.color });
 
-        /* ── Content ── */
+        /* â”€â”€ Content â”€â”€ */
         /* Icon */
         this.add.circle(cx, cy - 118, 28, cls.color, 0.85);
-        const clsEmoji = { hunter:'🏹', knight:'⚔️', wizard:'🔮', necromancer:'💀' };
+        const clsEmoji = { hunter:'ðŸ¹', knight:'âš”ï¸', wizard:'ðŸ”®', necromancer:'ðŸ’€' };
         this.add.text(cx, cy - 118, clsEmoji[key] || key[0].toUpperCase(), {
           fontSize:'22px', fontFamily:'system-ui', color:'#fff',
         }).setOrigin(0.5);
@@ -1088,7 +1051,7 @@
 
         /* Perks */
         cls.perks.forEach((p, pi) => {
-          this.add.text(cx, cy + 102 + pi * 18, `• ${p}`, {
+          this.add.text(cx, cy + 102 + pi * 18, `â€¢ ${p}`, {
             fontSize:'10px', fontFamily:'system-ui', color:cls.labelCol,
             wordWrap:{ width: cardW - 22 }, align:'center',
           }).setOrigin(0.5, 0);
@@ -1107,7 +1070,7 @@
         });
       });
 
-      /* ── 1HP Mode toggle ── */
+      /* â”€â”€ 1HP Mode toggle â”€â”€ */
       const is1hp = () => localStorage.getItem('hoa_1hp') === '1';
       const oneBg = this.add.rectangle(W/2, H - 56, 220, 30, 0x7f1d1d, 0.3).setInteractive();
       const oneBorder = this.add.graphics();
@@ -1120,7 +1083,7 @@
         oneBorder.clear();
         oneBorder.lineStyle(on ? 2 : 1, on ? 0xef4444 : 0x4b5563, on ? 0.9 : 0.5);
         oneBorder.strokeRect(W/2 - 110, H - 71, 220, 30);
-        oneLabel.setText(on ? '☠  1HP MODE  —  ACTIVE' : '☠  1HP MODE  —  click to enable');
+        oneLabel.setText(on ? 'â˜   1HP MODE  â€”  ACTIVE' : 'â˜   1HP MODE  â€”  click to enable');
         oneLabel.setColor(on ? '#fca5a5' : '#6b7280');
       };
       refreshOne();
@@ -1147,7 +1110,7 @@
     }
   }
 
-  /* ── GAME ── */
+  /* â”€â”€ GAME â”€â”€ */
   class GameScene extends Phaser.Scene {
     constructor() { super('Game'); }
 
@@ -1241,7 +1204,7 @@
       /* ESC = pause */
       const doPause = () => {
         if (this.dead || this.scene.isActive('LevelUp') || this.scene.isActive('PauseMenu')) return;
-        SFX.pauseSfx();
+
         this.paused = true; this.physics.pause();
         this.scene.pause('Game');
         this.scene.launch('PauseMenu', { game: this });
@@ -1249,7 +1212,6 @@
       this.input.keyboard.on('keydown-ESC', doPause);
       window._triggerPause = doPause;
 
-      SFX.init();
       window._showTouchControls(true);
       this.time.delayedCall(900, () => this.startWave());
     }
@@ -1429,12 +1391,10 @@
       this.cfg = cfg; this.spawned = 0; this.total = cfg.count; this.alive = 0;
       this.events.emit('wave', this.waveNum, cfg.boss);
       if (cfg.boss) {
-        SFX.boss();
         this.time.delayedCall(600, () => this.spawnBoss(cfg));
       } else {
-        SFX.wave();
         if (cfg.waveType === 'horde') {
-          const ann = this.add.text(W/2, H*0.38, '⚡ HORDE WAVE ⚡', {
+          const ann = this.add.text(W/2, H*0.38, 'âš¡ HORDE WAVE âš¡', {
             fontSize:'38px', fontFamily:'system-ui', fontStyle:'bold',
             color:'#f97316', stroke:'#000', strokeThickness:5,
           }).setOrigin(0.5).setAlpha(0);
@@ -1442,7 +1402,7 @@
             this.time.delayedCall(900,()=>this.tweens.add({ targets:ann, alpha:0, scaleX:1.3, scaleY:1.3, duration:600, onComplete:()=>ann.destroy() }))
           });
         } else if (cfg.waveType === 'elite') {
-          const ann = this.add.text(W/2, H*0.38, '★ ELITE WAVE ★', {
+          const ann = this.add.text(W/2, H*0.38, 'â˜… ELITE WAVE â˜…', {
             fontSize:'38px', fontFamily:'system-ui', fontStyle:'bold',
             color:'#fbbf24', stroke:'#000', strokeThickness:5,
           }).setOrigin(0.5).setAlpha(0);
@@ -1481,7 +1441,7 @@
       else if (wn >= 5 && roll < 0.66) { size=21; color=0x7f1d1d; spd*=0.5;  hp*=3.0; type='tank';     }
       else if (wn >= 4 && roll < 0.75) { size=15; color=0x475569; spd*=0.55; hp*=1.8; type='shielder'; }
 
-      // Elite modifier — higher tier = more elites and stronger ones
+      // Elite modifier â€” higher tier = more elites and stronger ones
       const eliteTier = cfg.eliteTier || 0;
       const eliteChance = Math.min(0.45, eliteTier * 0.07);
       const eliteMult   = 1 + eliteTier * 0.5;
@@ -1654,7 +1614,7 @@
       g.eHp = hp; g.eMaxHp = hp; g.eSpd = spd; g.eBaseSpd = spd;
       g.eDmg = dmg; g.eXp = xpVal; g.eSize = size; g.eColor = color; g.eType = type;
       g.isElite = isElite; g.isMini = isMini; g.lastDmgT = 0; g.lastShot = 0;
-      /* Shielder — separate shield graphic that rotates toward player */
+      /* Shielder â€” separate shield graphic that rotates toward player */
       if (type === 'shielder') {
         const shieldG = this.add.graphics();
         const drawShield = (sg, sz) => {
@@ -1704,7 +1664,7 @@
       const x = Phaser.Math.FloatBetween(W * 0.2, W * 0.8);
       const g = this.add.graphics();
       const bs = size;
-      if (bt === 0) { // Colossus — crimson armored titan
+      if (bt === 0) { // Colossus â€” crimson armored titan
         g.fillStyle(0x1a0000, 1); g.fillCircle(0, 0, bs);
         g.fillStyle(bossColors[bt], 1); g.fillCircle(0, -3, bs - 4);
         // shoulder plates
@@ -1732,7 +1692,7 @@
         g.fillStyle(bossEyeCol[bt], 1); g.fillCircle(-bs*0.26, -bs*0.18, bs*0.09); g.fillCircle(bs*0.26, -bs*0.18, bs*0.09);
         g.fillStyle(0x000000, 1); g.fillCircle(-bs*0.26, -bs*0.18, bs*0.04); g.fillCircle(bs*0.26, -bs*0.18, bs*0.04);
 
-      } else if (bt === 1) { // Tempest — storm elemental
+      } else if (bt === 1) { // Tempest â€” storm elemental
         // outer storm ring
         g.lineStyle(6, 0x0e7490, 0.4); g.strokeCircle(0, 0, bs + 18);
         g.lineStyle(4, 0x22d3ee, 0.55); g.strokeCircle(0, 0, bs + 10);
@@ -1755,7 +1715,7 @@
         g.fillStyle(bossEyeCol[bt], 1); g.fillCircle(-bs*0.26, -bs*0.18, bs*0.09); g.fillCircle(bs*0.26, -bs*0.18, bs*0.09);
         g.fillStyle(0x000000, 1); g.fillCircle(-bs*0.26, -bs*0.18, bs*0.04); g.fillCircle(bs*0.26, -bs*0.18, bs*0.04);
 
-      } else if (bt === 2) { // Voidwalker — void demon
+      } else if (bt === 2) { // Voidwalker â€” void demon
         g.fillStyle(0x0a0010, 1); g.fillCircle(0, 0, bs);
         g.fillStyle(bossColors[bt], 1); g.fillCircle(0, -2, bs - 5);
         // void nebula inner
@@ -1782,7 +1742,7 @@
         g.fillStyle(bossEyeCol[bt], 1); g.fillCircle(-bs*0.26, -bs*0.18, bs*0.09); g.fillCircle(bs*0.26, -bs*0.18, bs*0.09);
         g.fillStyle(0x000000, 1); g.fillCircle(-bs*0.26, -bs*0.18, bs*0.04); g.fillCircle(bs*0.26, -bs*0.18, bs*0.04);
 
-      } else { // Dreadnought — ancient war machine
+      } else { // Dreadnought â€” ancient war machine
         g.fillStyle(0x1c0f00, 1); g.fillCircle(0, 0, bs);
         g.fillStyle(bossColors[bt], 1); g.fillCircle(0, -2, bs - 4);
         // armored shoulder plates
@@ -1863,7 +1823,6 @@
       this._vignette.setAlpha(0.7);
       this.tweens.killTweensOf(this._vignette);
       this.tweens.add({ targets:this._vignette, alpha:0, duration:520, ease:'power2.in' });
-      SFX.hurt();
       if (this.ps.hp <= 0) { this.ps.hp = 0; this.onDeath(); }
       return dmg;
     }
@@ -1894,11 +1853,11 @@
       if (!proj.active || !enemy.active) return;
       if (proj.hitSet && proj.hitSet.has(enemy)) return;
 
-      /* Shielder — absorb hit with shield */
+      /* Shielder â€” absorb hit with shield */
       if (enemy.eType === 'shielder' && enemy.shieldHp > 0) {
         enemy.shieldHp--;
         this.hitFlash(enemy);
-        const blk = this.add.text(enemy.x, enemy.y - enemy.eSize - 6, '⛨', {
+        const blk = this.add.text(enemy.x, enemy.y - enemy.eSize - 6, 'â›¨', {
           fontSize: '16px', fontFamily: 'system-ui', color: '#93c5fd', stroke:'#000', strokeThickness:2,
         }).setOrigin(0.5);
         this.tweens.add({ targets: blk, y: blk.y - 22, alpha: 0, duration: 500, onComplete: () => blk.destroy() });
@@ -1925,9 +1884,9 @@
       if (isCrit && this.ps.critPierce && proj.pierceLeft < this.ps.critPierce) proj.pierceLeft = this.ps.critPierce;
       // Berserker stacking bonus
       const bsrkMult = this.ps.bsrkPerKill ? 1 + Math.min(this.ps.bsrkMax, (this.waveKills||0) * this.ps.bsrkPerKill) : 1;
-      // Iron Will — bonus damage when low HP
+      // Iron Will â€” bonus damage when low HP
       const ironWillMult = (this.ps.ironWill && this.ps.hp < this.ps.maxHp * 0.30) ? this.ps.ironWill : 1;
-      // Marked for Death — mark on first hit, bonus on subsequent hits
+      // Marked for Death â€” mark on first hit, bonus on subsequent hits
       const markMult = (this.ps.markMult && enemy.marked) ? this.ps.markMult : 1;
       if (this.ps.markMult && !enemy.marked) enemy.marked = true;
       // Phantom Shot counter
@@ -1952,7 +1911,7 @@
       enemy.eHp -= dmg;
       this.totalDmg = (this.totalDmg || 0) + dmg;
       this.hitFlash(enemy);
-      // Vampiric Strike — leech
+      // Vampiric Strike â€” leech
       if (this.ps.vStrike) {
         const leechMult = (this.ps.bloodPact && this.ps.hp < this.ps.maxHp * 0.30) ? (this.ps.bloodPact || 1) : 1;
         this.ps.hp = Math.min(this.ps.maxHp, this.ps.hp + Math.max(1, Math.floor(dmg * this.ps.vStrike * leechMult)));
@@ -1992,7 +1951,7 @@
         if (this.ps.leaveFire) this.spawnFirePuddle(enemy.x, enemy.y);
       }
 
-      // Venomous — apply poison DOT
+      // Venomous â€” apply poison DOT
       if (this.ps.poisonDmg && !proj.isRicochet) {
         const now = this.time.now;
         enemy.poisonEnd = now + this.ps.poisonDur;
@@ -2006,7 +1965,7 @@
         this.time.delayedCall(2000, () => { if (enemy.active) enemy.eSpd = enemy.eBaseSpd; });
       }
 
-      // Explosive Rounds — splash AOE (hunter, no recursion on ricochet/phantom)
+      // Explosive Rounds â€” splash AOE (hunter, no recursion on ricochet/phantom)
       if (this.ps.explodeRange && !proj.isRicochet && !proj.isExplosion) {
         const ex = enemy.x, ey = enemy.y, er = this.ps.explodeRange;
         const expl = this.add.circle(ex, ey, 6, 0xff8c00, 0.9);
@@ -2020,7 +1979,7 @@
         });
       }
 
-      // Overload — every Nth fireball triggers Frost Nova
+      // Overload â€” every Nth fireball triggers Frost Nova
       if (proj.isFireball && this.ps.overloadEvery) {
         this.overloadCount++;
         if (this.overloadCount >= this.ps.overloadEvery) {
@@ -2033,12 +1992,12 @@
         }
       }
 
-      // Void Rift — leave damaging zone where fireball lands
+      // Void Rift â€” leave damaging zone where fireball lands
       if (proj.isFireball && this.ps.voidRift) {
         this.spawnVoidRift(enemy.x, enemy.y);
       }
 
-      // Ricochet — spawn bouncing fragments
+      // Ricochet â€” spawn bouncing fragments
       if (this.ps.ricochetCount && !proj.isRicochet) {
         const targets = this.enemies.getChildren()
           .filter(e => e.active && e !== enemy)
@@ -2058,7 +2017,7 @@
         });
       }
 
-      // Chain Reaction — delayed secondary explosion
+      // Chain Reaction â€” delayed secondary explosion
       if (proj.isFireball && this.ps.chainReact) {
         const ex = enemy.x, ey = enemy.y;
         this.time.delayedCall(280, () => {
@@ -2151,7 +2110,7 @@
       if (enemy.eliteLabel) { enemy.eliteLabel.destroy(); enemy.eliteLabel = null; }
       if (enemy.shieldArc)  { enemy.shieldArc.destroy();  enemy.shieldArc  = null; }
 
-      /* Necromancer — raise dead (not bosses, not already-minions) */
+      /* Necromancer â€” raise dead (not bosses, not already-minions) */
       if (this.ps.raiseDead && !enemy.isBoss && !enemy.isMinion && !enemy.isMini) {
         const chance = this.ps.raiseChance || 0.35;
         if (Math.random() < chance) this.spawnMinion(enemy.x, enemy.y, enemy.eBaseSpd);
@@ -2167,7 +2126,6 @@
         }
       }
 
-      SFX.kill();
       /* XP orb with pulse tween */
       const orb = this.add.circle(enemy.x, enemy.y, 5, 0xa78bfa, 0.9);
       this.physics.add.existing(orb);
@@ -2194,7 +2152,7 @@
       if (enemy.isBoss) { this.boss = null; this.events.emit('bossDead'); }
       if (this.ps.lifeSteal > 0) this.ps.hp = Math.min(this.ps.maxHp, this.ps.hp + this.ps.lifeSteal);
 
-      // Reaper — death explosion (no chain recursion)
+      // Reaper â€” death explosion (no chain recursion)
       if (this.ps.reaperDmg && !enemy.isMini && !enemy.fromReaper) {
         const rx = enemy.x, ry = enemy.y, rr = this.ps.reaperRange;
         const expl = this.add.circle(rx, ry, 8, 0x6d28d9, 0.85);
@@ -2208,23 +2166,23 @@
         });
       }
 
-      // Haste — speed burst on kill
+      // Haste â€” speed burst on kill
       if (this.ps.hasteBonus) this.hasteUntil = this.time.now + this.ps.hasteDur;
 
       this.ps.kills++;
       this.waveKills++;
 
-      // Soul Eater — permanent damage gain per 10 kills
+      // Soul Eater â€” permanent damage gain per 10 kills
       if (this.ps.soulEaterDmg && this.ps.kills % 10 === 0) this.ps.dmg += this.ps.soulEaterDmg;
 
-      // Bone Armor — gain stack on kill
+      // Bone Armor â€” gain stack on kill
       if (this.ps.boneArmor) this.ps.boneStacks = Math.min(this.ps.boneMax, (this.ps.boneStacks || 0) + 1);
 
-      // Blood Pact — kill heal when below 30%
+      // Blood Pact â€” kill heal when below 30%
       if (this.ps.bloodPactKillHeal && this.ps.hp < this.ps.maxHp * 0.30)
         this.ps.hp = Math.min(this.ps.maxHp, this.ps.hp + Math.floor(this.ps.maxHp * this.ps.bloodPactKillHeal));
 
-      // Last Rites — boss kill bonus
+      // Last Rites â€” boss kill bonus
       if (enemy.isBoss && this.ps.bossHeal) {
         this.ps.hp = Math.min(this.ps.maxHp, this.ps.hp + this.ps.bossHeal);
         this.bossDmgUntil = this.time.now + this.ps.bossDmgDur;
@@ -2242,7 +2200,6 @@
       const type = pu.pType;
       if (pu._inner && pu._inner.active) pu._inner.destroy();
       pu.destroy();
-      SFX.pickup();
       const floatTxt = (txt, col) => {
         const t = this.add.text(this.pg.x, this.pg.y - 24, txt, {
           fontSize:'14px', fontFamily:'system-ui', fontStyle:'bold', color:col, stroke:'#000', strokeThickness:3,
@@ -2279,7 +2236,6 @@
     }
 
     doLevelUp() {
-      SFX.levelUp();
       window._showTouchControls(false);
       this.paused = true; this.physics.pause();
       this.scene.pause('Game');
@@ -2335,13 +2291,13 @@
       const all = this.enemies.getChildren().filter(e => e.active);
       if (!all.length) return;
 
-      /* Closest enemy — always hit regardless of distance */
+      /* Closest enemy â€” always hit regardless of distance */
       const closest = all.reduce((a, b) =>
         Phaser.Math.Distance.Between(px, py, a.x, a.y) <=
         Phaser.Math.Distance.Between(px, py, b.x, b.y) ? a : b
       );
 
-      /* White burst rings — use arc() so scaleX/Y expand from player centre */
+      /* White burst rings â€” use arc() so scaleX/Y expand from player centre */
       for (let i = 0; i < 3; i++) {
         const ring = this.add.arc(px, py, 20 + i * 8, 0, 360, false, 0xffffff, 0);
         ring.setStrokeStyle(3 - i, 0xffffff, 1 - i * 0.25);
@@ -2375,7 +2331,6 @@
     }
 
     fireAt(target) {
-      SFX.shoot();
       const angle = Phaser.Math.Angle.Between(this.pg.x, this.pg.y, target.x, target.y);
       const isWizard = this.ps.class === 'wizard';
       const isNecro  = this.ps.class === 'necromancer';
@@ -2396,7 +2351,7 @@
         p.fillStyle(0xa78bfa, 0.6); p.fillCircle(r*0.2, r*0.2, r*0.25);
         p.isNecroOrb = true;
       } else {
-        // Hunter arrow — drawn along the angle of travel
+        // Hunter arrow â€” drawn along the angle of travel
         const ar = r * 1.1;
         const len = 18 + ar * 1.8;
         // shaft
@@ -2484,7 +2439,7 @@
         if (e.eHp <= 0) { this.killEnemy(e); return; }
         hitEnemies.push({ e, dmg });
       });
-      // Chain Lightning — arcs from each melee-hit enemy to nearby ones
+      // Chain Lightning â€” arcs from each melee-hit enemy to nearby ones
       if (this.ps.chainCount && hitEnemies.length) {
         hitEnemies.forEach(({ e, dmg }) => {
           if (!e.active) return;
@@ -2571,7 +2526,7 @@
         vx = tc.vx * this.ps.spd;
         vy = tc.vy * this.ps.spd;
       }
-      /* Touch dash — detect rising edge */
+      /* Touch dash â€” detect rising edge */
       const touchDashNow = tc && tc.dashPressed;
       if (touchDashNow && !this._lastTouchDash) this.keys.dash._justPressed = true;
       this._lastTouchDash = touchDashNow;
@@ -2588,7 +2543,6 @@
           this.dashUntil = time + 190;
           this.dashCd = time + 1400;
           this.shieldActive = true; this.shieldUntilReady = time + 230;
-          SFX.dash();
           for (let i = 0; i < 4; i++) {
             this.time.delayedCall(i * 40, () => {
               if (this.dead) return;
@@ -2710,11 +2664,11 @@
             if (time > e.chargeTimer) { e.chargeState = 'patrol'; e.chargeTimer = time + Phaser.Math.Between(1800, 3500); }
           }
         } else if (e.isBoss) {
-          /* ── BOSS AI by type ── */
+          /* â”€â”€ BOSS AI by type â”€â”€ */
           const bt = e.bossType ?? 0;
           const bhp = e.eHp / e.eMaxHp;
 
-          // Phase 2 enrage at 50% HP — faster + bigger attacks
+          // Phase 2 enrage at 50% HP â€” faster + bigger attacks
           if (!e.phase2 && bhp <= 0.5) {
             e.phase2 = true;
             e.eSpd = e.eBaseSpd * 1.5;
@@ -2733,7 +2687,7 @@
           }
 
           if (bt === 0) {
-            /* ── COLOSSUS: charges + radial burst ── */
+            /* â”€â”€ COLOSSUS: charges + radial burst â”€â”€ */
             if (e.chargeState === 'patrol') {
               const a = Phaser.Math.Angle.Between(e.x, e.y, px, py);
               e.body.setVelocity(Math.cos(a)*e.eSpd*0.55, Math.sin(a)*e.eSpd*0.55);
@@ -2741,7 +2695,7 @@
                 e.chargeState = 'windup'; e.chargeTimer = time + 900;
                 e.chargeAngle = Phaser.Math.Angle.Between(e.x, e.y, px, py);
                 e.body.setVelocity(0, 0);
-                // Windup indicator — red arrow
+                // Windup indicator â€” red arrow
                 const warn = this.add.graphics();
                 warn.fillStyle(0xff0000, 0.75);
                 warn.fillTriangle(0,-e.eSize-22, -12,-e.eSize-8, 12,-e.eSize-8);
@@ -2770,7 +2724,7 @@
             }
 
           } else if (bt === 1) {
-            /* ── TEMPEST: orbits + spiral rings ── */
+            /* â”€â”€ TEMPEST: orbits + spiral rings â”€â”€ */
             e.orbitAngle = (e.orbitAngle || 0) + delta * 0.0012 * (e.phase2 ? 1.6 : 1);
             const dist1 = Phaser.Math.Distance.Between(px, py, e.x, e.y);
             const pref1 = 240;
@@ -2785,7 +2739,7 @@
               const a = Phaser.Math.Angle.Between(e.x, e.y, px, py) + Math.PI/2;
               e.body.setVelocity(Math.cos(a)*e.eSpd*0.9, Math.sin(a)*e.eSpd*0.9);
             }
-            // Spiral ring every 3.5s — player must dodge through gaps
+            // Spiral ring every 3.5s â€” player must dodge through gaps
             const spiralCd = e.phase2 ? 2000 : 3500;
             if (time - e.lastSpecial > spiralCd) {
               e.lastSpecial = time;
@@ -2803,7 +2757,7 @@
             }
 
           } else if (bt === 2) {
-            /* ── VOIDWALKER: teleports + void zones ── */
+            /* â”€â”€ VOIDWALKER: teleports + void zones â”€â”€ */
             const a = Phaser.Math.Angle.Between(e.x, e.y, px, py);
             e.body.setVelocity(Math.cos(a)*e.eSpd*0.4, Math.sin(a)*e.eSpd*0.4);
             const tpCd = e.phase2 ? 2500 : 4000;
@@ -2834,11 +2788,11 @@
             }
 
           } else {
-            /* ── DREADNOUGHT: all mechanics combined ── */
+            /* â”€â”€ DREADNOUGHT: all mechanics combined â”€â”€ */
             // Movement: aggressive chase
             const a = Phaser.Math.Angle.Between(e.x, e.y, px, py);
             e.body.setVelocity(Math.cos(a)*e.eSpd*0.75, Math.sin(a)*e.eSpd*0.75);
-            // Cycle: charge → ring → mines, every 2.5s
+            // Cycle: charge â†’ ring â†’ mines, every 2.5s
             const dreadCd = e.phase2 ? 1800 : 2800;
             if (time - e.lastSpecial > dreadCd) {
               e.lastSpecial = time;
@@ -2892,7 +2846,7 @@
         /* Elite aura + label follow */
         if (e.eliteAura) e.eliteAura.setPosition(e.x, e.y);
         if (e.eliteLabel) e.eliteLabel.setPosition(e.x, e.y - e.eSize - 16);
-        /* Shielder — rotate shield arc toward player and show shield HP bar */
+        /* Shielder â€” rotate shield arc toward player and show shield HP bar */
         if (e.shieldArc && e.shieldHp > 0) {
           const ang = Phaser.Math.Angle.Between(e.x, e.y, px, py);
           e.shieldArc.setPosition(e.x, e.y);
@@ -3040,7 +2994,7 @@
         });
       }
 
-      /* Sentinel — slow nearby enemies */
+      /* Sentinel â€” slow nearby enemies */
       if (this.ps.sentinelRange) {
         this.enemies.getChildren().forEach(e => {
           if (!e.active) return;
@@ -3169,7 +3123,7 @@
     breakShield(time) {
       this.shieldActive = false;
       this.shieldUntilReady = time + this.ps.shieldCd;
-      // Crack shards — small arcs that scatter outward
+      // Crack shards â€” small arcs that scatter outward
       const px = this.pg.x, py = this.pg.y;
       for (let i = 0; i < 6; i++) {
         const angle = (i / 6) * Math.PI * 2 + Math.random() * 0.4;
@@ -3232,7 +3186,7 @@
       if (this.dead) return;
       window._showTouchControls(false);
       window._triggerPause = null;
-      // Undying — revive instead of dying
+      // Undying â€” revive instead of dying
       if (this.ps.undying && this.ps.reviveCount > 0) {
         this.ps.reviveCount--;
         this.ps.hp = Math.floor(this.ps.maxHp * (this.ps.undyingHp || 0.25));
@@ -3240,7 +3194,6 @@
         return;
       }
       this.dead = true; this.physics.pause();
-      SFX.death();
       const timeSec = Math.floor((Date.now() - this._runStart) / 1000);
       const baseSouls = Math.floor(this.waveNum * 3 + this.ps.kills * 0.15);
       const souls = Math.floor(baseSouls * (this.ps.soulMult || 1));
@@ -3263,7 +3216,7 @@
     }
   }
 
-  /* ── PAUSE MENU ── */
+  /* â”€â”€ PAUSE MENU â”€â”€ */
   class PauseMenuScene extends Phaser.Scene {
     constructor() { super('PauseMenu'); }
     init(d) { this.game_ = d.game; }
@@ -3281,15 +3234,15 @@
         b.on('pointerover', ()=>b.setAlpha(1)); b.on('pointerout', ()=>b.setAlpha(0.92));
         b.on('pointerdown', fn);
       };
-      mkBtn('▶  RESUME', cy-30, 0x4c1d95, ()=>this.resumeGame());
-      mkBtn('↩  MAIN MENU', cy+28, 0x3b0764, ()=>{
+      mkBtn('â–¶  RESUME', cy-30, 0x4c1d95, ()=>this.resumeGame());
+      mkBtn('â†©  MAIN MENU', cy+28, 0x3b0764, ()=>{
         this.scene.stop('PauseMenu'); this.scene.stop('Game'); this.scene.stop('UI');
         localStorage.removeItem('hoa_daily'); this.scene.start('Menu');
       });
       this.add.text(cx, cy+84, 'SPACE or ESC to resume', {
         fontSize:'12px', fontFamily:'system-ui', color:'rgba(255,255,255,0.28)',
       }).setOrigin(0.5);
-      this.add.text(cx, cy+108, 'WASD / Arrows to move  ·  SPACE to dash', {
+      this.add.text(cx, cy+108, 'WASD / Arrows to move  Â·  SPACE to dash', {
         fontSize:'11px', fontFamily:'system-ui', color:'rgba(255,255,255,0.2)',
       }).setOrigin(0.5);
       this.input.keyboard.on('keydown-ESC',   ()=>this.resumeGame());
@@ -3305,7 +3258,7 @@
     }
   }
 
-  /* ── UI ── */
+  /* â”€â”€ UI â”€â”€ */
   class UIScene extends Phaser.Scene {
     constructor() { super('UI'); }
     create() {
@@ -3316,7 +3269,7 @@
       this.add.rectangle(16, H - 24, 210, 8, 0x1a0033).setOrigin(0);
       this.xpBar  = this.add.rectangle(16, H - 24, 0, 8, 0x7c3aed).setOrigin(0);
 
-      /* Boss HP bar — top centre, hidden until boss spawns */
+      /* Boss HP bar â€” top centre, hidden until boss spawns */
       const bw = Math.min(520, W * 0.5);
       this.bossBarBg   = this.add.rectangle(W/2, 8, bw, 18, 0x3b0000).setOrigin(0.5, 0).setAlpha(0);
       this.bossBarFill = this.add.rectangle(W/2 - bw/2, 8, bw, 18, 0xdc2626).setOrigin(0, 0).setAlpha(0);
@@ -3334,10 +3287,10 @@
         badge.fillStyle(0x7f1d1d, 0.85); badge.fillRoundedRect(0, 0, 78, 18, 4);
         badge.lineStyle(1, 0xef4444, 0.9); badge.strokeRoundedRect(0, 0, 78, 18, 4);
         badge.setPosition(W/2 - 39, 10);
-        this.add.text(W/2, 19, '☠  1HP MODE', { fontSize:'11px', fontFamily:'system-ui', fontStyle:'bold', color:'#fca5a5' }).setOrigin(0.5, 0.5);
+        this.add.text(W/2, 19, 'â˜   1HP MODE', { fontSize:'11px', fontFamily:'system-ui', fontStyle:'bold', color:'#fca5a5' }).setOrigin(0.5, 0.5);
       }
 
-      /* Trait panel — bottom-right, pills stack upward */
+      /* Trait panel â€” bottom-right, pills stack upward */
       this._traitPills = [];
       this._traitContainer = this.add.container(W - 10, H - 36);
       this._lastTraitCount = -1;
@@ -3412,7 +3365,7 @@
     }
   }
 
-  /* ── LEVEL UP ── */
+  /* â”€â”€ LEVEL UP â”€â”€ */
   class LevelUpScene extends Phaser.Scene {
     constructor() { super('LevelUp'); }
     init(d) { this.ps = d.ps; this.game_ = d.game; }
@@ -3463,7 +3416,7 @@
         this.tweens.add({ targets: card, alpha: { from: 0, to: 0.97 }, y: { from: cy + 20, to: cy }, duration: 270, delay: i * 90, ease: 'power2.out' });
       });
 
-      /* ── CURSE BUTTON ── */
+      /* â”€â”€ CURSE BUTTON â”€â”€ */
       this._buildCurseBtn();
     }
 
@@ -3480,10 +3433,10 @@
         .setStrokeStyle(1.5, 0xef4444, 0.8)
         .setInteractive({ useHandCursor: true });
 
-      this.add.text(bx, by - 8, `⚠  TAKE A CURSE: ${curse.name}`, {
+      this.add.text(bx, by - 8, `âš   TAKE A CURSE: ${curse.name}`, {
         fontSize: '13px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#ef4444',
       }).setOrigin(0.5);
-      this.add.text(bx, by + 10, `${curse.desc}  —  +${souls} souls`, {
+      this.add.text(bx, by + 10, `${curse.desc}  â€”  +${souls} souls`, {
         fontSize: '11px', fontFamily: 'system-ui', color: '#fca5a5',
       }).setOrigin(0.5);
 
@@ -3497,7 +3450,7 @@
     }
   }
 
-  /* ── END-OF-RUN SUMMARY ── */
+  /* â”€â”€ END-OF-RUN SUMMARY â”€â”€ */
   class SummaryScene extends Phaser.Scene {
     constructor() { super('Summary'); }
     init(d) {
@@ -3549,7 +3502,7 @@
         const bp = BLUEPRINTS.find(b => b.id === id);
         return bp ? bp.name : id;
       });
-      const traitStr = traitNames.length ? traitNames.join('  ·  ') : 'None';
+      const traitStr = traitNames.length ? traitNames.join('  Â·  ') : 'None';
       this.add.text(cx, traitsY + 24, traitStr, {
         fontSize: '12px', fontFamily: 'system-ui', color: '#a78bfa',
         wordWrap: { width: W - 80 }, align: 'center',
@@ -3574,16 +3527,16 @@
       });
 
       /* Share score button */
-      const shareTxt = this.add.text(cx, H - 38, '📋  Share Score', {
+      const shareTxt = this.add.text(cx, H - 38, 'ðŸ“‹  Share Score', {
         fontSize:'13px', fontFamily:'system-ui', color:'rgba(167,139,250,0.65)',
       }).setOrigin(0.5).setInteractive({ useHandCursor:true });
       shareTxt.on('pointerover', ()=>shareTxt.setColor('#a78bfa'));
       shareTxt.on('pointerout',  ()=>shareTxt.setColor('rgba(167,139,250,0.65)'));
       shareTxt.on('pointerdown', ()=>{
-        const txt = `🏆 Halls of Aurora — Wave ${this.wave} | ${this.kills} kills | Level ${this.level} | ${mm}:${ss}\nPlay at: halls-of-aurora.vercel.app`;
+        const txt = `ðŸ† Halls of Aurora â€” Wave ${this.wave} | ${this.kills} kills | Level ${this.level} | ${mm}:${ss}\nPlay at: halls-of-aurora.vercel.app`;
         navigator.clipboard.writeText(txt).then(()=>{
-          shareTxt.setText('✓  Copied to clipboard!');
-          this.time.delayedCall(2200, ()=>shareTxt.setText('📋  Share Score'));
+          shareTxt.setText('âœ“  Copied to clipboard!');
+          this.time.delayedCall(2200, ()=>shareTxt.setText('ðŸ“‹  Share Score'));
         }).catch(()=>{});
       });
 
@@ -3592,7 +3545,7 @@
     }
   }
 
-  /* ── META UPGRADE SCENE ── */
+  /* â”€â”€ META UPGRADE SCENE â”€â”€ */
   class MetaScene extends Phaser.Scene {
     constructor() { super('Meta'); }
     init(d) { this.earned = d.souls; this.shown = d.shown ?? d.souls; this.wave = d.wave; this.kills = d.kills; this.level = d.level || 1; }
@@ -3607,7 +3560,7 @@
         fontSize: '52px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#dc2626',
       }).setOrigin(0.5);
 
-      this.add.text(W / 2, 115, `Wave ${this.wave}  ·  ${this.kills} kills  ·  +${this.shown} souls earned`, {
+      this.add.text(W / 2, 115, `Wave ${this.wave}  Â·  ${this.kills} kills  Â·  +${this.shown} souls earned`, {
         fontSize: '18px', fontFamily: 'system-ui', color: '#fff',
       }).setOrigin(0.5);
 
@@ -3665,7 +3618,7 @@
         }
       });
 
-      /* Leaderboard moved to global overlay (🏆 button, top-left) */
+      /* Leaderboard moved to global overlay (ðŸ† button, top-left) */
 
       const btnY = Math.max(205 + rows * (uh + 10) + 20, H - 65);
       const btn = this.add.text(W / 2 - 80, btnY, '[ Play Again ]', {
@@ -3675,7 +3628,7 @@
       btn.on('pointerdown', () => this.scene.start('Menu'));
 
       /* Change name button */
-      const nameBtn = this.add.text(W / 2 + 100, btnY, `[ ${localStorage.getItem('hoa_name') || '?'} · change ]`, {
+      const nameBtn = this.add.text(W / 2 + 100, btnY, `[ ${localStorage.getItem('hoa_name') || '?'} Â· change ]`, {
         fontSize: '13px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.3)',
       }).setOrigin(0.5).setInteractive({ useHandCursor: true });
       nameBtn.on('pointerover', () => nameBtn.setColor('rgba(255,255,255,0.7)'));
