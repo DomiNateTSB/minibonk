@@ -244,6 +244,10 @@
     { id:'vitality',   name:'Vitality',     desc:'+0.4 HP regen per sec',     apply:(p,r)=>{ p.regen=(p.regen||0)+r*0.4; } },
     { id:'arcanePow',  name:'Arcane Power', desc:'+15% starting proj size',   apply:(p,r)=>{ p.projSize*=Math.pow(1.15,r); } },
     { id:'fortune',    name:'Fortune',      desc:'+30 starting XP range',     apply:(p,r)=>{ p.xpRange+=r*30; } },
+    { id:'unlock_hunter', name:'🏹 Hunter: Eagle Eyes',   desc:'Hunter starts with infinite proj range', apply:(p,r)=>{ if(r>0&&p.class==='hunter') p.projLifetime=999999; } },
+    { id:'unlock_knight', name:'⚔️ Knight: Iron Will',    desc:'Knight starts with +100 max HP',         apply:(p,r)=>{ if(r>0&&p.class==='knight'){ p.maxHp+=100; p.hp+=100; } } },
+    { id:'unlock_wizard', name:'🔮 Wizard: Arcane Power', desc:'Wizard starts with +25% damage',         apply:(p,r)=>{ if(r>0&&p.class==='wizard') p.dmg*=1.25; } },
+    { id:'unlock_necro',  name:'💀 Necro: Dark Pact',     desc:'Necromancer starts with Raise Dead',     apply:(p,r)=>{ if(r>0&&p.class==='necromancer'){ p.raiseDead=true; p.raiseChance=0.35; } } },
   ];
   const META_COSTS = [200, 600, 1800, 5000, 14000];
   const META_MAX   = META_COSTS.length;
@@ -258,22 +262,78 @@
   }
   function saveMeta(d) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(d)); } catch {} }
 
+  /* ── SFX ENGINE (Web Audio API, no external files) ── */
+  const SFX = {
+    ctx: null, vol: 0.32,
+    init() { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch {} },
+    tone(freq, dur, type='sine', vol, delay=0) {
+      if (!this.ctx) return;
+      const v = vol ?? this.vol;
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0, this.ctx.currentTime + delay);
+      g.gain.linearRampToValueAtTime(v, this.ctx.currentTime + delay + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + delay + dur);
+      const o = this.ctx.createOscillator(); o.type = type; o.frequency.value = freq;
+      o.connect(g); g.connect(this.ctx.destination);
+      o.start(this.ctx.currentTime + delay); o.stop(this.ctx.currentTime + delay + dur);
+    },
+    noise(dur, vol=0.15, delay=0) {
+      if (!this.ctx) return;
+      const buf = this.ctx.createBuffer(1, Math.ceil(this.ctx.sampleRate * dur), this.ctx.sampleRate);
+      const data = buf.getChannelData(0); for (let i=0;i<data.length;i++) data[i]=(Math.random()*2-1);
+      const src = this.ctx.createBufferSource(); src.buffer = buf;
+      const g2 = this.ctx.createGain(); g2.gain.setValueAtTime(vol, this.ctx.currentTime+delay);
+      g2.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime+delay+dur);
+      src.connect(g2); g2.connect(this.ctx.destination); src.start(this.ctx.currentTime+delay);
+    },
+    shoot()    { this.tone(920,0.07,'sawtooth',0.1); this.tone(680,0.05,'sine',0.07,0.02); },
+    hitEnemy() { this.noise(0.06,0.16); this.tone(180,0.08,'square',0.08); },
+    kill()     { this.tone(480,0.05,'sine',0.14); this.tone(720,0.07,'sine',0.1,0.04); },
+    levelUp()  { [523,659,784,1047].forEach((f,i)=>this.tone(f,0.2,'sine',0.18,i*0.09)); },
+    hurt()     { this.noise(0.12,0.38); this.tone(110,0.14,'sawtooth',0.18); },
+    wave()     { [200,280,380].forEach((f,i)=>this.tone(f,0.28,'sine',0.13,i*0.11)); },
+    boss()     { [75,55,95].forEach((f,i)=>this.tone(f,0.55,'sawtooth',0.27,i*0.18)); this.noise(0.4,0.17,0.1); },
+    pickup()   { [880,1100,1320].forEach((f,i)=>this.tone(f,0.1,'sine',0.14,i*0.05)); },
+    dash()     { this.tone(420,0.04,'sine',0.09); this.tone(640,0.07,'sine',0.07,0.03); },
+    death()    { this.noise(0.35,0.42); [280,190,110].forEach((f,i)=>this.tone(f,0.38,'sawtooth',0.22,i*0.14)); },
+    pauseSfx() { this.tone(300,0.1,'sine',0.12); this.tone(200,0.12,'sine',0.1,0.08); },
+  };
+
+  /* ── SEEDED RNG for Daily Challenge ── */
+  function mulberry32(seed) {
+    return function() {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function getDailySeed() {
+    const d = new Date(); return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+  }
+  let _dailyRng = null;
+
   function waveCfg(n) {
     const boss = n % 5 === 0;
-    const late = Math.max(0, n - 15);           // extra scaling after wave 15
-    const surge = Math.max(0, n - 30);          // brutal scaling after wave 30
+    let waveType = 'normal';
+    if (!boss && n >= 4 && n % 3 === 0) waveType = 'horde';
+    if (!boss && n >= 7 && n % 7 === 0) waveType = 'elite';
+    const late = Math.max(0, n - 15);
+    const surge = Math.max(0, n - 30);
+    const base = boss ? Math.floor(20+n*8+late*4) : Math.floor(30+n*15+late*10+surge*8);
+    const baseInt = Math.max(50, 320 - n * 22);
     return {
-      n, boss,
-      count:    boss ? Math.floor(20 + n * 8 + late * 4)
-                     : Math.floor(30 + n * 15 + late * 10 + surge * 8),
-      interval: Math.max(50, 320 - n * 22),     // floor 50ms (slightly tighter)
-      hp:       Math.floor(25 + n * 22 + late * late * 2 + surge * surge * 3),
-      speed:    Math.min(280, 58 + n * 3.5 + late * 2 + surge * 1.5),
-      dmg:      Math.floor(8 + n * 2 + late * 0.8 + surge * 0.6),
+      n, boss, waveType,
+      count:    waveType === 'horde' ? base * 2 : base,
+      interval: waveType === 'horde' ? Math.max(28, baseInt * 0.44) : baseInt,
+      hp:       Math.floor((25+n*22+late*late*2+surge*surge*3) * (waveType==='elite' ? 1.6 : 1)),
+      speed:    Math.min(280, 58 + n*3.5 + late*2 + surge*1.5),
+      dmg:      Math.floor(8 + n*2 + late*0.8 + surge*0.6),
       xpVal:    4 + n * 2,
-      eliteTier:Math.floor(n / 7),              // every 7 waves a new elite tier
-      bossHp:   Math.floor(500 + n * 200 + late * late * 12 + surge * surge * 8),
-      bossType: (Math.floor(n / 5) - 1) % 4,   // cycles through 4 boss archetypes
+      eliteAll: waveType === 'elite',
+      eliteTier:Math.floor(n / 7),
+      bossHp:   Math.floor(500 + n*200 + late*late*12 + surge*surge*8),
+      bossType: (Math.floor(n / 5) - 1) % 4,
     };
   }
 
@@ -720,7 +780,26 @@
         this.tweens.add({ targets: hint, alpha: 0, duration: 700, yoyo: true, repeat: -1 })
       });
 
+      /* Daily Challenge button */
+      const dailyBtn = this.add.text(cx, cy + 148, '🗓  Daily Challenge', {
+        fontSize:'14px', fontFamily:'system-ui', fontStyle:'bold', color:'#fbbf24',
+      }).setOrigin(0.5).setInteractive({ useHandCursor:true }).setAlpha(0);
+      dailyBtn.on('pointerover', ()=>dailyBtn.setAlpha(1));
+      dailyBtn.on('pointerout',  ()=>dailyBtn.setAlpha(0.8));
+      dailyBtn.on('pointerdown', ()=>{
+        localStorage.setItem('hoa_daily','1');
+        const goDaily = () => { this.cameras.main.fadeOut(350,0,0,0); this.time.delayedCall(370,()=>this.scene.start('ClassSelect')); };
+        if (!localStorage.getItem('hoa_name')) {
+          const ov = document.getElementById('name-overlay'); ov.style.display='flex';
+          const inp = document.getElementById('name-input'); inp.focus();
+          const sub = ()=>{ const n=inp.value.trim().slice(0,16); if(!n)return; localStorage.setItem('hoa_name',n); ov.style.display='none'; goDaily(); };
+          document.getElementById('name-submit').onclick = sub; inp.onkeydown = e=>{ if(e.key==='Enter') sub(); };
+        } else { goDaily(); }
+      });
+      this.tweens.add({ targets:dailyBtn, alpha:0.8, duration:500, delay:700 });
+
       const startGame = () => {
+        localStorage.removeItem('hoa_daily');
         this.cameras.main.fadeOut(350, 0, 0, 0);
         this.time.delayedCall(370, () => { this.scene.start('ClassSelect'); });
       };
@@ -1003,12 +1082,17 @@
       this.ps.traits = []; this.ps._curseSouls = 0;
       this.dead     = false; this.paused = false;
       this.orbitals = [];
+      this.dashCd = 0; this.dashUntil = 0; this.dashDir = {x:0,y:0};
+      this._runStart = Date.now();
+      this.isDaily = localStorage.getItem('hoa_daily') === '1';
+      if (this.isDaily) _dailyRng = mulberry32(getDailySeed());
 
       this.enemies     = this.physics.add.group();
       this.projectiles = this.add.group();
       this.xpOrbs      = this.physics.add.group();
       this.enemyProjs  = this.add.group();
       this.minions     = this.physics.add.group();
+      this.pickups     = this.physics.add.group();
 
       /* Floor grid */
       const grid = this.add.graphics();
@@ -1027,13 +1111,32 @@
       this.keys = this.input.keyboard.addKeys({
         up: 'W', down: 'S', left: 'A', right: 'D',
         up2: 'UP', down2: 'DOWN', left2: 'LEFT', right2: 'RIGHT',
+        dash: 'SPACE',
       });
 
       this.physics.add.overlap(this.projectiles, this.enemies,  this.onHit,       null, this);
       this.physics.add.overlap(this.pg,          this.xpOrbs,   this.onXP,        null, this);
       this.physics.add.overlap(this.pg,          this.enemyProjs,this.onEnemyProj, null, this);
       this.physics.add.overlap(this.minions,     this.enemies,   this.onMinionHit, null, this);
+      this.physics.add.overlap(this.pg,          this.pickups,   this.onPickup,    null, this);
 
+      /* Vignette overlay for damage flash */
+      this._vignette = this.add.graphics().setDepth(99).setAlpha(0);
+      this._vignette.fillStyle(0xff0000, 1);
+      const vw = 48;
+      this._vignette.fillRect(0,0,W,vw); this._vignette.fillRect(0,H-vw,W,vw);
+      this._vignette.fillRect(0,0,vw,H); this._vignette.fillRect(W-vw,0,vw,H);
+
+      /* ESC = pause */
+      this.input.keyboard.on('keydown-ESC', () => {
+        if (this.dead || this.scene.isActive('LevelUp') || this.scene.isActive('PauseMenu')) return;
+        SFX.pauseSfx();
+        this.paused = true; this.physics.pause();
+        this.scene.pause('Game');
+        this.scene.launch('PauseMenu', { game: this });
+      });
+
+      SFX.init();
       this.time.delayedCall(900, () => this.startWave());
     }
 
@@ -1211,7 +1314,29 @@
       const cfg = waveCfg(this.waveNum);
       this.cfg = cfg; this.spawned = 0; this.total = cfg.count; this.alive = 0;
       this.events.emit('wave', this.waveNum, cfg.boss);
-      if (cfg.boss) this.time.delayedCall(600, () => this.spawnBoss(cfg));
+      if (cfg.boss) {
+        SFX.boss();
+        this.time.delayedCall(600, () => this.spawnBoss(cfg));
+      } else {
+        SFX.wave();
+        if (cfg.waveType === 'horde') {
+          const ann = this.add.text(W/2, H*0.38, '⚡ HORDE WAVE ⚡', {
+            fontSize:'38px', fontFamily:'system-ui', fontStyle:'bold',
+            color:'#f97316', stroke:'#000', strokeThickness:5,
+          }).setOrigin(0.5).setAlpha(0);
+          this.tweens.add({ targets:ann, alpha:1, duration:200, onComplete:()=>
+            this.time.delayedCall(900,()=>this.tweens.add({ targets:ann, alpha:0, scaleX:1.3, scaleY:1.3, duration:600, onComplete:()=>ann.destroy() }))
+          });
+        } else if (cfg.waveType === 'elite') {
+          const ann = this.add.text(W/2, H*0.38, '★ ELITE WAVE ★', {
+            fontSize:'38px', fontFamily:'system-ui', fontStyle:'bold',
+            color:'#fbbf24', stroke:'#000', strokeThickness:5,
+          }).setOrigin(0.5).setAlpha(0);
+          this.tweens.add({ targets:ann, alpha:1, duration:200, onComplete:()=>
+            this.time.delayedCall(900,()=>this.tweens.add({ targets:ann, alpha:0, scaleX:1.3, scaleY:1.3, duration:600, onComplete:()=>ann.destroy() }))
+          });
+        }
+      }
       this.time.addEvent({ delay: cfg.interval, repeat: cfg.count - 1, callback: () => this.spawnEnemy(cfg) });
     }
 
@@ -1256,7 +1381,7 @@
     }
 
     mkEnemy(x, y, size, color, hp, spd, dmg, xpVal, type, isMini = false) {
-      const isElite = !isMini && type !== 'boss' && Math.random() < 0.08;
+      const isElite = !isMini && type !== 'boss' && (this.cfg?.eliteAll || Math.random() < 0.08);
       if (isElite) { hp *= 3; xpVal = Math.floor(xpVal * 2.5); size = Math.floor(size * 1.15); }
 
       if (this.ps && this.ps.enemySpeedCurse && !isMini) spd = Math.min(300, spd * this.ps.enemySpeedCurse);
@@ -1620,6 +1745,11 @@
       if (dmg <= 0) return 0;
       this.ps.hp -= dmg;
       this.flashPlayer();
+      this.cameras.main.shake(130, 0.007);
+      this._vignette.setAlpha(0.7);
+      this.tweens.killTweensOf(this._vignette);
+      this.tweens.add({ targets:this._vignette, alpha:0, duration:520, ease:'power2.in' });
+      SFX.hurt();
       if (this.ps.hp <= 0) { this.ps.hp = 0; this.onDeath(); }
       return dmg;
     }
@@ -1923,6 +2053,7 @@
         }
       }
 
+      SFX.kill();
       /* XP orb with pulse tween */
       const orb = this.add.circle(enemy.x, enemy.y, 5, 0xa78bfa, 0.9);
       this.physics.add.existing(orb);
@@ -1930,6 +2061,21 @@
       orb.xpVal = enemy.eXp;
       this.xpOrbs.add(orb);
       this.tweens.add({ targets: orb, scaleX: 1.5, scaleY: 1.5, duration: 500, yoyo: true, repeat: -1, ease: 'sine.inOut' });
+      /* Pickup drop */
+      if (!enemy.isMini && (enemy.isBoss || Math.random() < 0.15)) {
+        const is1hp = this.ps.is1hp;
+        const types = enemy.isBoss ? ['shield','speed'] : (is1hp ? ['speed','shield'] : ['speed','hp','shield']);
+        const pType = types[Math.floor(Math.random()*types.length)];
+        const pCol = {speed:0x22d3ee, shield:0x3b82f6, hp:0x4ade80}[pType];
+        const px2 = enemy.x + Phaser.Math.Between(-16,16), py2 = enemy.y + Phaser.Math.Between(-16,16);
+        const pu = this.add.circle(px2, py2, 8, pCol, 1);
+        const inner = this.add.circle(px2, py2, 4, 0xffffff, 0.75);
+        this.physics.add.existing(pu); pu.body.setCircle(8);
+        pu.pType = pType; pu._inner = inner;
+        this.pickups.add(pu);
+        this.tweens.add({ targets:[pu,inner], y: py2-10, duration:500, yoyo:true, repeat:-1, ease:'sine.inOut' });
+        this.time.delayedCall(12000, ()=>{ if(pu.active){ pu.destroy(); if(inner.active) inner.destroy(); } });
+      }
 
       if (enemy.isBoss) { this.boss = null; this.events.emit('bossDead'); }
       if (this.ps.lifeSteal > 0) this.ps.hp = Math.min(this.ps.maxHp, this.ps.hp + this.ps.lifeSteal);
@@ -1977,6 +2123,35 @@
         this.time.delayedCall(2000, () => { if (!this.dead) this.startWave(); });
     }
 
+    onPickup(player, pu) {
+      if (!pu.active) return;
+      const type = pu.pType;
+      if (pu._inner && pu._inner.active) pu._inner.destroy();
+      pu.destroy();
+      SFX.pickup();
+      const floatTxt = (txt, col) => {
+        const t = this.add.text(this.pg.x, this.pg.y - 24, txt, {
+          fontSize:'14px', fontFamily:'system-ui', fontStyle:'bold', color:col, stroke:'#000', strokeThickness:3,
+        }).setOrigin(0.5).setDepth(50);
+        this.tweens.add({ targets:t, y:t.y-44, alpha:0, duration:900, ease:'power2.out', onComplete:()=>t.destroy() });
+      };
+      if (type === 'speed') {
+        const savedSpd = this.ps.spd;
+        this.ps.spd *= 1.5;
+        floatTxt('+50% SPEED', '#22d3ee');
+        this.time.delayedCall(5000, ()=>{ if(this.ps) this.ps.spd = savedSpd; });
+      } else if (type === 'shield') {
+        this.shieldActive = true; this.shieldUntilReady = this.time.now + 4500;
+        floatTxt('SHIELD!', '#93c5fd');
+      } else if (type === 'hp') {
+        if (!this.ps.is1hp) {
+          const heal = Math.max(1, Math.floor(this.ps.maxHp * 0.2));
+          this.ps.hp = Math.min(this.ps.maxHp, this.ps.hp + heal);
+          floatTxt(`+${heal} HP`, '#4ade80');
+        }
+      }
+    }
+
     onXP(player, orb) {
       if (!orb.active) return;
       this.ps.xp += Math.floor(orb.xpVal * (this.ps.xpMult || 1));
@@ -1990,6 +2165,7 @@
     }
 
     doLevelUp() {
+      SFX.levelUp();
       this.paused = true; this.physics.pause();
       this.scene.pause('Game');
       this.scene.launch('LevelUp', { ps: this.ps, game: this });
@@ -2083,6 +2259,7 @@
     }
 
     fireAt(target) {
+      SFX.shoot();
       const angle = Phaser.Math.Angle.Between(this.pg.x, this.pg.y, target.x, target.y);
       const isWizard = this.ps.class === 'wizard';
       const isNecro  = this.ps.class === 'necromancer';
@@ -2272,7 +2449,32 @@
       if (down.isDown  || down2.isDown)  vy =  this.ps.spd;
       if (vx && vy) { vx *= 0.707; vy *= 0.707; }
       const hasteMult = (this.ps.hasteBonus && time < this.hasteUntil) ? (1 + this.ps.hasteBonus) : 1;
-      this.pg.body.setVelocity(vx * hasteMult, vy * hasteMult);
+      /* Dash */
+      if (Phaser.Input.Keyboard.JustDown(this.keys.dash) && time > this.dashCd) {
+        const dx = vx || (right.isDown||right2.isDown ? 1 : left.isDown||left2.isDown ? -1 : 0);
+        const dy = vy || (down.isDown||down2.isDown ? 1 : up.isDown||up2.isDown ? -1 : 0);
+        if (dx !== 0 || dy !== 0) {
+          const len = Math.sqrt(dx*dx+dy*dy);
+          this.dashDir = { x:dx/len, y:dy/len };
+          this.dashUntil = time + 190;
+          this.dashCd = time + 1400;
+          this.shieldActive = true; this.shieldUntilReady = time + 230;
+          SFX.dash();
+          for (let i = 0; i < 4; i++) {
+            this.time.delayedCall(i * 40, () => {
+              if (this.dead) return;
+              const tr = this.add.graphics();
+              tr.fillStyle(0x60a5fa, 0.32 - i*0.06); tr.fillCircle(this.pg.x, this.pg.y, 12);
+              this.tweens.add({ targets:tr, alpha:0, duration:260, onComplete:()=>tr.destroy() });
+            });
+          }
+        }
+      }
+      if (time < this.dashUntil) {
+        this.pg.body.setVelocity(this.dashDir.x * 680, this.dashDir.y * 680);
+      } else {
+        this.pg.body.setVelocity(vx * hasteMult, vy * hasteMult);
+      }
 
       const px = this.pg.x, py = this.pg.y;
 
@@ -2907,6 +3109,8 @@
         return;
       }
       this.dead = true; this.physics.pause();
+      SFX.death();
+      const timeSec = Math.floor((Date.now() - this._runStart) / 1000);
       const baseSouls = Math.floor(this.waveNum * 3 + this.ps.kills * 0.15);
       const souls = Math.floor(baseSouls * (this.ps.soulMult || 1));
       postScore(localStorage.getItem('hoa_name') || 'Unknown', this.waveNum, this.ps.kills, this.ps.level, this.ps.class, this.ps.is1hp);
@@ -2918,12 +3122,53 @@
       this.cameras.main.fadeOut(400, 0, 0, 0);
       this.time.delayedCall(420, () => {
         this.scene.stop('UI'); this.scene.stop('LevelUp');
+        localStorage.removeItem('hoa_daily');
         this.scene.start('Summary', {
           souls, wave: this.waveNum, kills: this.ps.kills, level: this.ps.level,
           totalDmg: this.totalDmg || 0, traits: (this.ps.traits || []).slice(),
-          curseSouls: this.ps._curseSouls || 0,
+          curseSouls: this.ps._curseSouls || 0, timeSec,
         });
       });
+    }
+  }
+
+  /* ── PAUSE MENU ── */
+  class PauseMenuScene extends Phaser.Scene {
+    constructor() { super('PauseMenu'); }
+    init(d) { this.game_ = d.game; }
+    create() {
+      const cx = W/2, cy = H/2;
+      this.add.rectangle(cx, cy, W, H, 0x000000, 0.65);
+      this.add.text(cx, cy-110, 'PAUSED', {
+        fontSize:'54px', fontFamily:'system-ui', fontStyle:'bold', color:'#a78bfa', stroke:'#000', strokeThickness:4,
+      }).setOrigin(0.5);
+      const mkBtn = (label, y, col, fn) => {
+        const b = this.add.rectangle(cx, y, 230, 44, col, 0.92)
+          .setStrokeStyle(1.5, 0xffffff, 0.3).setInteractive({ useHandCursor:true });
+        this.add.text(cx, y, label, { fontSize:'16px', fontFamily:'system-ui', fontStyle:'bold', color:'#fff' }).setOrigin(0.5);
+        b.on('pointerover', ()=>b.setAlpha(1)); b.on('pointerout', ()=>b.setAlpha(0.92));
+        b.on('pointerdown', fn);
+      };
+      mkBtn('▶  RESUME', cy-30, 0x4c1d95, ()=>this.resumeGame());
+      mkBtn('↩  MAIN MENU', cy+28, 0x3b0764, ()=>{
+        this.scene.stop('PauseMenu'); this.scene.stop('Game'); this.scene.stop('UI');
+        localStorage.removeItem('hoa_daily'); this.scene.start('Menu');
+      });
+      this.add.text(cx, cy+84, 'SPACE or ESC to resume', {
+        fontSize:'12px', fontFamily:'system-ui', color:'rgba(255,255,255,0.28)',
+      }).setOrigin(0.5);
+      this.add.text(cx, cy+108, 'WASD / Arrows to move  ·  SPACE to dash', {
+        fontSize:'11px', fontFamily:'system-ui', color:'rgba(255,255,255,0.2)',
+      }).setOrigin(0.5);
+      this.input.keyboard.on('keydown-ESC',   ()=>this.resumeGame());
+      this.input.keyboard.on('keydown-SPACE', ()=>this.resumeGame());
+    }
+    resumeGame() {
+      this.scene.stop('PauseMenu');
+      this.scene.resume('Game');
+      const g = this.game_;
+      g.paused = false;
+      if (g.physics && g.physics.world) g.physics.resume();
     }
   }
 
@@ -3125,7 +3370,7 @@
     init(d) {
       this.souls = d.souls; this.wave = d.wave; this.kills = d.kills;
       this.level = d.level; this.totalDmg = d.totalDmg; this.traits = d.traits || [];
-      this.curseSouls = d.curseSouls || 0;
+      this.curseSouls = d.curseSouls || 0; this.timeSec = d.timeSec || 0;
     }
     create() {
       const cx = W / 2;
@@ -3139,11 +3384,14 @@
 
       /* Stats panel */
       const panelY = 130;
+      const mm = String(Math.floor(this.timeSec/60)).padStart(2,'0');
+      const ss = String(this.timeSec%60).padStart(2,'0');
       const stats = [
         ['Wave Reached',   this.wave],
         ['Enemies Slain',  this.kills],
         ['Damage Dealt',   (this.totalDmg||0).toLocaleString()],
         ['Level Reached',  this.level],
+        ['Time Survived',  `${mm}:${ss}`],
         ['Souls Earned',   this.souls + this.curseSouls + (this.curseSouls > 0 ? ` (+${this.curseSouls} curse)` : '')],
       ];
       stats.forEach(([label, val], i) => {
@@ -3190,6 +3438,20 @@
           souls: totalSouls, shown: totalSouls,
           wave: this.wave, kills: this.kills, level: this.level,
         });
+      });
+
+      /* Share score button */
+      const shareTxt = this.add.text(cx, H - 38, '📋  Share Score', {
+        fontSize:'13px', fontFamily:'system-ui', color:'rgba(167,139,250,0.65)',
+      }).setOrigin(0.5).setInteractive({ useHandCursor:true });
+      shareTxt.on('pointerover', ()=>shareTxt.setColor('#a78bfa'));
+      shareTxt.on('pointerout',  ()=>shareTxt.setColor('rgba(167,139,250,0.65)'));
+      shareTxt.on('pointerdown', ()=>{
+        const txt = `🏆 Halls of Aurora — Wave ${this.wave} | ${this.kills} kills | Level ${this.level} | ${mm}:${ss}\nPlay at: halls-of-aurora.vercel.app`;
+        navigator.clipboard.writeText(txt).then(()=>{
+          shareTxt.setText('✓  Copied to clipboard!');
+          this.time.delayedCall(2200, ()=>shareTxt.setText('📋  Share Score'));
+        }).catch(()=>{});
       });
 
       /* Tween in stats */
@@ -3298,7 +3560,7 @@
     transparent: true,
     parent: 'game-container',
     physics: { default: 'arcade', arcade: { debug: false } },
-    scene: [MenuScene, ClassSelectScene, GameScene, UIScene, LevelUpScene, SummaryScene, MetaScene],
+    scene: [MenuScene, ClassSelectScene, GameScene, UIScene, LevelUpScene, SummaryScene, MetaScene, PauseMenuScene],
   });
   </script>
 
