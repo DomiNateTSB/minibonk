@@ -2168,8 +2168,17 @@
         });
       }
 
-      // Haste â€” speed burst on kill
-      if (this.ps.hasteBonus) this.hasteUntil = this.time.now + this.ps.hasteDur;
+      // Haste — speed burst on kill
+      if (this.ps.hasteBonus) {
+        const wasInactive = this.time.now >= this.hasteUntil;
+        this.hasteUntil = this.time.now + this.ps.hasteDur;
+        if (wasInactive) {
+          const ht = this.add.text(this.pg.x, this.pg.y - 32, '⚡ HASTE!', {
+            fontSize:'13px', fontFamily:'system-ui', fontStyle:'bold', color:'#60a5fa', stroke:'#000', strokeThickness:3,
+          }).setOrigin(0.5).setDepth(50);
+          this.tweens.add({ targets:ht, y:ht.y-36, alpha:0, duration:900, ease:'power2.out', onComplete:()=>ht.destroy() });
+        }
+      }
 
       this.ps.kills++;
       this.waveKills++;
