@@ -1149,6 +1149,7 @@
       this.lastFrostNova = -99999; this.lastAura = 0; this.lastBarrage = 0;
       this.lastBlizzard = 0; this.lastWarcry = 0; this.warcryUntil = 0;
       this.hasteUntil = 0; this.shieldActive = false; this.shieldUntilReady = 0;
+      this.speedBoostActive = false; this._preBoostSpd = 0; this._speedTimer = null;
       this.shieldViz = null; this.auraViz = null; this.waveKills = 0;
       this.lastStorm = 0; this.bossDmgUntil = 0;
       this.phantomCount = 0; this.overloadCount = 0;
@@ -2207,10 +2208,10 @@
         this.tweens.add({ targets:t, y:t.y-44, alpha:0, duration:900, ease:'power2.out', onComplete:()=>t.destroy() });
       };
       if (type === 'speed') {
-        const savedSpd = this.ps.spd;
-        this.ps.spd *= 1.5;
+        if (!this.speedBoostActive) { this._preBoostSpd = this.ps.spd; this.ps.spd *= 1.5; this.speedBoostActive = true; }
         floatTxt('+50% SPEED', '#22d3ee');
-        this.time.delayedCall(5000, ()=>{ if(this.ps) this.ps.spd = savedSpd; });
+        if (this._speedTimer) this._speedTimer.remove();
+        this._speedTimer = this.time.delayedCall(5000, () => { this.ps.spd = this._preBoostSpd; this.speedBoostActive = false; });
       } else if (type === 'shield') {
         this.shieldActive = true; this.shieldUntilReady = this.time.now + 4500;
         floatTxt('SHIELD!', '#93c5fd');
