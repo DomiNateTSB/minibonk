@@ -122,8 +122,8 @@
       document.getElementById('lb-rows').innerHTML =
         '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:12px;">Loading…</div>';
       try {
-        const SB_URL = 'https://mrbordcotmacqizwqhdz.supabase.co';
-        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yYm9yZGNvdG1hY3FpendxaGR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NzYxNDksImV4cCI6MjA5NjE1MjE0OX0.O_Ovq1k0k3RQGIrNee2LhhEy1xzOj2HZwTTOuz_UERE';
+        const SB_URL = 'https://biclaeemulhkdejyeysv.supabase.co';
+        const SB_KEY = 'sb_publishable_6o1Iaj3yMd5thivLqY8ttQ_L19qyZ5-';
         const table = tab === '1hp' ? 'minibonk_leaderboard_1hp' : 'minibonk_leaderboard';
         const r = await fetch(`${SB_URL}/rest/v1/${table}?select=name,wave,kills,level,class_name&order=wave.desc,kills.desc&limit=100`,
           { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } });
@@ -186,8 +186,8 @@
     CREATE POLICY "pub" ON minibonk_leaderboard_1hp FOR ALL USING (true) WITH CHECK (true);
     ─────────────────────────────────────────────────────────────────
   */
-  const SB_URL = 'https://mrbordcotmacqizwqhdz.supabase.co';
-  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1yYm9yZGNvdG1hY3FpendxaGR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NzYxNDksImV4cCI6MjA5NjE1MjE0OX0.O_Ovq1k0k3RQGIrNee2LhhEy1xzOj2HZwTTOuz_UERE';
+  const SB_URL = 'https://biclaeemulhkdejyeysv.supabase.co';
+  const SB_KEY = 'sb_publishable_6o1Iaj3yMd5thivLqY8ttQ_L19qyZ5-';
   const SB_HDR = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' };
 
   const CLASS_EMOJI = { hunter:'🏹', knight:'⚔️', wizard:'🔮', necromancer:'💀' };
