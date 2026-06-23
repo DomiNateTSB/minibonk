@@ -3568,7 +3568,20 @@
         fontSize: '15px', fontFamily: 'system-ui', color: '#fbbf24',
       }).setOrigin(0.5);
 
-      this.add.text(W / 2, 185, 'PERMANENT UPGRADES', {
+      /* Play Again button — always visible in header */
+      const playAgainBtn = this.add.rectangle(W / 2, 178, 200, 36, 0x4c1d95, 0.95)
+        .setStrokeStyle(1.5, 0xa78bfa, 0.8).setInteractive({ useHandCursor: true });
+      const playAgainTxt = this.add.text(W / 2, 178, '▶  PLAY AGAIN', {
+        fontSize: '14px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#e9d5ff',
+      }).setOrigin(0.5);
+      playAgainBtn.on('pointerover', () => { playAgainBtn.setFillColor(0x6d28d9); playAgainTxt.setColor('#fff'); });
+      playAgainBtn.on('pointerout',  () => { playAgainBtn.setFillColor(0x4c1d95); playAgainTxt.setColor('#e9d5ff'); });
+      playAgainBtn.on('pointerdown', () => {
+        this.cameras.main.fadeOut(250, 0, 0, 0);
+        this.time.delayedCall(270, () => this.scene.start('ClassSelect'));
+      });
+
+      this.add.text(W / 2, 206, 'PERMANENT UPGRADES', {
         fontSize: '11px', fontFamily: 'system-ui', fontStyle: 'bold', color: 'rgba(255,255,255,0.3)', letterSpacing: 3,
       }).setOrigin(0.5);
 
@@ -3578,7 +3591,7 @@
 
       META_UPGRADES.forEach((u, i) => {
         const col = i % cols, row = Math.floor(i / cols);
-        const ux = sx + col * (uw + ugap), uy = 205 + row * (uh + 10);
+        const ux = sx + col * (uw + ugap), uy = 226 + row * (uh + 10);
         const rank = meta.upgrades[u.id] || 0;
         const maxed = rank >= META_MAX;
         const cost = maxed ? 0 : META_COSTS[rank];
