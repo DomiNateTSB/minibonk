@@ -123,7 +123,7 @@
         '<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:12px;">Loading…</div>';
       try {
         const SB_URL = 'https://biclaeemulhkdejyeysv.supabase.co';
-        const SB_KEY = 'sb_publishable_6o1Iaj3yMd5thivLqY8ttQ_L19qyZ5-';
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpY2xhZWVtdWxoa2RlanlleXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxOTkzODIsImV4cCI6MjA5Nzc3NTM4Mn0.VkFCPzroqgPgUkxXfLjrWbWBXoOONV6OFHBuyrRm7l0';
         const table = tab === '1hp' ? 'minibonk_leaderboard_1hp' : 'minibonk_leaderboard';
         const r = await fetch(`${SB_URL}/rest/v1/${table}?select=name,wave,kills,level,class_name&order=wave.desc,kills.desc&limit=100`,
           { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } });
@@ -187,7 +187,7 @@
     ─────────────────────────────────────────────────────────────────
   */
   const SB_URL = 'https://biclaeemulhkdejyeysv.supabase.co';
-  const SB_KEY = 'sb_publishable_6o1Iaj3yMd5thivLqY8ttQ_L19qyZ5-';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpY2xhZWVtdWxoa2RlanlleXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxOTkzODIsImV4cCI6MjA5Nzc3NTM4Mn0.VkFCPzroqgPgUkxXfLjrWbWBXoOONV6OFHBuyrRm7l0';
   const SB_HDR = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' };
 
   const CLASS_EMOJI = { hunter:'🏹', knight:'⚔️', wizard:'🔮', necromancer:'💀' };
