@@ -106,17 +106,18 @@
       }
     }, { passive: false });
 
+    const resetJoystick = () => {
+      jTouchId = null; jOrigin = null;
+      jBase.style.display = 'none'; jStick.style.display = 'none';
+      window._touch.vx = 0; window._touch.vy = 0;
+    };
     jZone.addEventListener('touchend', e => {
       e.preventDefault();
       for (const t of e.changedTouches) {
-        if (t.identifier === jTouchId) {
-          jTouchId = null; jOrigin = null;
-          jBase.style.display = 'none'; jStick.style.display = 'none';
-          window._touch.vx = 0; window._touch.vy = 0;
-          break;
-        }
+        if (t.identifier === jTouchId) { resetJoystick(); break; }
       }
     }, { passive: false });
+    jZone.addEventListener('touchcancel', e => { resetJoystick(); }, { passive: false });
 
     dashBtn.addEventListener('touchstart', e => {
       e.preventDefault();
@@ -569,11 +570,6 @@
       legendary: { desc:'AOE slam every 2s, 140 dmg', fn: p => { p.slamDmg=(p.slamDmg||0)+140; p.slamCd=2000; p.b.slam=`${p.slamDmg} dmg`; } },
       fmt: b => b.slam  ? `Ground Slam    ${b.slam}`  : null },
     /* â”€â”€ General (all classes) â”€â”€ */
-    { id:'haste', name:'Haste',
-      common:    { desc:'Kills grant +30% speed for 2s',  fn:p=>{ p.hasteBonus=(p.hasteBonus||0)+0.30; p.hasteDur=Math.min(8000,(p.hasteDur||0)+2000); p.b.haste=`+${Math.round(p.hasteBonus*100)}% ${p.hasteDur/1000}s`; } },
-      rare:      { desc:'Kills grant +60% speed for 3s',  fn:p=>{ p.hasteBonus=(p.hasteBonus||0)+0.60; p.hasteDur=Math.min(8000,(p.hasteDur||0)+3000); p.b.haste=`+${Math.round(p.hasteBonus*100)}% ${p.hasteDur/1000}s`; } },
-      legendary: { desc:'Kills grant +120% speed for 5s', fn:p=>{ p.hasteBonus=(p.hasteBonus||0)+1.20; p.hasteDur=Math.min(10000,(p.hasteDur||0)+5000);p.b.haste=`+${Math.round(p.hasteBonus*100)}% ${p.hasteDur/1000}s`; } },
-      fmt:b=>b.haste?`Haste          ${b.haste}`:null },
     { id:'aura', name:'Cursed Aura',
       common:    { desc:'+5 dmg/s aura, +15px range',   fn:p=>{ p.auraDmg=(p.auraDmg||0)+5;  p.auraRange=(p.auraRange||65)+15; p.b.aura=`${p.auraDmg}/s ${p.auraRange}px`; } },
       rare:      { desc:'+14 dmg/s aura, +25px range',  fn:p=>{ p.auraDmg=(p.auraDmg||0)+14; p.auraRange=(p.auraRange||85)+25; p.b.aura=`${p.auraDmg}/s ${p.auraRange}px`; } },
@@ -1149,7 +1145,6 @@
       this.lastFrostNova = -99999; this.lastAura = 0; this.lastBarrage = 0;
       this.lastBlizzard = 0; this.lastWarcry = 0; this.warcryUntil = 0;
       this.hasteUntil = 0; this.shieldActive = false; this.shieldUntilReady = 0;
-      this.speedBoostActive = false; this._preBoostSpd = 0; this._speedTimer = null;
       this.shieldViz = null; this.auraViz = null; this.waveKills = 0;
       this.lastStorm = 0; this.bossDmgUntil = 0;
       this.phantomCount = 0; this.overloadCount = 0;
@@ -1213,6 +1208,7 @@
       this.input.keyboard.on('keydown-ESC', doPause);
       window._triggerPause = doPause;
 
+      if (window._touch) { window._touch.vx = 0; window._touch.vy = 0; window._touch.dashPressed = false; }
       window._showTouchControls(true);
       this.time.delayedCall(900, () => this.startWave());
     }
@@ -2207,12 +2203,7 @@
         }).setOrigin(0.5).setDepth(50);
         this.tweens.add({ targets:t, y:t.y-44, alpha:0, duration:900, ease:'power2.out', onComplete:()=>t.destroy() });
       };
-      if (type === 'speed') {
-        if (!this.speedBoostActive) { this._preBoostSpd = this.ps.spd; this.ps.spd *= 1.5; this.speedBoostActive = true; }
-        floatTxt('+50% SPEED', '#22d3ee');
-        if (this._speedTimer) this._speedTimer.remove();
-        this._speedTimer = this.time.delayedCall(5000, () => { this.ps.spd = this._preBoostSpd; this.speedBoostActive = false; });
-      } else if (type === 'shield') {
+      if (type === 'shield') {
         this.shieldActive = true; this.shieldUntilReady = this.time.now + 4500;
         floatTxt('SHIELD!', '#93c5fd');
       } else if (type === 'hp') {
