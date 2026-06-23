@@ -2557,7 +2557,11 @@
       if (time < this.dashUntil) {
         this.pg.body.setVelocity(this.dashDir.x * 680, this.dashDir.y * 680);
       } else {
-        this.pg.body.setVelocity(vx * hasteMult, vy * hasteMult);
+        const MAX_SPD = 520;
+        let fvx = vx * hasteMult, fvy = vy * hasteMult;
+        const fmag = Math.sqrt(fvx*fvx + fvy*fvy);
+        if (fmag > MAX_SPD) { fvx = fvx/fmag*MAX_SPD; fvy = fvy/fmag*MAX_SPD; }
+        this.pg.body.setVelocity(fvx, fvy);
       }
 
       const px = this.pg.x, py = this.pg.y;
