@@ -2,14 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Halls of Aurora</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: #06000f; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #06000f; touch-action: none; }
     #aurora-bg { position: fixed; inset: 0; z-index: 0; }
     #aurora-bg canvas { width: 100%; height: 100%; }
     #game-container { position: fixed; inset: 0; z-index: 1; }
+    #game-container canvas { touch-action: none; }
+    /* Touch controls */
+    #tc-wrap { display:none; position:fixed; inset:0; z-index:60; pointer-events:none; }
+    #tc-joy-zone { position:absolute; left:0; top:0; width:55%; height:100%; pointer-events:all; }
+    #tc-base { position:absolute; display:none; width:112px; height:112px; border-radius:50%;
+      border:2px solid rgba(167,139,250,0.38); background:rgba(10,4,26,0.38); pointer-events:none; }
+    #tc-stick { position:absolute; display:none; width:50px; height:50px; border-radius:50%;
+      background:rgba(167,139,250,0.58); pointer-events:none; }
+    #tc-dash { position:absolute; right:28px; bottom:110px; width:74px; height:74px; border-radius:50%;
+      border:2px solid rgba(96,165,250,0.65); background:rgba(10,4,26,0.48);
+      pointer-events:all; display:flex; align-items:center; justify-content:center;
+      font-family:system-ui; font-size:11px; font-weight:bold; color:#93c5fd; letter-spacing:1px;
+      user-select:none; -webkit-user-select:none; }
+    #tc-dash.active { background:rgba(96,165,250,0.35); border-color:rgba(96,165,250,1); }
+    #tc-pause { position:absolute; right:28px; top:24px; width:44px; height:44px; border-radius:10px;
+      border:2px solid rgba(167,139,250,0.45); background:rgba(10,4,26,0.48);
+      pointer-events:all; display:flex; align-items:center; justify-content:center;
+      font-size:18px; user-select:none; -webkit-user-select:none; }
   </style>
 </head>
 <body>
@@ -28,6 +48,97 @@
 
   <div id="aurora-bg"></div>
   <div id="game-container"></div>
+
+  <!-- Touch controls (shown only during gameplay on touch devices) -->
+  <div id="tc-wrap">
+    <div id="tc-joy-zone"></div>
+    <div id="tc-base"></div>
+    <div id="tc-stick"></div>
+    <div id="tc-dash">DASH</div>
+    <div id="tc-pause">⏸</div>
+  </div>
+
+  <script>
+  /* ── TOUCH CONTROLS ── */
+  window._isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+  window._touch = { vx: 0, vy: 0, dashPressed: false, _dashWas: false };
+
+  window._showTouchControls = function(show) {
+    if (!window._isMobile) return;
+    document.getElementById('tc-wrap').style.display = show ? 'block' : 'none';
+  };
+
+  (function() {
+    const wrap    = document.getElementById('tc-wrap');
+    const jZone   = document.getElementById('tc-joy-zone');
+    const jBase   = document.getElementById('tc-base');
+    const jStick  = document.getElementById('tc-stick');
+    const dashBtn = document.getElementById('tc-dash');
+    const JR = 52; // max joystick radius
+    let jOrigin = null, jTouchId = null;
+
+    function updateStick(cx, cy) {
+      const dx = cx - jOrigin.x, dy = cy - jOrigin.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      const capped = Math.min(dist, JR);
+      const nx = dist > 0 ? dx/dist : 0;
+      const ny = dist > 0 ? dy/dist : 0;
+      jStick.style.left = (jOrigin.x + nx*capped - 25) + 'px';
+      jStick.style.top  = (jOrigin.y + ny*capped - 25) + 'px';
+      window._touch.vx = nx * Math.min(1, dist / JR);
+      window._touch.vy = ny * Math.min(1, dist / JR);
+    }
+
+    jZone.addEventListener('touchstart', e => {
+      e.preventDefault();
+      if (jTouchId !== null) return;
+      const t = e.changedTouches[0];
+      jTouchId = t.identifier;
+      jOrigin = { x: t.clientX, y: t.clientY };
+      jBase.style.cssText += ';display:block;left:'+(t.clientX-56)+'px;top:'+(t.clientY-56)+'px;';
+      jStick.style.cssText += ';display:block;left:'+(t.clientX-25)+'px;top:'+(t.clientY-25)+'px;';
+    }, { passive: false });
+
+    jZone.addEventListener('touchmove', e => {
+      e.preventDefault();
+      for (const t of e.changedTouches) {
+        if (t.identifier === jTouchId) { updateStick(t.clientX, t.clientY); break; }
+      }
+    }, { passive: false });
+
+    jZone.addEventListener('touchend', e => {
+      e.preventDefault();
+      for (const t of e.changedTouches) {
+        if (t.identifier === jTouchId) {
+          jTouchId = null; jOrigin = null;
+          jBase.style.display = 'none'; jStick.style.display = 'none';
+          window._touch.vx = 0; window._touch.vy = 0;
+          break;
+        }
+      }
+    }, { passive: false });
+
+    dashBtn.addEventListener('touchstart', e => {
+      e.preventDefault();
+      window._touch.dashPressed = true;
+      dashBtn.classList.add('active');
+    }, { passive: false });
+    dashBtn.addEventListener('touchend', e => {
+      e.preventDefault();
+      window._touch.dashPressed = false;
+      dashBtn.classList.remove('active');
+    }, { passive: false });
+
+    // Pause button
+    document.getElementById('tc-pause').addEventListener('touchstart', e => {
+      e.preventDefault();
+      if (window._triggerPause) window._triggerPause();
+    }, { passive: false });
+
+    // Prevent default touch on canvas to avoid scroll/zoom
+    document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+  })();
+  </script>
 
   <!-- ── GLOBAL LEADERBOARD OVERLAY ── -->
   <div id="lb-btn" title="Leaderboard" style="
@@ -1128,15 +1239,18 @@
       this._vignette.fillRect(0,0,vw,H); this._vignette.fillRect(W-vw,0,vw,H);
 
       /* ESC = pause */
-      this.input.keyboard.on('keydown-ESC', () => {
+      const doPause = () => {
         if (this.dead || this.scene.isActive('LevelUp') || this.scene.isActive('PauseMenu')) return;
         SFX.pauseSfx();
         this.paused = true; this.physics.pause();
         this.scene.pause('Game');
         this.scene.launch('PauseMenu', { game: this });
-      });
+      };
+      this.input.keyboard.on('keydown-ESC', doPause);
+      window._triggerPause = doPause;
 
       SFX.init();
+      window._showTouchControls(true);
       this.time.delayedCall(900, () => this.startWave());
     }
 
@@ -2166,6 +2280,7 @@
 
     doLevelUp() {
       SFX.levelUp();
+      window._showTouchControls(false);
       this.paused = true; this.physics.pause();
       this.scene.pause('Game');
       this.scene.launch('LevelUp', { ps: this.ps, game: this });
@@ -2177,6 +2292,7 @@
       this.physics.resume();
       this.paused = false;
       this.rebuildOrbitals();
+      window._showTouchControls(true);
     }
 
     spawnMinion(x, y, speed) {
@@ -2449,10 +2565,23 @@
       if (down.isDown  || down2.isDown)  vy =  this.ps.spd;
       if (vx && vy) { vx *= 0.707; vy *= 0.707; }
       const hasteMult = (this.ps.hasteBonus && time < this.hasteUntil) ? (1 + this.ps.hasteBonus) : 1;
+      /* Merge touch joystick input */
+      const tc = window._touch;
+      if (tc && (tc.vx || tc.vy)) {
+        vx = tc.vx * this.ps.spd;
+        vy = tc.vy * this.ps.spd;
+      }
+      /* Touch dash — detect rising edge */
+      const touchDashNow = tc && tc.dashPressed;
+      if (touchDashNow && !this._lastTouchDash) this.keys.dash._justPressed = true;
+      this._lastTouchDash = touchDashNow;
+
       /* Dash */
-      if (Phaser.Input.Keyboard.JustDown(this.keys.dash) && time > this.dashCd) {
-        const dx = vx || (right.isDown||right2.isDown ? 1 : left.isDown||left2.isDown ? -1 : 0);
-        const dy = vy || (down.isDown||down2.isDown ? 1 : up.isDown||up2.isDown ? -1 : 0);
+      const dashJust = Phaser.Input.Keyboard.JustDown(this.keys.dash) || this.keys.dash._justPressed;
+      this.keys.dash._justPressed = false;
+      if (dashJust && time > this.dashCd) {
+        const dx = vx || (right.isDown||right2.isDown ? 1 : left.isDown||left2.isDown ? -1 : (tc&&tc.vx ? tc.vx : 0));
+        const dy = vy || (down.isDown||down2.isDown ? 1 : up.isDown||up2.isDown ? -1 : (tc&&tc.vy ? tc.vy : 0));
         if (dx !== 0 || dy !== 0) {
           const len = Math.sqrt(dx*dx+dy*dy);
           this.dashDir = { x:dx/len, y:dy/len };
@@ -3101,6 +3230,8 @@
 
     onDeath() {
       if (this.dead) return;
+      window._showTouchControls(false);
+      window._triggerPause = null;
       // Undying — revive instead of dying
       if (this.ps.undying && this.ps.reviveCount > 0) {
         this.ps.reviveCount--;
@@ -3137,6 +3268,7 @@
     constructor() { super('PauseMenu'); }
     init(d) { this.game_ = d.game; }
     create() {
+      window._showTouchControls(false);
       const cx = W/2, cy = H/2;
       this.add.rectangle(cx, cy, W, H, 0x000000, 0.65);
       this.add.text(cx, cy-110, 'PAUSED', {
@@ -3169,6 +3301,7 @@
       const g = this.game_;
       g.paused = false;
       if (g.physics && g.physics.world) g.physics.resume();
+      window._showTouchControls(true);
     }
   }
 
