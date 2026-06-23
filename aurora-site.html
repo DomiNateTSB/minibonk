@@ -865,8 +865,9 @@
         /* ── Content ── */
         /* Icon */
         this.add.circle(cx, cy - 118, 28, cls.color, 0.85);
-        this.add.text(cx, cy - 118, key[0].toUpperCase(), {
-          fontSize:'22px', fontFamily:'system-ui', fontStyle:'bold', color:'#fff',
+        const clsEmoji = { hunter:'🏹', knight:'⚔️', wizard:'🔮', necromancer:'💀' };
+        this.add.text(cx, cy - 118, clsEmoji[key] || key[0].toUpperCase(), {
+          fontSize:'22px', fontFamily:'system-ui', color:'#fff',
         }).setOrigin(0.5);
 
         /* Class name */
@@ -2101,11 +2102,29 @@
         p.fillStyle(0xa78bfa, 0.6); p.fillCircle(r*0.2, r*0.2, r*0.25);
         p.isNecroOrb = true;
       } else {
-        p.fillStyle(0xddd6fe, 1); p.fillCircle(0, 0, r);
+        // Hunter arrow — drawn along the angle of travel
+        const ar = r * 1.1;
+        const len = 18 + ar * 1.8;
+        // shaft
+        p.lineStyle(ar * 0.55, 0xd4a373, 1);
+        p.lineBetween(-len * 0.55, 0, len * 0.45, 0);
+        // arrowhead
+        p.fillStyle(0x60a5fa, 1);
+        p.fillTriangle(len * 0.45, 0, len * 0.1, -ar * 0.9, len * 0.1, ar * 0.9);
+        p.fillStyle(0x93c5fd, 0.7);
+        p.fillTriangle(len * 0.45, 0, len * 0.2, -ar * 0.45, len * 0.2, ar * 0.45);
+        // fletching (two small feathers at tail)
+        p.fillStyle(0xef4444, 0.9);
+        p.fillTriangle(-len * 0.55, 0, -len * 0.28, -ar * 1.1, -len * 0.22, 0);
+        p.fillStyle(0xfbbf24, 0.9);
+        p.fillTriangle(-len * 0.55, 0, -len * 0.28,  ar * 1.1, -len * 0.22, 0);
+        p.isArrow = true;
       }
       p.x = this.pg.x; p.y = this.pg.y;
       this.physics.add.existing(p);
       p.body.setCircle(r, -r, -r);
+      // rotate arrow graphic to face direction of travel
+      if (p.isArrow) p.setRotation(angle);
       p.body.setVelocity(Math.cos(angle) * this.ps.projSpd, Math.sin(angle) * this.ps.projSpd);
       p.pierceLeft = this.ps.pierce;
       this.projectiles.add(p);
