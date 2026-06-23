@@ -34,5 +34,5 @@ const out = src.slice(0, lastMatch.index) +
   src.slice(lastMatch.index + lastMatch[0].length);
 
 fs.mkdirSync('dist', { recursive: true });
-fs.writeFileSync(path.join('dist', 'aurora-site.html'), out, 'utf8');
-console.log('Built dist/aurora-site.html (' + Math.round(out.length / 1024) + ' KB)');
+fs.writeFileSync(path.join('dist', 'index.html'), out, 'utf8');
+console.log('Built dist/index.html (' + Math.round(out.length / 1024) + ' KB)');
