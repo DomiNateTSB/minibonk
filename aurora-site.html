@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Minibonk</title>
+  <title>Halls of Aurora</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #06000f; }
@@ -15,7 +15,7 @@
 <body>
   <!-- Name entry overlay -->
   <div id="name-overlay" style="display:none;position:fixed;inset:0;z-index:99;background:rgba(0,0,0,0.82);backdrop-filter:blur(4px);align-items:center;justify-content:center;flex-direction:column;font-family:system-ui;">
-    <p style="color:#a78bfa;font-size:13px;letter-spacing:3px;margin-bottom:12px;font-weight:bold;">MINIBONK</p>
+    <p style="color:#a78bfa;font-size:13px;letter-spacing:3px;margin-bottom:12px;font-weight:bold;">HALLS OF AURORA</p>
     <h2 style="color:#fff;font-size:26px;font-weight:bold;margin-bottom:6px;">Enter your name</h2>
     <p style="color:rgba(255,255,255,0.35);font-size:13px;margin-bottom:22px;">It will appear on the leaderboard</p>
     <input id="name-input" type="text" maxlength="16" autocomplete="off" placeholder="Your name…"
@@ -124,7 +124,7 @@
       try {
         const SB_URL = 'https://biclaeemulhkdejyeysv.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpY2xhZWVtdWxoa2RlanlleXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxOTkzODIsImV4cCI6MjA5Nzc3NTM4Mn0.VkFCPzroqgPgUkxXfLjrWbWBXoOONV6OFHBuyrRm7l0';
-        const table = tab === '1hp' ? 'minibonk_leaderboard_1hp' : 'minibonk_leaderboard';
+        const table = tab === '1hp' ? 'aurora_leaderboard_1hp' : 'aurora_leaderboard';
         const r = await fetch(`${SB_URL}/rest/v1/${table}?select=name,wave,kills,level,class_name&order=wave.desc,kills.desc&limit=100`,
           { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } });
         const data = await r.json();
@@ -171,19 +171,19 @@
   /*
     Run this SQL once in Supabase Dashboard → SQL Editor to set up:
     ─────────────────────────────────────────────────────────────────
-    DELETE FROM minibonk_leaderboard;
-    ALTER TABLE minibonk_leaderboard ADD COLUMN IF NOT EXISTS class_name text;
-    CREATE UNIQUE INDEX IF NOT EXISTS lb_name_unique ON minibonk_leaderboard(name);
+    DELETE FROM aurora_leaderboard;
+    ALTER TABLE aurora_leaderboard ADD COLUMN IF NOT EXISTS class_name text;
+    CREATE UNIQUE INDEX IF NOT EXISTS lb_name_unique ON aurora_leaderboard(name);
 
-    CREATE TABLE IF NOT EXISTS minibonk_leaderboard_1hp (
+    CREATE TABLE IF NOT EXISTS aurora_leaderboard_1hp (
       id bigserial primary key,
       name text unique,
       wave int, kills int, level int,
       class_name text,
       created_at timestamptz default now()
     );
-    ALTER TABLE minibonk_leaderboard_1hp ENABLE ROW LEVEL SECURITY;
-    CREATE POLICY "pub" ON minibonk_leaderboard_1hp FOR ALL USING (true) WITH CHECK (true);
+    ALTER TABLE aurora_leaderboard_1hp ENABLE ROW LEVEL SECURITY;
+    CREATE POLICY "pub" ON aurora_leaderboard_1hp FOR ALL USING (true) WITH CHECK (true);
     ─────────────────────────────────────────────────────────────────
   */
   const SB_URL = 'https://biclaeemulhkdejyeysv.supabase.co';
@@ -193,7 +193,7 @@
   const CLASS_EMOJI = { hunter:'🏹', knight:'⚔️', wizard:'🔮', necromancer:'💀' };
 
   async function postScore(name, wave, kills, level, cls, is1hp) {
-    const table = is1hp ? 'minibonk_leaderboard_1hp' : 'minibonk_leaderboard';
+    const table = is1hp ? 'aurora_leaderboard_1hp' : 'aurora_leaderboard';
     try {
       /* Fetch existing entry for this player */
       const r = await fetch(
@@ -219,7 +219,7 @@
   }
 
   async function fetchLeaderboard(is1hp) {
-    const table = is1hp ? 'minibonk_leaderboard_1hp' : 'minibonk_leaderboard';
+    const table = is1hp ? 'aurora_leaderboard_1hp' : 'aurora_leaderboard';
     try {
       const res = await fetch(
         `${SB_URL}/rest/v1/${table}?select=name,wave,kills,level,class_name&order=wave.desc,kills.desc&limit=100`,
@@ -688,7 +688,7 @@
     create() {
       const meta = loadMeta();
       const cx = W / 2, cy = H / 2;
-      const title = this.add.text(cx, cy - 80, 'MINIBONK', {
+      const title = this.add.text(cx, cy - 80, 'HALLS OF AURORA', {
         fontSize: Math.min(62, W / 13) + 'px',
         fontFamily: 'system-ui', fontStyle: 'bold', color: '#ffffff',
       }).setOrigin(0.5).setAlpha(0);
