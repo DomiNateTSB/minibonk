@@ -1186,20 +1186,21 @@
         // glowing eyes
         g.fillStyle(0x60a5fa, 1); g.fillCircle(-2, -10, 1.5); g.fillCircle(2, -10, 1.5);
         g.fillStyle(0xbfdbfe, 0.6); g.fillCircle(-1.5, -10.5, 0.6); g.fillCircle(2.5, -10.5, 0.6);
-        // bow (right side, more detailed)
+        // bow (held close to body on the right)
         g.lineStyle(4, 0x78350f, 1);
-        g.beginPath(); g.arc(24, 0, 13, -1.2, 1.2, false); g.strokePath();
+        g.beginPath(); g.arc(13, 0, 11, -1.2, 1.2, false); g.strokePath();
         g.lineStyle(2, 0x92400e, 0.6);
-        g.beginPath(); g.arc(24, 0, 10, -1.0, 1.0, false); g.strokePath();
+        g.beginPath(); g.arc(13, 0, 8, -1.0, 1.0, false); g.strokePath();
         // bowstring
         g.lineStyle(1, 0xfef08a, 1);
-        const bsx = 24 + 13 * Math.cos(1.2), bsy = 13 * Math.sin(1.2);
+        const bsx = 13 + 11 * Math.cos(1.2), bsy = 11 * Math.sin(1.2);
         g.lineBetween(bsx, -bsy, bsx, bsy);
-        // arrow with fletching
-        g.lineStyle(2, 0xd4a373, 1); g.lineBetween(-8, 0, 22, 0);
-        g.fillStyle(0x60a5fa, 1); g.fillTriangle(23, 0, 16, -3, 16, 3);
-        g.lineStyle(1, 0xef4444, 0.9); g.lineBetween(-8, 0, -4, -3); g.lineBetween(-8, 0, -4, 3);
-        g.fillStyle(0xfef08a, 1); g.lineBetween(-6, 0, -3, -2); g.lineBetween(-6, 0, -3, 2);
+        // arrow nocked on string (short, just spans body to string)
+        g.lineStyle(2, 0xd4a373, 1); g.lineBetween(2, 0, bsx, 0);
+        g.fillStyle(0x60a5fa, 1); g.fillTriangle(bsx + 1, 0, bsx - 5, -3, bsx - 5, 3);
+        // fletching at the nock end
+        g.fillStyle(0xef4444, 0.9); g.fillTriangle(2, 0, 5, -4, 7, 0);
+        g.fillStyle(0xfbbf24, 0.9); g.fillTriangle(2, 0, 5,  4, 7, 0);
       }
     }
 
