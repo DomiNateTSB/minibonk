@@ -402,7 +402,7 @@
       n, boss, waveType,
       count:    waveType === 'horde' ? base * 2 : base,
       interval: waveType === 'horde' ? Math.max(28, baseInt * 0.44) : baseInt,
-      hp:       Math.floor((25+n*22+late*late*2+surge*surge*3) * (waveType==='elite' ? 1.6 : 1)),
+      hp:       Math.floor((25+n*22+late*late*2+surge*surge*3) * (waveType==='elite' ? 1.2 : 1)),
       speed:    Math.min(280, 58 + n*3.5 + late*2 + surge*1.5),
       dmg:      Math.floor(8 + n*2 + late*0.8 + surge*0.6),
       xpVal:    4 + n * 2,
@@ -1462,8 +1462,8 @@
     }
 
     mkEnemy(x, y, size, color, hp, spd, dmg, xpVal, type, isMini = false) {
-      const isElite = !isMini && type !== 'boss' && (this.cfg?.eliteAll || Math.random() < 0.08);
-      if (isElite) { hp *= 3; xpVal = Math.floor(xpVal * 2.5); size = Math.floor(size * 1.15); }
+      const isElite = !isMini && type !== 'boss' && (this.cfg?.eliteAll ? Math.random() < 0.5 : Math.random() < 0.08);
+      if (isElite) { hp *= 2; xpVal = Math.floor(xpVal * 2.5); size = Math.floor(size * 1.15); }
 
       if (this.ps && this.ps.enemySpeedCurse && !isMini) spd = Math.min(300, spd * this.ps.enemySpeedCurse);
 
