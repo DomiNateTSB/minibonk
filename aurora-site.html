@@ -4251,11 +4251,17 @@
         this.tweens.add({ targets: [this.bossBarBg, this.bossBarFill, this.bossTxt], alpha: 0, duration: 600 });
       });
       /* ── Souls preview (bottom-left, above HP bar) ── */
+      const _metaForSouls = loadMeta();
+      this._totalSoulsTxt = this.add.text(16, H - 108, `Total souls: ${_metaForSouls.souls || 0}`, {
+        fontSize: '11px', fontFamily: 'system-ui', color: '#a78bfa', alpha: 0.7,
+      });
       this.soulsTxt = this.add.text(16, H - 92, '', {
         fontSize: '12px', fontFamily: 'system-ui', color: '#fbbf24', alpha: 0.85,
       });
       g.events.on('soulsPreview', souls => {
         this.soulsTxt.setText(`✦ ${souls} souls on death`);
+        const curMeta = loadMeta();
+        this._totalSoulsTxt.setText(`Total souls: ${curMeta.souls || 0}`);
       });
 
       /* ── Kill streak display (top-left, below HP) ── */
