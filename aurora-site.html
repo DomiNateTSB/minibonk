@@ -2781,15 +2781,8 @@
       enemy.destroy();
       this.events.emit('kill', this.ps.kills);
 
-      /* ── Kill streak ── */
-      const now2 = this.time.now;
-      const gap = now2 - (this._lastKillTime || 0);
-      this._lastKillTime = now2;
-      if (gap < 2200) {
-        this._streak = (this._streak || 0) + 1;
-      } else {
-        this._streak = 1;
-      }
+      /* ── Kill streak — only damage resets it, not wave gaps ── */
+      this._streak = (this._streak || 0) + 1;
       this.events.emit('streak', this._streak);
       /* Milestone announcements */
       const milestones = {
