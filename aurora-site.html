@@ -1163,58 +1163,63 @@
       const row1Keys = ['hunter','knight','wizard','necromancer'];
       const row2Keys = ['rogue','paladin','berserker'];
       const cardW = Math.min(170, (W - 80) / 4);
-      const cardH = 310;
+      const cardH = 238;
       const gap = 16;
 
-      const buildRow = (keys, rowCy, showLock) => {
+      /* Row centres — keep clear of header (y≈83) and footer */
+      const row1Cy = Math.round(H * 0.33);   // ~198 on a 600H screen
+      const row2Cy = Math.round(H * 0.73);   // ~438
+
+      const buildRow = (keys, rowCy) => {
         const totalW = keys.length * cardW + (keys.length - 1) * gap;
         const startX = W/2 - totalW/2;
         keys.forEach((key, i) => {
           const cls = CLASSES[key];
           const unlocked = isClassUnlocked(key);
           const cx = startX + i * (cardW + gap) + cardW / 2;
+          const hh = cardH / 2;   // half-height = 119
 
           const bg = this.add.rectangle(cx, rowCy, cardW, cardH, cls.color, unlocked ? 0.13 : 0.05)
             .setInteractive({ useHandCursor: unlocked });
           const ebg = this.add.graphics();
           this._ebCards.push({ g: ebg, cx, cy: rowCy, w: cardW, h: cardH, color: cls.color, locked: !unlocked });
 
-          this.add.circle(cx, rowCy - 106, 26, cls.color, unlocked ? 0.85 : 0.25);
-          this.add.text(cx, rowCy - 106, unlocked ? (CLASS_EMOJI[key]||'?') : '🔒', {
-            fontSize:'20px', fontFamily:'system-ui', color:'#fff',
+          this.add.circle(cx, rowCy - hh + 30, 24, cls.color, unlocked ? 0.85 : 0.22);
+          this.add.text(cx, rowCy - hh + 30, unlocked ? (CLASS_EMOJI[key]||'?') : '🔒', {
+            fontSize:'18px', fontFamily:'system-ui', color:'#fff',
           }).setOrigin(0.5);
 
-          this.add.text(cx, rowCy - 67, cls.name.toUpperCase(), {
-            fontSize:'13px', fontFamily:'system-ui', fontStyle:'bold',
+          this.add.text(cx, rowCy - hh + 60, cls.name.toUpperCase(), {
+            fontSize:'12px', fontFamily:'system-ui', fontStyle:'bold',
             color: unlocked ? cls.labelCol : '#4b5563', letterSpacing:3,
           }).setOrigin(0.5);
 
-          this.add.text(cx, rowCy - 48, cls.desc, {
+          this.add.text(cx, rowCy - hh + 76, cls.desc, {
             fontSize:'9px', fontFamily:'system-ui', color: unlocked ? '#94a3b8' : '#374151',
             wordWrap:{ width: cardW - 18 }, align:'center',
           }).setOrigin(0.5, 0);
 
           const divG = this.add.graphics();
-          divG.lineStyle(1, cls.color, unlocked ? 0.3 : 0.1);
-          divG.lineBetween(cx - cardW*0.35, rowCy + 8, cx + cardW*0.35, rowCy + 8);
+          divG.lineStyle(1, cls.color, unlocked ? 0.3 : 0.08);
+          divG.lineBetween(cx - cardW*0.35, rowCy + 4, cx + cardW*0.35, rowCy + 4);
 
           const sd = cls.stats;
           [`HP: ${sd.hp}`, `SPD: ${sd.spd}`, `DMG: ${sd.dmg}`]
             .forEach((stat, si) => {
-              this.add.text(cx, rowCy + 18 + si * 15, stat, {
+              this.add.text(cx, rowCy + 14 + si * 14, stat, {
                 fontSize:'10px', fontFamily:'system-ui', color: unlocked ? '#cbd5e1' : '#374151',
               }).setOrigin(0.5);
             });
 
           if (!unlocked) {
             const ach = ACHIEVEMENTS.find(a => a.unlocks === key);
-            this.add.text(cx, rowCy + 70, ach ? `🔒 ${ach.hint}` : '🔒 LOCKED', {
+            this.add.text(cx, rowCy + 60, ach ? `🔒 ${ach.hint}` : '🔒 LOCKED', {
               fontSize:'9px', fontFamily:'system-ui', fontStyle:'bold', color:'#6b7280',
               wordWrap:{ width: cardW - 16 }, align:'center',
             }).setOrigin(0.5, 0);
           } else {
             cls.perks.slice(0,2).forEach((p, pi) => {
-              this.add.text(cx, rowCy + 68 + pi * 16, `• ${p}`, {
+              this.add.text(cx, rowCy + 60 + pi * 15, `• ${p}`, {
                 fontSize:'9px', fontFamily:'system-ui', color:cls.labelCol,
                 wordWrap:{ width: cardW - 18 }, align:'center',
               }).setOrigin(0.5, 0);
@@ -1233,12 +1238,16 @@
         });
       };
 
-      buildRow(row1Keys, H / 2 - 20);
-      /* Row 2 divider */
-      this.add.text(W/2, H/2 + 155, 'ADVANCED CLASSES — Unlock by completing achievements', {
-        fontSize:'10px', fontFamily:'system-ui', fontStyle:'bold', color:'#4b5563', letterSpacing:2,
+      buildRow(row1Keys, row1Cy);
+      /* Divider between the two rows */
+      const dividerY = Math.round((row1Cy + cardH/2 + row2Cy - cardH/2) / 2);
+      const divLine = this.add.graphics();
+      divLine.lineStyle(1, 0x1e1e3a, 1);
+      divLine.lineBetween(W*0.05, dividerY, W*0.95, dividerY);
+      this.add.text(W/2, dividerY, 'ADVANCED CLASSES — Unlock by completing achievements', {
+        fontSize:'10px', fontFamily:'system-ui', fontStyle:'bold', color:'#374151', letterSpacing:2,
       }).setOrigin(0.5);
-      buildRow(row2Keys, H/2 + 215);
+      buildRow(row2Keys, row2Cy);
 
       /* ── 1HP Mode toggle ── */
       const is1hp = () => localStorage.getItem('hoa_1hp') === '1';
