@@ -4785,13 +4785,17 @@
     scene: [MenuScene, ClassSelectScene, GameScene, UIScene, LevelUpScene, SummaryScene, MetaScene, PauseMenuScene, AchievementsScene],
   });
 
-  /* On orientation change: save live run state to sessionStorage, then reload.
-     The game restores it seamlessly — player continues from the same wave. */
-  window.addEventListener('orientationchange', () => {
+  /* Detect orientation flip via resize (more reliable than orientationchange on iOS).
+     Only reload when the aspect ratio actually crosses portrait/landscape boundary. */
+  let _wasPortrait = window.innerHeight > window.innerWidth;
+  window.addEventListener('resize', () => {
+    const isPortrait = window.innerHeight > window.innerWidth;
+    if (isPortrait === _wasPortrait) return; // not a flip, ignore
+    _wasPortrait = isPortrait;
     if (window._liveRunState) {
       try { sessionStorage.setItem('hoa_run_restore', JSON.stringify(window._liveRunState)); } catch {}
     }
-    setTimeout(() => window.location.reload(), 300);
+    setTimeout(() => window.location.reload(), 80);
   });
   </script>
 
