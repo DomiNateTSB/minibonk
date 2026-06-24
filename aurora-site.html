@@ -1836,31 +1836,29 @@
       };
       animate();
 
-      /* Capture scene ref before any DOM handlers are registered */
       const scene = this;
 
-      /* The Phaser canvas physically intercepts pointer events even when behind a z-index overlay.
-         Set pointer-events:none on it so DOM buttons on the overlay can receive clicks/taps. */
-      const gameCanvas = document.querySelector('#game-container canvas') || document.querySelector('canvas');
-      if (gameCanvas) gameCanvas.style.pointerEvents = 'none';
-      scene.input.enabled = false;
+      /* Sleep the scene — this is the only reliable way to stop Phaser from
+         processing window-level pointer events that bleed through HTML overlays. */
+      scene.scene.sleep('ClassSelect');
 
       const closeOverlay = () => {
         cancelAnimationFrame(raf);
         overlay.remove();
-        if (gameCanvas) gameCanvas.style.pointerEvents = '';
-        scene.input.enabled = true;
       };
 
-      ['pointerdown','touchstart','click'].forEach(ev => {
-        backBtn.addEventListener(ev, e => { e.stopPropagation(); e.preventDefault(); closeOverlay(); }, { capture: true });
-        playBtn.addEventListener(ev, e => {
-          e.stopPropagation(); e.preventDefault();
-          closeOverlay();
-          localStorage.setItem('hoa_class', key);
-          scene.scene.start('Game');
-          scene.scene.launch('UI');
-        }, { capture: true });
+      backBtn.addEventListener('pointerdown', e => {
+        e.stopPropagation();
+        closeOverlay();
+        scene.scene.wake('ClassSelect');
+      });
+
+      playBtn.addEventListener('pointerdown', e => {
+        e.stopPropagation();
+        closeOverlay();
+        localStorage.setItem('hoa_class', key);
+        scene.scene.start('Game');
+        scene.scene.launch('UI');
       });
     }
 
