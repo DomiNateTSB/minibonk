@@ -4359,13 +4359,51 @@
     constructor() { super('LevelUp'); }
     init(d) { this.ps = d.ps; this.game_ = d.game; }
     create() {
-      this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.70);
-      this.add.text(W / 2, H / 2 - 185, `LEVEL ${this.ps.level}`, {
+      this._rerollsLeft = this.ps._rerollsLeft ?? 3;
+      this._buildCards();
+      /* ── CURSE BUTTON ── */
+      this._buildCurseBtn();
+    }
+
+    _buildCards() {
+      /* Clear previous cards if rerolling */
+      if (this._cardGroup) this._cardGroup.forEach(o => o.destroy());
+      this._cardGroup = [];
+
+      const add = (o) => { this._cardGroup.push(o); return o; };
+
+      add(this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.70));
+      add(this.add.text(W / 2, H / 2 - 185, `LEVEL ${this.ps.level}`, {
         fontSize: '38px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#a78bfa',
-      }).setOrigin(0.5);
-      this.add.text(W / 2, H / 2 - 135, 'Choose a trait', {
+      }).setOrigin(0.5));
+      add(this.add.text(W / 2, H / 2 - 135, 'Choose a trait', {
         fontSize: '17px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.45)',
-      }).setOrigin(0.5);
+      }).setOrigin(0.5));
+
+      const meta = loadMeta();
+      const canReroll = this._rerollsLeft > 0 && meta.souls >= 25;
+
+      /* Reroll button */
+      const rrBg = add(this.add.rectangle(W / 2, H / 2 + 108, 220, 34, canReroll ? 0x1a3a1a : 0x1a1a1a, 0.95)
+        .setStrokeStyle(1.5, canReroll ? 0x4ade80 : 0x333333));
+      const rrTxt = add(this.add.text(W / 2, H / 2 + 108,
+        canReroll ? `↺  Reroll traits  (25 souls · ${this._rerollsLeft} left)` : `↺  Reroll  (${this._rerollsLeft === 0 ? 'no rerolls left' : 'need 25 souls'})`, {
+        fontSize: '13px', fontFamily: 'system-ui', fontStyle: 'bold',
+        color: canReroll ? '#4ade80' : '#555',
+      }).setOrigin(0.5));
+
+      if (canReroll) {
+        rrBg.setInteractive({ useHandCursor: true });
+        rrBg.on('pointerover', () => rrBg.setFillColor(0x243a24));
+        rrBg.on('pointerout',  () => rrBg.setFillColor(0x1a3a1a));
+        rrBg.on('pointerdown', () => {
+          meta.souls -= 25; saveMeta(meta);
+          this._rerollsLeft--;
+          this.ps._rerollsLeft = this._rerollsLeft;
+          window._SFX.pickup();
+          this._buildCards();
+        });
+      }
 
       const offers = pickOffers(this.ps.class || 'hunter', this.ps.traits || [], this.ps.is1hp);
       const cw = Math.min(200, (W - 130) / 3);
@@ -4418,11 +4456,8 @@
           this.game_.resume();
         });
 
-        this.tweens.add({ targets: card, alpha: { from: 0, to: 0.97 }, y: { from: cy + 20, to: cy }, duration: 270, delay: i * 90, ease: 'power2.out' });
+        add(this.tweens.add({ targets: card, alpha: { from: 0, to: 0.97 }, y: { from: cy + 20, to: cy }, duration: 270, delay: i * 90, ease: 'power2.out' }));
       });
-
-      /* ── CURSE BUTTON ── */
-      this._buildCurseBtn();
     }
 
     _buildCurseBtn() {
@@ -4602,7 +4637,36 @@
         this.time.delayedCall(270, () => this.scene.start('ClassSelect'));
       });
 
-      this.add.text(W / 2, 206, 'PERMANENT UPGRADES', {
+      /* Re-spec button */
+      const respecCost = 500;
+      const hasUpgrades = Object.values(meta.upgrades || {}).some(v => v > 0);
+      const canRespec = hasUpgrades && meta.souls >= respecCost;
+      const rsBg = this.add.rectangle(W / 2, 197, 230, 28, canRespec ? 0x3a1a00 : 0x1a1a1a, 0.95)
+        .setStrokeStyle(1, canRespec ? 0xf97316 : 0x333333);
+      const rsTxt = this.add.text(W / 2, 197,
+        hasUpgrades ? `⟳  Re-spec upgrades  (${respecCost} souls)` : '⟳  No upgrades to re-spec', {
+        fontSize: '11px', fontFamily: 'system-ui', fontStyle: 'bold',
+        color: canRespec ? '#fb923c' : '#444',
+      }).setOrigin(0.5);
+      if (canRespec) {
+        rsBg.setInteractive({ useHandCursor: true });
+        rsBg.on('pointerover', () => { rsBg.setFillColor(0x4a2a00); rsTxt.setColor('#fed7aa'); });
+        rsBg.on('pointerout',  () => { rsBg.setFillColor(0x3a1a00); rsTxt.setColor('#fb923c'); });
+        rsBg.on('pointerdown', () => {
+          /* Refund all spent souls, charge 500 fee */
+          let refund = 0;
+          META_UPGRADES.forEach(u => {
+            const r = meta.upgrades[u.id] || 0;
+            for (let i = 0; i < r; i++) refund += META_COSTS[i];
+          });
+          meta.upgrades = {};
+          meta.souls = meta.souls - respecCost + refund;
+          saveMeta(meta);
+          this.scene.restart({ souls: 0, shown: this.shown, wave: this.wave, kills: this.kills, level: this.level });
+        });
+      }
+
+      this.add.text(W / 2, 212, 'PERMANENT UPGRADES', {
         fontSize: '11px', fontFamily: 'system-ui', fontStyle: 'bold', color: 'rgba(255,255,255,0.3)', letterSpacing: 3,
       }).setOrigin(0.5);
 
