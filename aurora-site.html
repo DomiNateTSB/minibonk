@@ -4255,6 +4255,10 @@
       this._totalSoulsTxt = this.add.text(16, H - 108, `Total souls: ${_metaForSouls.souls || 0}`, {
         fontSize: '11px', fontFamily: 'system-ui', color: '#a78bfa', alpha: 0.7,
       });
+      window.addEventListener('hoa:soulsChanged', () => {
+        const m = loadMeta();
+        this._totalSoulsTxt.setText(`Total souls: ${m.souls || 0}`);
+      });
       this.soulsTxt = this.add.text(16, H - 92, '', {
         fontSize: '12px', fontFamily: 'system-ui', color: '#fbbf24', alpha: 0.85,
       });
@@ -4442,7 +4446,7 @@
       const rrBg = add(this.add.rectangle(W / 2, H / 2 - 100, 240, 36, canReroll ? 0x0d2b0d : 0x181818, 0.97)
         .setStrokeStyle(2, canReroll ? 0x4ade80 : 0x383838));
       const rrTxt = add(this.add.text(W / 2, H / 2 - 100,
-        canReroll ? `↺  Reroll traits  (25 souls · ${this._rerollsLeft} left)` : `↺  Reroll  (${this._rerollsLeft === 0 ? 'no rerolls left' : 'need 25 souls'})`, {
+        canReroll ? `↺  Reroll traits  (25 souls · ${this._rerollsLeft} left)` : `↺  Reroll  (${this._rerollsLeft === 0 ? 'no rerolls left' : 'not enough souls'})`, {
         fontSize: '13px', fontFamily: 'system-ui', fontStyle: 'bold',
         color: canReroll ? '#4ade80' : '#4a4a4a',
       }).setOrigin(0.5));
@@ -4456,6 +4460,7 @@
           this._rerollsLeft--;
           this.ps._rerollsLeft = this._rerollsLeft;
           window._SFX.pickup();
+          window.dispatchEvent(new CustomEvent('hoa:soulsChanged'));
           this._buildCards();
         });
       }
