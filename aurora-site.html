@@ -141,6 +141,19 @@
   })();
   </script>
 
+  <!-- ── MUTE BUTTON ── -->
+  <div id="mute-btn" title="Toggle sound" onclick="(function(){
+    const m = window._SFX.toggleMute();
+    document.getElementById('mute-btn').textContent = m ? '🔇' : '🔊';
+  })()" style="
+    position:fixed; top:14px; right:14px; z-index:200;
+    background:rgba(15,7,30,0.88); border:1px solid rgba(124,58,237,0.5);
+    border-radius:8px; padding:7px 11px; cursor:pointer;
+    font-size:15px; user-select:none; backdrop-filter:blur(6px);
+    transition:border-color .15s;
+  " onmouseenter="this.style.borderColor='rgba(167,139,250,0.9)'"
+     onmouseleave="this.style.borderColor='rgba(124,58,237,0.5)'">🔊</div>
+
   <!-- ── GLOBAL LEADERBOARD OVERLAY ── -->
   <div id="lb-btn" title="Leaderboard" style="
     position:fixed; top:14px; left:14px; z-index:200;
@@ -512,6 +525,138 @@
   function saveMeta(d) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(d)); } catch {} }
 
   /* ── SFX ENGINE (Web Audio API, no external files) ── */
+  const SFX = (() => {
+    let ctx = null, muted = false;
+    const vol = () => muted ? 0 : 1;
+
+    function getCtx() {
+      if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch {} }
+      if (ctx && ctx.state === 'suspended') ctx.resume();
+      return ctx;
+    }
+
+    function tone(freq, dur, type = 'sine', gain = 0.18, delay = 0, detune = 0) {
+      const c = getCtx(); if (!c || muted) return;
+      const g = c.createGain();
+      const t0 = c.currentTime + delay;
+      g.gain.setValueAtTime(0.001, t0);
+      g.gain.linearRampToValueAtTime(gain, t0 + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+      const o = c.createOscillator();
+      o.type = type; o.frequency.value = freq; o.detune.value = detune;
+      o.connect(g); g.connect(c.destination);
+      o.start(t0); o.stop(t0 + dur + 0.02);
+    }
+
+    function noise(dur, gain = 0.12, delay = 0, hpFreq = 0) {
+      const c = getCtx(); if (!c || muted) return;
+      const sr = c.sampleRate;
+      const buf = c.createBuffer(1, Math.ceil(sr * dur), sr);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      const src = c.createBufferSource(); src.buffer = buf;
+      const g = c.createGain();
+      const t0 = c.currentTime + delay;
+      g.gain.setValueAtTime(gain, t0);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+      let node = src;
+      if (hpFreq) {
+        const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = hpFreq;
+        src.connect(hp); hp.connect(g);
+      } else { src.connect(g); }
+      g.connect(c.destination);
+      src.start(t0);
+    }
+
+    return {
+      init() { getCtx(); },
+      toggleMute() { muted = !muted; return muted; },
+      isMuted() { return muted; },
+
+      /* ── Per-class shoot sounds ── */
+      shoot(cls) {
+        if (muted) return;
+        if (cls === 'knight' || cls === 'paladin' || cls === 'berserker') {
+          noise(0.06, 0.20, 0, 400); tone(180, 0.09, 'sawtooth', 0.12);
+        } else if (cls === 'wizard') {
+          tone(820, 0.05, 'sine', 0.13); tone(1100, 0.08, 'sine', 0.08, 0.02);
+        } else if (cls === 'necromancer') {
+          tone(220, 0.12, 'sawtooth', 0.10); tone(180, 0.10, 'sine', 0.07, 0.04);
+        } else if (cls === 'rogue') {
+          noise(0.04, 0.14, 0, 1200); tone(680, 0.04, 'square', 0.07);
+        } else { /* hunter */
+          tone(900, 0.05, 'sawtooth', 0.10); tone(640, 0.04, 'sine', 0.07, 0.02);
+        }
+      },
+
+      kill() {
+        noise(0.07, 0.18, 0, 200);
+        tone(520, 0.06, 'sine', 0.14); tone(780, 0.08, 'sine', 0.09, 0.04);
+      },
+
+      eliteKill() {
+        noise(0.10, 0.22, 0, 150);
+        tone(440, 0.07, 'sine', 0.16); tone(660, 0.10, 'sine', 0.12, 0.05); tone(880, 0.08, 'sine', 0.08, 0.10);
+      },
+
+      hurt() {
+        noise(0.14, 0.32); tone(110, 0.16, 'sawtooth', 0.18);
+      },
+
+      dodge() {
+        tone(880, 0.04, 'sine', 0.10); tone(1100, 0.06, 'sine', 0.08, 0.03);
+      },
+
+      levelUp() {
+        [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.22, 'sine', 0.20, i * 0.10));
+      },
+
+      wave() {
+        tone(200, 0.30, 'sine', 0.14); tone(280, 0.25, 'sine', 0.10, 0.12); tone(380, 0.20, 'sine', 0.08, 0.22);
+        noise(0.18, 0.10, 0.05);
+      },
+
+      boss() {
+        [75, 55, 95].forEach((f, i) => tone(f, 0.60, 'sawtooth', 0.28, i * 0.20));
+        noise(0.45, 0.18, 0.10);
+      },
+
+      pickup() {
+        [880, 1100, 1320].forEach((f, i) => tone(f, 0.12, 'sine', 0.16, i * 0.06));
+      },
+
+      dash() {
+        noise(0.08, 0.12, 0, 800); tone(420, 0.05, 'sine', 0.10); tone(640, 0.08, 'sine', 0.07, 0.03);
+      },
+
+      death() {
+        noise(0.40, 0.42);
+        [280, 190, 110, 80].forEach((f, i) => tone(f, 0.45, 'sawtooth', 0.24, i * 0.16));
+      },
+
+      haste() {
+        tone(1200, 0.04, 'square', 0.10); tone(1600, 0.06, 'sine', 0.12, 0.02); noise(0.05, 0.08, 0, 1000);
+      },
+
+      block() {
+        noise(0.06, 0.18, 0, 300); tone(340, 0.08, 'square', 0.14);
+      },
+
+      achieve() {
+        [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.28, 'sine', 0.18, i * 0.08));
+        tone(1047, 0.35, 'sine', 0.12, 0.42);
+      },
+
+      waveElite() {
+        [160, 220].forEach((f, i) => tone(f, 0.35, 'sawtooth', 0.18, i * 0.12));
+        noise(0.20, 0.12, 0.05);
+      },
+    };
+  })();
+
+  /* Expose SFX globally so the Phaser game can call it */
+  window._SFX = SFX;
+
   /* ── SEEDED RNG for Daily Challenge ── */
   function mulberry32(seed) {
     return function() {
@@ -1649,6 +1794,7 @@
       const cfg = waveCfg(this.waveNum);
       this.cfg = cfg; this.spawned = 0; this.total = cfg.count; this.alive = 0;
       this.events.emit('wave', this.waveNum, cfg.boss);
+      if (cfg.boss) window._SFX.boss(); else if (cfg.waveType === 'elite') window._SFX.waveElite(); else window._SFX.wave();
       if (cfg.boss) {
         this.time.delayedCall(600, () => this.spawnBoss(cfg));
       } else {
@@ -2072,6 +2218,7 @@
         this.tweens.add({ targets:ft, y:ft.y-32, alpha:0, duration:750, onComplete:()=>ft.destroy() });
         if (this.ps.dodgeHeal) this.ps.hp = Math.min(this.ps.maxHp, this.ps.hp + this.ps.dodgeHeal);
         if (this.ps.dodgeSpeed) this.hasteUntil = Math.max(this.hasteUntil, this.time.now + 900);
+        window._SFX.dodge();
         this._waveHitThisTick = false;
         return 0;
       }
@@ -2084,6 +2231,7 @@
           near.forEach(e=>{ e.eHp -= Math.floor(raw * this.ps.divineCounter); this.hitFlash(e); });
         }
         if (this.ps.divineHeal) this.ps.hp = Math.min(this.ps.maxHp, this.ps.hp + this.ps.divineHeal);
+        window._SFX.block();
         this._waveHitThisTick = false;
         return 0;
       }
@@ -2099,6 +2247,7 @@
       }
       if (dmg <= 0) return 0;
       this.ps.hp -= dmg;
+      window._SFX.hurt();
       this.flashPlayer();
       this.cameras.main.shake(130, 0.007);
       this._vignette.setAlpha(0.7);
@@ -2452,7 +2601,7 @@
       }
 
       // Per-run stats
-      if (enemy.isElite) this._eliteKills = (this._eliteKills||0)+1;
+      if (enemy.isElite) { this._eliteKills = (this._eliteKills||0)+1; window._SFX.eliteKill(); } else { window._SFX.kill(); }
       if (enemy.isBoss)  this._bossKills  = (this._bossKills||0)+1;
       /* Kill Heal (Paladin Aura of Healing legendary) */
       if (this.ps.killHeal) this.ps.hp = Math.min(this.ps.maxHp, this.ps.hp + this.ps.killHeal);
@@ -2473,6 +2622,7 @@
         const wasInactive = this.time.now >= this.hasteUntil;
         this.hasteUntil = this.time.now + this.ps.hasteDur;
         if (wasInactive) {
+          window._SFX.haste();
           const ht = this.add.text(this.pg.x, this.pg.y - 32, '⚡ HASTE!', {
             fontSize:'13px', fontFamily:'system-ui', fontStyle:'bold', color:'#60a5fa', stroke:'#000', strokeThickness:3,
           }).setOrigin(0.5).setDepth(50);
@@ -2525,11 +2675,13 @@
       } else if (type === 'shield') {
         this.shieldActive = true; this.shieldUntilReady = this.time.now + 4500;
         floatTxt('SHIELD!', '#93c5fd');
+        window._SFX.pickup();
       } else if (type === 'hp') {
         if (!this.ps.is1hp) {
           const heal = Math.max(1, Math.floor(this.ps.maxHp * 0.2));
           this.ps.hp = Math.min(this.ps.maxHp, this.ps.hp + heal);
           floatTxt(`+${heal} HP`, '#4ade80');
+          window._SFX.pickup();
         }
       }
     }
@@ -2826,6 +2978,7 @@
       const all = this.enemies.getChildren().filter(e => e.active);
       if (!all.length) return;
       this.lastAtk = time;
+      window._SFX.shoot(this.ps.class);
       if (['knight','paladin','berserker'].includes(this.ps.class)) {
         this.meleeAttack(time, all);
       } else {
@@ -2880,6 +3033,7 @@
           this.dashDir = { x:dx/len, y:dy/len };
           this.dashUntil = time + 190;
           if (this.ps.backstabMult) this._justDashed = true;
+          window._SFX.dash();
           this.dashCd = time + 1400;
           this.shieldActive = true; this.shieldUntilReady = time + 230;
           for (let i = 0; i < 4; i++) {
@@ -3553,6 +3707,7 @@
         return;
       }
       this.dead = true; this.physics.pause();
+      window._SFX.death();
       const timeSec = Math.floor((Date.now() - this._runStart) / 1000);
       const baseSouls = Math.floor(this.waveNum * 3 + this.ps.kills * 0.15);
       const souls = Math.floor(baseSouls * (this.ps.soulMult || 1));
@@ -3885,6 +4040,7 @@
           fn(this.ps);
           if (!this.ps.traits) this.ps.traits = [];
           if (!this.ps.traits.includes(bp.id)) { this.ps.traits.push(bp.id); bp._takenTier = tier; }
+          window._SFX.levelUp();
           this.game_.resume();
         });
 
