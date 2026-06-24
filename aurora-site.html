@@ -3562,18 +3562,59 @@
         e.hpBar.fillStyle(e.isBoss ? 0xfbbf24 : 0xef4444, 1);
         e.hpBar.fillRect(e.x - bw/2, e.y - e.eSize - 11, bw * Math.max(0, e.eHp / e.eMaxHp), 4);
         /* Consecrate aura (Paladin) */
-      if (this.ps.consecrateDmg && time - this._lastConsecrateT > 1000) {
-        this._lastConsecrateT = time;
+      if (this.ps.consecrateDmg) {
         const cR = this.ps.consecrateR || 80;
-        this.enemies.getChildren().forEach(e => {
-          if (!e.active) return;
-          if (Phaser.Math.Distance.Between(this.pg.x, this.pg.y, e.x, e.y) <= cR) {
-            e.eHp -= this.ps.consecrateDmg; this.totalDmg = (this.totalDmg||0)+this.ps.consecrateDmg;
-            this.hitFlash(e);
-            if (this.ps.consecrateSlow) { e.eSpd = e.eBaseSpd * (1-this.ps.consecrateSlow); this.time.delayedCall(1100,()=>{ if(e.active)e.eSpd=e.eBaseSpd; }); }
-            if (e.eHp <= 0 && e.active) this.killEnemy(e);
-          }
-        });
+        /* Persistent ring visual — create once, update position each frame */
+        if (!this._consecRing) {
+          this._consecRing = this.add.graphics().setDepth(1);
+          this._consecPulse = this.add.circle(this.pg.x, this.pg.y, cR, 0xfef9c3, 0).setDepth(1);
+          /* Breathe: outer ring pulses in/out gently */
+          this._consecRingAlpha = 0.22;
+          this._consecBreath = this.tweens.add({
+            targets: this._consecPulse,
+            scaleX: { from: 0.92, to: 1.06 }, scaleY: { from: 0.92, to: 1.06 },
+            alpha: { from: 0.04, to: 0.10 },
+            duration: 1100, yoyo: true, repeat: -1, ease: 'sine.inOut',
+          });
+        }
+        /* Redraw ring every frame to follow player */
+        this._consecRing.clear();
+        /* Outer glow ring */
+        this._consecRing.lineStyle(3, 0xfef9c3, 0.30);
+        this._consecRing.strokeCircle(this.pg.x, this.pg.y, cR);
+        /* Inner faint fill ring */
+        this._consecRing.lineStyle(1, 0xfbbf24, 0.18);
+        this._consecRing.strokeCircle(this.pg.x, this.pg.y, cR * 0.72);
+        /* Rotating cross markers on the ring */
+        const rot = (time * 0.0008) % (Math.PI * 2);
+        for (let i = 0; i < 4; i++) {
+          const a = rot + i * Math.PI / 2;
+          const mx = this.pg.x + Math.cos(a) * cR;
+          const my = this.pg.y + Math.sin(a) * cR;
+          this._consecRing.fillStyle(0xfef9c3, 0.55);
+          this._consecRing.fillCircle(mx, my, 3.5);
+          this._consecRing.lineStyle(1.5, 0xfef9c3, 0.35);
+          this._consecRing.lineBetween(mx - 6, my, mx + 6, my);
+          this._consecRing.lineBetween(mx, my - 6, mx, my + 6);
+        }
+        this._consecPulse.setPosition(this.pg.x, this.pg.y).setRadius(cR);
+
+        /* Damage tick every 1s */
+        if (time - this._lastConsecrateT > 1000) {
+          this._lastConsecrateT = time;
+          this.enemies.getChildren().forEach(e => {
+            if (!e.active) return;
+            if (Phaser.Math.Distance.Between(this.pg.x, this.pg.y, e.x, e.y) <= cR) {
+              e.eHp -= this.ps.consecrateDmg; this.totalDmg = (this.totalDmg||0)+this.ps.consecrateDmg;
+              this.hitFlash(e);
+              if (this.ps.consecrateSlow) { e.eSpd = e.eBaseSpd * (1-this.ps.consecrateSlow); this.time.delayedCall(1100,()=>{ if(e.active)e.eSpd=e.eBaseSpd; }); }
+              if (e.eHp <= 0 && e.active) this.killEnemy(e);
+            }
+          });
+          /* Radiant pulse flash on tick */
+          const flash = this.add.circle(this.pg.x, this.pg.y, cR, 0xfef9c3, 0.18).setDepth(1);
+          this.tweens.add({ targets: flash, alpha: 0, scaleX: 1.15, scaleY: 1.15, duration: 400, ease: 'power2.out', onComplete: () => flash.destroy() });
+        }
       }
       /* Stunned enemy — freeze velocity */
       this.enemies.getChildren().forEach(e => { if (e.active && e.stunUntil && this.time.now < e.stunUntil && e.body) e.body.setVelocity(0,0); });
