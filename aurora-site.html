@@ -857,12 +857,6 @@
       rare:      { desc:'Kills grant +60% speed for 3s',  fn:p=>{ p.hasteBonus=(p.hasteBonus||0)+0.60; p.hasteDur=Math.min(8000,(p.hasteDur||0)+3000); p.b.haste=`+${Math.round(p.hasteBonus*100)}% ${p.hasteDur/1000}s`; } },
       legendary: { desc:'Kills grant +120% speed for 5s', fn:p=>{ p.hasteBonus=(p.hasteBonus||0)+1.20; p.hasteDur=Math.min(10000,(p.hasteDur||0)+5000);p.b.haste=`+${Math.round(p.hasteBonus*100)}% ${p.hasteDur/1000}s`; } },
       fmt:b=>b.haste?`Haste          ${b.haste}`:null },
-    /* ── General (all classes) ── */
-    { id:'haste', name:'Haste',
-      common:    { desc:'Kills grant +30% speed for 2s',  fn:p=>{ p.hasteBonus=(p.hasteBonus||0)+0.30; p.hasteDur=Math.min(8000,(p.hasteDur||0)+2000); p.b.haste=`+${Math.round(p.hasteBonus*100)}% ${p.hasteDur/1000}s`; } },
-      rare:      { desc:'Kills grant +60% speed for 3s',  fn:p=>{ p.hasteBonus=(p.hasteBonus||0)+0.60; p.hasteDur=Math.min(8000,(p.hasteDur||0)+3000); p.b.haste=`+${Math.round(p.hasteBonus*100)}% ${p.hasteDur/1000}s`; } },
-      legendary: { desc:'Kills grant +120% speed for 5s', fn:p=>{ p.hasteBonus=(p.hasteBonus||0)+1.20; p.hasteDur=Math.min(10000,(p.hasteDur||0)+5000);p.b.haste=`+${Math.round(p.hasteBonus*100)}% ${p.hasteDur/1000}s`; } },
-      fmt:b=>b.haste?`Haste          ${b.haste}`:null },
     { id:'aura', name:'Cursed Aura',
       common:    { desc:'+5 dmg/s aura, +15px range',   fn:p=>{ p.auraDmg=(p.auraDmg||0)+5;  p.auraRange=(p.auraRange||65)+15; p.b.aura=`${p.auraDmg}/s ${p.auraRange}px`; } },
       rare:      { desc:'+14 dmg/s aura, +25px range',  fn:p=>{ p.auraDmg=(p.auraDmg||0)+14; p.auraRange=(p.auraRange||85)+25; p.b.aura=`${p.auraDmg}/s ${p.auraRange}px`; } },
@@ -3958,33 +3952,75 @@
 
     _refreshTraits(ps) {
       const traits = ps.traits || [];
-      if (traits.length === this._lastTraitCount) return;
+      const stacks = ps.traitStacks || {};
+      const b = ps.b || {};
+      /* Rebuild whenever stacks change, not just trait count */
+      const stackSig = JSON.stringify(stacks);
+      if (stackSig === this._lastStackSig) return;
+      this._lastStackSig = stackSig;
       this._lastTraitCount = traits.length;
       this._traitContainer.removeAll(true);
-      const bpMap = {};
-      BLUEPRINTS.forEach(bp => bpMap[bp.id] = bp.name);
-      const pillH = 18, gap = 4;
-      traits.slice().reverse().forEach((id, i) => {
-        const name = bpMap[id] || id;
-        const y = -(i * (pillH + gap));
+
+      const W_PANEL = 148, pillH = 17, gap = 3;
+      let row = 0;
+
+      /* ── Section 1: accumulated stat totals via fmt() ── */
+      const statLines = [];
+      BLUEPRINTS.forEach(bp => {
+        if (!bp.fmt) return;
+        const line = bp.fmt(b);
+        if (line && !statLines.includes(line)) statLines.push(line);
+      });
+
+      statLines.forEach(line => {
+        const y = -(row * (pillH + gap));
+        const bg = this.add.graphics();
+        bg.fillStyle(0x0d0820, 0.90);
+        bg.fillRoundedRect(-W_PANEL, y - pillH/2, W_PANEL - 4, pillH, 3);
+        bg.lineStyle(1, 0x4c1d95, 0.60);
+        bg.strokeRoundedRect(-W_PANEL, y - pillH/2, W_PANEL - 4, pillH, 3);
+        const lbl = this.add.text(-W_PANEL/2 - 2, y, line.trim(), {
+          fontSize: '10px', fontFamily: 'system-ui', color: '#c4b5fd',
+        }).setOrigin(0.5);
+        this._traitContainer.add([bg, lbl]);
+        row++;
+      });
+
+      /* ── Divider + TRAITS header ── */
+      if (traits.length > 0 && statLines.length > 0) {
+        const dy = -(row * (pillH + gap));
+        const div = this.add.graphics();
+        div.lineStyle(1, 0x4c1d95, 0.35);
+        div.lineBetween(-W_PANEL, dy, -4, dy);
+        this._traitContainer.add(div);
+        row += 0.8;
+      }
+
+      /* ── Section 2: trait name pills with ×N stacks ── */
+      traits.slice().reverse().forEach(id => {
+        const bp = BLUEPRINTS.find(b => b.id === id);
+        const name = bp ? bp.name : id;
+        const n = stacks[id] || 1;
+        const label = n > 1 ? `${name} ×${n}` : name;
+        const y = -(row * (pillH + gap));
         const pill = this.add.graphics();
         pill.fillStyle(0x1e1030, 0.82);
-        pill.fillRoundedRect(-130, y - pillH/2, 124, pillH, 4);
-        pill.lineStyle(1, 0x7c3aed, 0.55);
-        pill.strokeRoundedRect(-130, y - pillH/2, 124, pillH, 4);
-        const label = this.add.text(-68, y, name, {
-          fontSize: '11px', fontFamily: 'system-ui', color: '#a78bfa',
+        pill.fillRoundedRect(-W_PANEL, y - pillH/2, W_PANEL - 4, pillH, 4);
+        pill.lineStyle(1, 0x7c3aed, 0.45);
+        pill.strokeRoundedRect(-W_PANEL, y - pillH/2, W_PANEL - 4, pillH, 4);
+        const txt = this.add.text(-W_PANEL/2 - 2, y, label, {
+          fontSize: '10px', fontFamily: 'system-ui', color: n > 1 ? '#fbbf24' : '#a78bfa',
         }).setOrigin(0.5);
-        this._traitContainer.add([pill, label]);
+        this._traitContainer.add([pill, txt]);
+        row++;
       });
+
       if (traits.length > 0) {
-        const header = this.add.graphics();
-        header.fillStyle(0x0f0720, 0.7);
-        header.fillRect(-130, -(traits.length * (pillH + gap)) - 2, 124, 16);
-        const htxt = this.add.text(-68, -(traits.length * (pillH + gap)) + 6, 'TRAITS', {
+        const hy = -(row * (pillH + gap));
+        const htxt = this.add.text(-W_PANEL/2 - 2, hy + 6, 'TRAITS', {
           fontSize: '9px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#4c1d95',
         }).setOrigin(0.5);
-        this._traitContainer.add([header, htxt]);
+        this._traitContainer.add(htxt);
       }
     }
 
@@ -4024,7 +4060,9 @@
           fontSize: '10px', fontFamily: 'system-ui', fontStyle: 'bold', color: tc.col, letterSpacing: 2,
         }).setOrigin(0.5, 0);
 
-        this.add.text(cx + cw / 2, cy + 38, bp.name, {
+        const stacks = (this.ps.traitStacks || {})[bp.id] || 0;
+        const nameLabel = stacks > 0 ? `${bp.name}  ×${stacks + 1}` : bp.name;
+        this.add.text(cx + cw / 2, cy + 38, nameLabel, {
           fontSize: '16px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#f1f5f9',
           wordWrap: { width: cw - 20 }, align: 'center',
         }).setOrigin(0.5, 0);
@@ -4034,11 +4072,24 @@
           wordWrap: { width: cw - 20 }, align: 'center',
         }).setOrigin(0.5, 0);
 
+        /* Current accumulated total for this trait */
+        if (stacks > 0 && bp.fmt && this.ps.b) {
+          const currentTotal = bp.fmt(this.ps.b);
+          if (currentTotal) {
+            this.add.text(cx + cw / 2, cy + ch - 18, `now: ${currentTotal.split(/\s{2,}/)[1] || currentTotal}`, {
+              fontSize: '11px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.45)',
+              wordWrap: { width: cw - 16 }, align: 'center',
+            }).setOrigin(0.5, 0);
+          }
+        }
+
         card.on('pointerover', () => card.setFillColor(tc.hover));
         card.on('pointerout',  () => card.setFillColor(tc.bg));
         card.on('pointerdown', () => {
           fn(this.ps);
           if (!this.ps.traits) this.ps.traits = [];
+          if (!this.ps.traitStacks) this.ps.traitStacks = {};
+          this.ps.traitStacks[bp.id] = (this.ps.traitStacks[bp.id] || 0) + 1;
           if (!this.ps.traits.includes(bp.id)) { this.ps.traits.push(bp.id); bp._takenTier = tier; }
           window._SFX.levelUp();
           this.game_.resume();
