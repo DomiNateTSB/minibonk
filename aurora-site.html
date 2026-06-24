@@ -4785,18 +4785,20 @@
     scene: [MenuScene, ClassSelectScene, GameScene, UIScene, LevelUpScene, SummaryScene, MetaScene, PauseMenuScene, AchievementsScene],
   });
 
-  /* Detect orientation flip via resize (more reliable than orientationchange on iOS).
-     Only reload when the aspect ratio actually crosses portrait/landscape boundary. */
-  let _wasPortrait = window.innerHeight > window.innerWidth;
-  window.addEventListener('resize', () => {
-    const isPortrait = window.innerHeight > window.innerWidth;
-    if (isPortrait === _wasPortrait) return; // not a flip, ignore
-    _wasPortrait = isPortrait;
+  /* Orientation detection — matchMedia is the only reliable method on iOS Safari.
+     resize and orientationchange both have known issues with locked viewports. */
+  function _doOrientationReload() {
     if (window._liveRunState) {
       try { sessionStorage.setItem('hoa_run_restore', JSON.stringify(window._liveRunState)); } catch {}
     }
-    setTimeout(() => window.location.reload(), 80);
-  });
+    setTimeout(() => window.location.reload(), 120);
+  }
+  try {
+    window.matchMedia('(orientation: portrait)').addEventListener('change', _doOrientationReload);
+  } catch {
+    /* Fallback for older browsers */
+    window.addEventListener('orientationchange', () => setTimeout(_doOrientationReload, 300));
+  }
   </script>
 
   <script type="module">
