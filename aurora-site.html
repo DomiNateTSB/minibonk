@@ -1177,7 +1177,7 @@
           const bg = this.add.rectangle(cx, rowCy, cardW, cardH, cls.color, unlocked ? 0.13 : 0.05)
             .setInteractive({ useHandCursor: unlocked });
           const ebg = this.add.graphics();
-          if (unlocked) this._ebCards.push({ g: ebg, cx, cy: rowCy, w: cardW, h: cardH, color: cls.color });
+          this._ebCards.push({ g: ebg, cx, cy: rowCy, w: cardW, h: cardH, color: cls.color, locked: !unlocked });
 
           this.add.circle(cx, rowCy - 106, 26, cls.color, unlocked ? 0.85 : 0.25);
           this.add.text(cx, rowCy - 106, unlocked ? (CLASS_EMOJI[key]||'?') : '🔒', {
@@ -1273,9 +1273,9 @@
     update(time, delta) {
       if (!this._ebCards || !this._ebCards.length) return;
       this._ebTime += (delta / 1000) * 0.75;
-      this._ebCards.forEach(({ g, cx, cy, w, h, color }) => {
+      this._ebCards.forEach(({ g, cx, cy, w, h, color, locked }) => {
         g.clear();
-        this._drawEB(g, cx - w/2, cy - h/2, w, h, 8, this._ebTime, color);
+        this._drawEB(g, cx - w/2, cy - h/2, w, h, 8, this._ebTime, locked ? 0x374151 : color);
       });
     }
   }
