@@ -1566,6 +1566,21 @@
       this.dashCd = 0; this.dashUntil = 0; this.dashDir = {x:0,y:0};
       this._runStart = Date.now();
       this.isDaily = localStorage.getItem('hoa_daily') === '1';
+
+      /* ── Orientation-change run restore ── */
+      try {
+        const saved = sessionStorage.getItem('hoa_run_restore');
+        if (saved) {
+          sessionStorage.removeItem('hoa_run_restore');
+          const r = JSON.parse(saved);
+          /* Restore player stats and traits — re-apply each trait fn to rebuild ps correctly */
+          Object.assign(this.ps, r.ps);
+          this.waveNum = Math.max(0, (r.waveNum || 1) - 1); /* will be incremented by startWave */
+          this._streak = r.streak || 0;
+          this.ps._rerollsLeft = r.rerollsLeft ?? 3;
+        }
+      } catch {}
+
       if (this.isDaily) _dailyRng = mulberry32(getDailySeed());
 
       this.enemies     = this.physics.add.group();
@@ -3819,6 +3834,14 @@
 
       this.autoAttack(time);
       this.events.emit('stats', this.ps);
+
+      /* Keep live run state fresh for orientation-change restore */
+      window._liveRunState = {
+        ps: JSON.parse(JSON.stringify(this.ps)),
+        waveNum: this.waveNum,
+        streak: this._streak || 0,
+        rerollsLeft: this.ps._rerollsLeft ?? 3,
+      };
     }
 
     onMinionHit(minion, enemy) {
@@ -3972,6 +3995,7 @@
         return;
       }
       this.dead = true; this.physics.pause();
+      window._liveRunState = null;
       window._SFX.death();
       const timeSec = Math.floor((Date.now() - this._runStart) / 1000);
       const baseSouls = Math.floor(this.waveNum * 3 + this.ps.kills * 0.15);
@@ -4761,10 +4785,13 @@
     scene: [MenuScene, ClassSelectScene, GameScene, UIScene, LevelUpScene, SummaryScene, MetaScene, PauseMenuScene, AchievementsScene],
   });
 
-  /* Reload on orientation change so scenes re-layout with correct W/H.
-     localStorage preserves all progress — no run data is lost. */
+  /* On orientation change: save live run state to sessionStorage, then reload.
+     The game restores it seamlessly — player continues from the same wave. */
   window.addEventListener('orientationchange', () => {
-    setTimeout(() => window.location.reload(), 350);
+    if (window._liveRunState) {
+      try { sessionStorage.setItem('hoa_run_restore', JSON.stringify(window._liveRunState)); } catch {}
+    }
+    setTimeout(() => window.location.reload(), 300);
   });
   </script>
 
