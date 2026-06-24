@@ -156,6 +156,26 @@
     🏆 <span>LEADERBOARD</span> <span id="lb-caret" style="font-size:10px">▼</span>
   </div>
 
+  <!-- ── ACHIEVEMENTS SIDE PANEL ── -->
+  <div id="ach-panel" style="
+    display:none; position:fixed; top:52px; left:368px; z-index:199;
+    width:300px; background:rgba(8,4,20,0.97); border:1px solid rgba(124,58,237,0.5);
+    border-radius:10px; font-family:system-ui; overflow:hidden;
+    backdrop-filter:blur(12px); box-shadow:0 8px 32px rgba(0,0,0,0.7);
+  ">
+    <div style="padding:10px 14px 8px; border-bottom:1px solid rgba(124,58,237,0.3); display:flex; align-items:center; justify-content:space-between;">
+      <span style="font-size:11px;font-weight:bold;letter-spacing:1.5px;color:#fbbf24;">🏆 YOUR ACHIEVEMENTS</span>
+      <span id="ach-count" style="font-size:10px;color:rgba(255,255,255,0.3);"></span>
+    </div>
+    <div id="ach-rows" style="
+      max-height:360px; overflow-y:auto; padding:6px 0;
+      scrollbar-width:thin; scrollbar-color:rgba(124,58,237,0.4) transparent;
+    "></div>
+    <div style="text-align:center;padding:6px;font-size:10px;color:rgba(255,255,255,0.18);border-top:1px solid rgba(124,58,237,0.15);">
+      Complete runs to unlock more
+    </div>
+  </div>
+
   <div id="lb-panel" style="
     display:none; position:fixed; top:52px; left:14px; z-index:199;
     width:340px; background:rgba(8,4,20,0.97); border:1px solid rgba(124,58,237,0.5);
@@ -192,6 +212,62 @@
   (function(){
     const CLASS_EMOJI_DOM = { hunter:'🏹', knight:'⚔️', wizard:'🔮', necromancer:'💀', rogue:'🗡️', paladin:'🛡️', berserker:'🪓' };
     let _open = false, _activeTab = 'normal', _cache = { normal: null, '1hp': null };
+
+    const ACH_DEFS = [
+      { id:'firstBlood',  icon:'🩸', name:'First Blood',     hint:'Kill 1 enemy',              cat:'easy' },
+      { id:'survivor5',   icon:'⏱️', name:'Survivor',         hint:'Last 5 minutes',            cat:'easy' },
+      { id:'wave10',      icon:'🌊', name:'Wave Rider',       hint:'Reach wave 10',             cat:'easy' },
+      { id:'level10',     icon:'⭐', name:'Rising Star',      hint:'Get to level 10',           cat:'easy' },
+      { id:'century',     icon:'💯', name:'Century',          hint:'100 kills in one run',      cat:'medium' },
+      { id:'allClasses',  icon:'🎭', name:'Class Act',        hint:'Try every starter class',   cat:'medium' },
+      { id:'elite25',     icon:'👑', name:'Elite Slayer',     hint:'25 elites in one run',      cat:'medium' },
+      { id:'souls5k',     icon:'✦',  name:'Soul Hoarder',     hint:'Earn 5000 total souls',     cat:'medium' },
+      { id:'speedRunner', icon:'🏃', name:'Speed Runner',     hint:'Last 10 minutes in one run',cat:'hard', unlocks:'Rogue' },
+      { id:'wave25',      icon:'🏆', name:'Wave Champion',    hint:'Reach wave 25',             cat:'hard', unlocks:'Berserker' },
+      { id:'millennium',  icon:'💀', name:'Millennium',       hint:'1000 total kills ever',     cat:'hard', unlocks:'Paladin' },
+      { id:'triLegend',   icon:'🌟', name:'Legendary Run',    hint:'3 legendaries in one run',  cat:'hard' },
+      { id:'bossHunter',  icon:'🐉', name:'Boss Hunter',      hint:'Defeat 20 bosses total',    cat:'hard' },
+      { id:'untouchable', icon:'🛡️', name:'Untouchable',      hint:'No damage for one wave',    cat:'legendary' },
+      { id:'wave35',      icon:'👹', name:'Apex Predator',    hint:'Reach wave 35',             cat:'legendary' },
+      { id:'decimator',   icon:'💥', name:'Decimator',        hint:'1M damage in one run',      cat:'legendary' },
+      { id:'onehpLegend', icon:'☠️', name:'1HP Legend',       hint:'10 min in 1HP mode',        cat:'legendary' },
+      { id:'speedDemon',  icon:'⚡', name:'Speed Demon',      hint:'Last 20 minutes',           cat:'legendary' },
+    ];
+
+    const CAT_COL = { easy:'#4ade80', medium:'#60a5fa', hard:'#f87171', legendary:'#fbbf24' };
+
+    function renderAchievements() {
+      let granted = [];
+      try { granted = JSON.parse(localStorage.getItem('hoa_ach')) || []; } catch {}
+      const rows = document.getElementById('ach-rows');
+      const count = document.getElementById('ach-count');
+      count.textContent = `${granted.length} / ${ACH_DEFS.length}`;
+      const cats = ['easy','medium','hard','legendary'];
+      const catLabel = { easy:'Easy', medium:'Medium', hard:'Hard', legendary:'Legendary' };
+      rows.innerHTML = cats.map(cat => {
+        const group = ACH_DEFS.filter(a => a.cat === cat);
+        const items = group.map(a => {
+          const earned = granted.includes(a.id);
+          return `<div style="
+            display:flex; align-items:center; gap:8px; padding:5px 12px;
+            opacity:${earned ? 1 : 0.38};
+          ">
+            <span style="font-size:14px;width:18px;text-align:center">${a.icon}</span>
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:11px;font-weight:bold;color:${earned ? CAT_COL[cat] : '#6b7280'};
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                ${a.name}${a.unlocks ? ` <span style="font-size:9px;color:#fbbf24">🔓 ${a.unlocks}</span>` : ''}
+              </div>
+              <div style="font-size:9px;color:rgba(255,255,255,${earned?0.45:0.25});margin-top:1px;">
+                ${earned ? '✓ Completed' : a.hint}
+              </div>
+            </div>
+            ${earned ? '<span style="color:#fbbf24;font-size:12px">✓</span>' : ''}
+          </div>`;
+        }).join('');
+        return `<div style="padding:4px 12px 2px;font-size:9px;font-weight:bold;letter-spacing:2px;color:${CAT_COL[cat]};opacity:0.7;margin-top:4px;">${catLabel[cat].toUpperCase()}</div>${items}`;
+      }).join('');
+    }
 
     function renderRows(scores) {
       const rows = document.getElementById('lb-rows');
@@ -248,8 +324,9 @@
     window._lbToggle = function() {
       _open = !_open;
       document.getElementById('lb-panel').style.display = _open ? 'block' : 'none';
+      document.getElementById('ach-panel').style.display = _open ? 'block' : 'none';
       document.getElementById('lb-caret').textContent = _open ? '▲' : '▼';
-      if (_open) { _cache = { normal: null, '1hp': null }; loadTab(_activeTab); }
+      if (_open) { _cache = { normal: null, '1hp': null }; loadTab(_activeTab); renderAchievements(); }
     };
 
     window._lbTab = function(tab) {
@@ -265,7 +342,7 @@
 
     /* Close when clicking outside */
     document.addEventListener('click', e => {
-      if (_open && !e.target.closest('#lb-btn') && !e.target.closest('#lb-panel')) {
+      if (_open && !e.target.closest('#lb-btn') && !e.target.closest('#lb-panel') && !e.target.closest('#ach-panel')) {
         _open = false;
         document.getElementById('lb-panel').style.display = 'none';
         document.getElementById('lb-caret').textContent = '▼';
