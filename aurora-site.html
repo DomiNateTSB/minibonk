@@ -4198,8 +4198,9 @@
       this.waveTxt = this.add.text(W / 2, 52, '', {
         fontSize: '22px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#fff',
       }).setOrigin(0.5, 0);
-      this.killTxt  = this.add.text(W - 16, 18, 'Kills: 0',  { fontSize: '15px', fontFamily: 'system-ui', color: '#a78bfa' }).setOrigin(1, 0);
-      this.levelTxt = this.add.text(W - 16, 44, 'Level 1',   { fontSize: '13px', fontFamily: 'system-ui', color: '#7c3aed' }).setOrigin(1, 0);
+      /* Offset kill/level below mute button (which sits at CSS top:14px right:14px ~43px tall) */
+      this.killTxt  = this.add.text(W - 16, 58, 'Kills: 0',  { fontSize: '15px', fontFamily: 'system-ui', color: '#a78bfa' }).setOrigin(1, 0);
+      this.levelTxt = this.add.text(W - 16, 80, 'Level 1',   { fontSize: '13px', fontFamily: 'system-ui', color: '#7c3aed' }).setOrigin(1, 0);
       /* 1HP mode badge */
       if (localStorage.getItem('hoa_1hp') === '1') {
         const badge = this.add.graphics();
@@ -4213,6 +4214,20 @@
       this._traitPills = [];
       this._traitContainer = this.add.container(W - 10, H - 36);
       this._lastTraitCount = -1;
+      this._traitsMinimized = false;
+
+      /* Minimize toggle button */
+      this._minimizeBtn = this.add.text(W - 14, H - 36, '▼', {
+        fontSize: '11px', fontFamily: 'system-ui', color: '#6d28d9',
+        stroke: '#000', strokeThickness: 2,
+      }).setOrigin(1, 0.5).setInteractive({ useHandCursor: true }).setAlpha(0.7).setDepth(10);
+      this._minimizeBtn.on('pointerover', () => this._minimizeBtn.setAlpha(1));
+      this._minimizeBtn.on('pointerout',  () => this._minimizeBtn.setAlpha(0.7));
+      this._minimizeBtn.on('pointerdown', () => {
+        this._traitsMinimized = !this._traitsMinimized;
+        this._traitContainer.setVisible(!this._traitsMinimized);
+        this._minimizeBtn.setText(this._traitsMinimized ? '▲' : '▼');
+      });
 
       g.events.on('wave', (n, boss) => {
         this.waveTxt.setText(boss ? `BOSS WAVE ${n}` : `Wave ${n}`);
@@ -4407,23 +4422,23 @@
       const add = (o) => { this._cardGroup.push(o); return o; };
 
       add(this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.70));
-      add(this.add.text(W / 2, H / 2 - 185, `LEVEL ${this.ps.level}`, {
+      add(this.add.text(W / 2, H / 2 - 175, `LEVEL ${this.ps.level}`, {
         fontSize: '38px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#a78bfa',
       }).setOrigin(0.5));
-      add(this.add.text(W / 2, H / 2 - 135, 'Choose a trait', {
+      add(this.add.text(W / 2, H / 2 - 128, 'Choose a trait', {
         fontSize: '17px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.45)',
       }).setOrigin(0.5));
 
       const meta = loadMeta();
       const canReroll = this._rerollsLeft > 0 && meta.souls >= 25;
 
-      /* Reroll button */
-      const rrBg = add(this.add.rectangle(W / 2, H / 2 + 108, 220, 34, canReroll ? 0x1a3a1a : 0x1a1a1a, 0.95)
-        .setStrokeStyle(1.5, canReroll ? 0x4ade80 : 0x333333));
-      const rrTxt = add(this.add.text(W / 2, H / 2 + 108,
+      /* Reroll button — placed above cards so it's always visible */
+      const rrBg = add(this.add.rectangle(W / 2, H / 2 - 100, 240, 36, canReroll ? 0x0d2b0d : 0x181818, 0.97)
+        .setStrokeStyle(2, canReroll ? 0x4ade80 : 0x383838));
+      const rrTxt = add(this.add.text(W / 2, H / 2 - 100,
         canReroll ? `↺  Reroll traits  (25 souls · ${this._rerollsLeft} left)` : `↺  Reroll  (${this._rerollsLeft === 0 ? 'no rerolls left' : 'need 25 souls'})`, {
         fontSize: '13px', fontFamily: 'system-ui', fontStyle: 'bold',
-        color: canReroll ? '#4ade80' : '#555',
+        color: canReroll ? '#4ade80' : '#4a4a4a',
       }).setOrigin(0.5));
 
       if (canReroll) {
@@ -4446,7 +4461,7 @@
 
       offers.forEach(({ bp, tier, desc, fn }, i) => {
         const tc = TIER_CFG[tier];
-        const cx = sx + i * (cw + gap), cy = H / 2 - 80;
+        const cx = sx + i * (cw + gap), cy = H / 2 - 40;
 
         const card = this.add.rectangle(cx, cy, cw, ch, tc.bg, 0.97).setOrigin(0).setInteractive({ useHandCursor: true });
         card.setStrokeStyle(tier === 'legendary' ? 2.5 : 1.5, tc.border);
@@ -4675,9 +4690,9 @@
       const respecCost = 500;
       const hasUpgrades = Object.values(meta.upgrades || {}).some(v => v > 0);
       const canRespec = hasUpgrades && meta.souls >= respecCost;
-      const rsBg = this.add.rectangle(W / 2, 197, 230, 28, canRespec ? 0x3a1a00 : 0x1a1a1a, 0.95)
+      const rsBg = this.add.rectangle(W / 2, 222, 230, 28, canRespec ? 0x3a1a00 : 0x1a1a1a, 0.95)
         .setStrokeStyle(1, canRespec ? 0xf97316 : 0x333333);
-      const rsTxt = this.add.text(W / 2, 197,
+      const rsTxt = this.add.text(W / 2, 222,
         hasUpgrades ? `⟳  Re-spec upgrades  (${respecCost} souls)` : '⟳  No upgrades to re-spec', {
         fontSize: '11px', fontFamily: 'system-ui', fontStyle: 'bold',
         color: canRespec ? '#fb923c' : '#444',
@@ -4700,7 +4715,7 @@
         });
       }
 
-      this.add.text(W / 2, 212, 'PERMANENT UPGRADES', {
+      this.add.text(W / 2, 246, 'PERMANENT UPGRADES', {
         fontSize: '11px', fontFamily: 'system-ui', fontStyle: 'bold', color: 'rgba(255,255,255,0.3)', letterSpacing: 3,
       }).setOrigin(0.5);
 
@@ -4710,7 +4725,7 @@
 
       META_UPGRADES.forEach((u, i) => {
         const col = i % cols, row = Math.floor(i / cols);
-        const ux = sx + col * (uw + ugap), uy = 226 + row * (uh + 10);
+        const ux = sx + col * (uw + ugap), uy = 262 + row * (uh + 10);
         const rank = meta.upgrades[u.id] || 0;
         const maxed = rank >= META_MAX;
         const cost = maxed ? 0 : META_COSTS[rank];
