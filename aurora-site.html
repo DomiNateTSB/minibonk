@@ -2792,7 +2792,12 @@
       }
       this.events.emit('streak', this._streak);
       /* Milestone announcements */
-      const milestones = { 10:'KILLING SPREE!', 25:'RAMPAGE!', 50:'UNSTOPPABLE!', 100:'GODLIKE!' };
+      const milestones = {
+        10:'KILLING SPREE', 25:'RAMPAGE', 50:'UNSTOPPABLE', 75:'DEVASTATING',
+        100:'GODLIKE', 150:'LEGENDARY', 200:'BEYOND HUMAN', 250:'APEX PREDATOR',
+        300:'EXTINCTION EVENT', 400:'FORCE OF NATURE', 500:'WALKING DEATH',
+        600:'WORLD ENDER', 750:'MYTHIC', 1000:'ETERNAL SLAYER',
+      };
       if (milestones[this._streak]) {
         this.events.emit('streakMilestone', this._streak, milestones[this._streak]);
         window._SFX.achieve();
