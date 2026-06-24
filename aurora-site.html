@@ -190,7 +190,7 @@
 
   <script>
   (function(){
-    const CLASS_EMOJI_DOM = { hunter:'🏹', knight:'⚔️', wizard:'🔮', necromancer:'💀' };
+    const CLASS_EMOJI_DOM = { hunter:'🏹', knight:'⚔️', wizard:'🔮', necromancer:'💀', rogue:'🗡️', paladin:'🛡️', berserker:'🪓' };
     let _open = false, _activeTab = 'normal', _cache = { normal: null, '1hp': null };
 
     function renderRows(scores) {
@@ -302,7 +302,7 @@
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpY2xhZWVtdWxoa2RlanlleXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxOTkzODIsImV4cCI6MjA5Nzc3NTM4Mn0.VkFCPzroqgPgUkxXfLjrWbWBXoOONV6OFHBuyrRm7l0';
   const SB_HDR = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json' };
 
-  const CLASS_EMOJI = { hunter:'🏹', knight:'⚔️', wizard:'🔮', necromancer:'💀' };
+  const CLASS_EMOJI = { hunter:'🏹', knight:'⚔️', wizard:'🔮', necromancer:'💀', rogue:'🗡️', paladin:'🛡️', berserker:'🪓' };
 
   async function postScore(name, wave, kills, level, cls, is1hp) {
     const table = is1hp ? 'aurora_leaderboard_1hp' : 'aurora_leaderboard';
@@ -343,6 +343,63 @@
 
   /* ── META SYSTEM ── */
   const SAVE_KEY = 'hoa_meta';
+
+  const STATS_KEY = 'hoa_stats';
+  const ACH_KEY   = 'hoa_ach';
+
+  function loadStats() {
+    try { return JSON.parse(localStorage.getItem(STATS_KEY)) || {}; } catch { return {}; }
+  }
+  function saveStats(st) { localStorage.setItem(STATS_KEY, JSON.stringify(st)); }
+  function loadAch()  { try { return JSON.parse(localStorage.getItem(ACH_KEY)) || []; } catch { return []; } }
+  function saveAch(a) { localStorage.setItem(ACH_KEY, JSON.stringify(a)); }
+
+  const ACHIEVEMENTS = [
+    /* ── EASY ── */
+    { id:'firstBlood',  name:'First Blood',     desc:'Kill your first enemy',                    hint:'Kill 1 enemy',              cat:'easy',      icon:'🩸', check:(st)=>st.totalKills>=1 },
+    { id:'survivor5',   name:'Survivor',         desc:'Survive 5 minutes in a single run',        hint:'Last 5 minutes',            cat:'easy',      icon:'⏱️', check:(st)=>st.lastTimeSec>=300 },
+    { id:'wave10',      name:'Wave Rider',       desc:'Reach wave 10',                            hint:'Reach wave 10',             cat:'easy',      icon:'🌊', check:(st)=>st.bestWave>=10 },
+    { id:'level10',     name:'Rising Star',      desc:'Reach level 10 in one run',               hint:'Get to level 10',           cat:'easy',      icon:'⭐', check:(st)=>st.bestLevel>=10 },
+    /* ── MEDIUM ── */
+    { id:'century',     name:'Century',          desc:'Kill 100 enemies in a single run',         hint:'100 kills in one run',      cat:'medium',    icon:'💯', check:(st)=>st.bestKillRun>=100 },
+    { id:'allClasses',  name:'Class Act',        desc:'Play as all 4 starter classes',            hint:'Try every starter class',   cat:'medium',    icon:'🎭', check:(st)=>['hunter','knight','wizard','necromancer'].every(c=>st['played_'+c]) },
+    { id:'elite25',     name:'Elite Slayer',     desc:'Kill 25 elite enemies in one run',         hint:'Defeat 25 elites per run',  cat:'medium',    icon:'👑', check:(st)=>st.bestEliteRun>=25 },
+    { id:'souls5k',     name:'Soul Hoarder',     desc:'Earn 5000 total souls across all runs',    hint:'Accumulate 5000 souls',     cat:'medium',    icon:'✦',  check:(st)=>st.totalSouls>=5000 },
+    /* ── HARD ── */
+    { id:'speedRunner', name:'Speed Runner',     desc:'Survive 10 minutes in a single run',       hint:'Last 10 minutes in one run',cat:'hard',      icon:'🏃', check:(st)=>st.lastTimeSec>=600,  unlocks:'rogue' },
+    { id:'wave25',      name:'Wave Champion',    desc:'Reach wave 25 in a single run',            hint:'Reach wave 25',             cat:'hard',      icon:'🏆', check:(st)=>st.bestWave>=25,       unlocks:'berserker' },
+    { id:'millennium',  name:'Millennium',       desc:'Kill 1000 enemies across all runs',        hint:'1000 total kills ever',     cat:'hard',      icon:'💀', check:(st)=>st.totalKills>=1000,   unlocks:'paladin' },
+    { id:'triLegend',   name:'Legendary Run',    desc:'Get 3 legendary traits in one run',        hint:'3 legendaries in one run',  cat:'hard',      icon:'🌟', check:(st)=>st.bestLegendaryRun>=3 },
+    { id:'bossHunter',  name:'Boss Hunter',      desc:'Kill 20 bosses across all runs',           hint:'Defeat 20 bosses total',    cat:'hard',      icon:'🐉', check:(st)=>st.totalBossKills>=20 },
+    /* ── LEGENDARY ── */
+    { id:'untouchable', name:'Untouchable',      desc:'Complete a full wave without taking damage',hint:'No damage for one wave',   cat:'legendary', icon:'🛡️', check:(st)=>st.perfectWaveEver },
+    { id:'wave35',      name:'Apex Predator',    desc:'Reach wave 35 in a single run',            hint:'Reach wave 35',            cat:'legendary', icon:'👹', check:(st)=>st.bestWave>=35 },
+    { id:'decimator',   name:'Decimator',        desc:'Deal 1,000,000 damage in one run',         hint:'1M damage in a single run', cat:'legendary', icon:'💥', check:(st)=>st.bestDmgRun>=1000000 },
+    { id:'onehpLegend', name:'1HP Legend',       desc:'Survive 10 minutes in 1HP mode',           hint:'10 min in 1HP mode',       cat:'legendary', icon:'☠️', check:(st)=>st.best1hpSec>=600 },
+    { id:'speedDemon',  name:'Speed Demon',      desc:'Survive 20 minutes in a single run',       hint:'Last 20 minutes',          cat:'legendary', icon:'⚡', check:(st)=>st.lastTimeSec>=1200 },
+  ];
+
+  function checkAchievements(runStats) {
+    const st = loadStats();
+    const granted = loadAch();
+    const newlyGranted = [];
+    ACHIEVEMENTS.forEach(ach => {
+      if (granted.includes(ach.id)) return;
+      if (ach.check(st, runStats)) { granted.push(ach.id); newlyGranted.push(ach); }
+    });
+    if (newlyGranted.length) saveAch(granted);
+    return newlyGranted;
+  }
+
+  function isClassUnlocked(cls) {
+    const starters = ['hunter','knight','wizard','necromancer'];
+    if (starters.includes(cls)) return true;
+    const granted = loadAch();
+    const ach = ACHIEVEMENTS.find(a => a.unlocks === cls);
+    return ach ? granted.includes(ach.id) : false;
+  }
+
+
   const META_UPGRADES = [
     { id:'hp',         name:'Fortitude',    desc:'+20 starting HP',           apply:(p,r)=>{ p.maxHp+=r*20; p.hp=p.maxHp; } },
     { id:'dmg',        name:'Whetstone',    desc:'+6% starting damage',       apply:(p,r)=>{ p.dmg*=Math.pow(1.06,r); } },
@@ -359,7 +416,10 @@
     { id:'unlock_hunter', name:'🏹 Hunter: Eagle Eyes',   desc:'Hunter starts with infinite proj range', apply:(p,r)=>{ if(r>0&&p.class==='hunter') p.projLifetime=999999; } },
     { id:'unlock_knight', name:'⚔️ Knight: Iron Will',    desc:'Knight starts with +100 max HP',         apply:(p,r)=>{ if(r>0&&p.class==='knight'){ p.maxHp+=100; p.hp+=100; } } },
     { id:'unlock_wizard', name:'🔮 Wizard: Arcane Power', desc:'Wizard starts with +25% damage',         apply:(p,r)=>{ if(r>0&&p.class==='wizard') p.dmg*=1.25; } },
-    { id:'unlock_necro',  name:'💀 Necro: Dark Pact',     desc:'Necromancer starts with Raise Dead',     apply:(p,r)=>{ if(r>0&&p.class==='necromancer'){ p.raiseDead=true; p.raiseChance=0.35; } } },
+    { id:'unlock_necro',     name:'💀 Necro: Dark Pact',       desc:'Necromancer starts with Raise Dead',     apply:(p,r)=>{ if(r>0&&p.class==='necromancer'){ p.raiseDead=true; p.raiseChance=0.35; } } },
+    { id:'unlock_rogue',     name:'🗡️ Rogue: Ghost Step',     desc:'Rogue starts with -30% dash cooldown',   apply:(p,r)=>{ if(r>0&&p.class==='rogue') p.dashCd=Math.max(250,(p.dashCd||600)*Math.pow(0.70,r)); } },
+    { id:'unlock_paladin',   name:'🛡️ Paladin: Holy Armor',   desc:'Paladin starts with 12% damage reduction',apply:(p,r)=>{ if(r>0&&p.class==='paladin') p.dmgReduce=(p.dmgReduce||0)+r*0.12; } },
+    { id:'unlock_berserker', name:'🪓 Berserker: Bloodlust',  desc:'Berserker heals 3% of damage dealt',      apply:(p,r)=>{ if(r>0&&p.class==='berserker') p.vStrike=(p.vStrike||0)+r*0.03; } },
   ];
   const META_COSTS = [200, 600, 1800, 5000, 14000];
   const META_MAX   = META_COSTS.length;
@@ -738,6 +798,73 @@
       legendary: { desc:'+5 max minions, minions never expire', fn:p=>{ p.maxMinions=(p.maxMinions||3)+5; p.minionDur=9999999; p.b.horde='+5 immortal'; } },
       fmt:b=>b.horde?`Undead Horde   ${b.horde}`:null },
 
+
+    // ── ROGUE TRAITS ──────────────────────────────────────────────────────────
+    { id:'evasion', name:'Evasion', cls:'rogue',
+      common:    { desc:'15% chance to dodge attacks',            fn:p=>{ p.dodgeChance=(p.dodgeChance||0)+0.15; p.b.evasion=Math.round((p.dodgeChance||0)*100)+'%'; } },
+      rare:      { desc:'30% dodge — gain burst speed on dodge',  fn:p=>{ p.dodgeChance=(p.dodgeChance||0)+0.30; p.dodgeSpeed=true; p.b.evasion=Math.round((p.dodgeChance||0)*100)+'% spd'; } },
+      legendary: { desc:'50% dodge — heal 20HP on each dodge',   fn:p=>{ p.dodgeChance=(p.dodgeChance||0)+0.50; p.dodgeSpeed=true; p.dodgeHeal=20; p.b.evasion=Math.round((p.dodgeChance||0)*100)+'% +heal'; } },
+      fmt:b=>b.evasion?`Evasion        ${b.evasion}`:null },
+    { id:'backstab', name:'Backstab', cls:'rogue',
+      common:    { desc:'First hit after dashing deals +100% dmg',  fn:p=>{ p.backstabMult=(p.backstabMult||1)+1.0; p.b.backstab=Math.round((p.backstabMult||1)*100)+'%'; } },
+      rare:      { desc:'First hit after dash: +200% dmg',          fn:p=>{ p.backstabMult=(p.backstabMult||1)+2.0; p.b.backstab=Math.round((p.backstabMult||1)*100)+'%'; } },
+      legendary: { desc:'First hit after dash: +450% dmg + stun',   fn:p=>{ p.backstabMult=(p.backstabMult||1)+4.5; p.backstabStun=true; p.b.backstab=Math.round((p.backstabMult||1)*100)+'%+stun'; } },
+      fmt:b=>b.backstab?`Backstab       ${b.backstab}`:null },
+    { id:'venomBlade', name:'Venom Blade', cls:'rogue',
+      common:    { desc:'Attacks poison for 4s (25 dmg/tick)',       fn:p=>{ p.poisonDmg=(p.poisonDmg||0)+25; p.poisonDur=Math.max(4000,p.poisonDur||0); p.b.venom=p.poisonDmg+'/tick'; } },
+      rare:      { desc:'Poison: 55 dmg/tick, 6s duration',          fn:p=>{ p.poisonDmg=(p.poisonDmg||0)+55; p.poisonDur=Math.max(6000,p.poisonDur||0); p.b.venom=p.poisonDmg+'/tick'; } },
+      legendary: { desc:'Poison: 130 dmg/tick, 8s, spreads on kill', fn:p=>{ p.poisonDmg=(p.poisonDmg||0)+130; p.poisonDur=Math.max(8000,p.poisonDur||0); p.poisonSpread=true; p.b.venom=p.poisonDmg+'/tick+spread'; } },
+      fmt:b=>b.venom?`Venom Blade    ${b.venom}`:null },
+    { id:'daggers', name:'Dagger Flurry', cls:'rogue',
+      common:    { desc:'-20% atkCd and +1 dagger per burst',        fn:p=>{ p.atkCd*=0.80; p.multi=(p.multi||0)+1; p.b.daggers='×'+(2+(p.multi||0)); } },
+      rare:      { desc:'-35% atkCd and +2 daggers per burst',       fn:p=>{ p.atkCd*=0.65; p.multi=(p.multi||0)+2; p.b.daggers='×'+(2+(p.multi||0)); } },
+      legendary: { desc:'-55% atkCd, +3 daggers, pierces 1 target',  fn:p=>{ p.atkCd*=0.45; p.multi=(p.multi||0)+3; p.pierce=(p.pierce||0)+1; p.b.daggers='×'+(2+(p.multi||0))+'pierce'; } },
+      fmt:b=>b.daggers?`Dagger Flurry  ${b.daggers}`:null },
+
+    // ── PALADIN TRAITS ───────────────────────────────────────────────────────
+    { id:'consecrate', name:'Consecrate', cls:'paladin',
+      common:    { desc:'Aura deals 10 dmg/sec to nearby foes (r:80)',    fn:p=>{ p.consecrateDmg=(p.consecrateDmg||0)+10; p.consecrateR=Math.max(80,(p.consecrateR||80)); p.b.consecrate=p.consecrateDmg+'/s'; } },
+      rare:      { desc:'Aura: 26 dmg/sec, range 130px',                  fn:p=>{ p.consecrateDmg=(p.consecrateDmg||0)+26; p.consecrateR=Math.max(130,(p.consecrateR||80)+50); p.b.consecrate=p.consecrateDmg+'/s r'+p.consecrateR; } },
+      legendary: { desc:'Aura: 60 dmg/sec, 180px, slows 25%',            fn:p=>{ p.consecrateDmg=(p.consecrateDmg||0)+60; p.consecrateR=Math.max(180,(p.consecrateR||80)+100); p.consecrateSlow=0.25; p.b.consecrate=p.consecrateDmg+'/s r'+p.consecrateR+'+slow'; } },
+      fmt:b=>b.consecrate?`Consecrate     ${b.consecrate}`:null },
+    { id:'divineShield', name:'Divine Shield', cls:'paladin',
+      common:    { desc:'20% chance to block incoming damage',             fn:p=>{ p.divineBlock=(p.divineBlock||0)+0.20; p.b.divine=Math.round((p.divineBlock||0)*100)+'%'; } },
+      rare:      { desc:'35% block, counterattack for 50% of damage',     fn:p=>{ p.divineBlock=(p.divineBlock||0)+0.35; p.divineCounter=0.5; p.b.divine=Math.round((p.divineBlock||0)*100)+'%+counter'; } },
+      legendary: { desc:'50% block, counter 100%, heal 15HP on block',    fn:p=>{ p.divineBlock=(p.divineBlock||0)+0.50; p.divineCounter=1.0; p.divineHeal=15; p.b.divine=Math.round((p.divineBlock||0)*100)+'%+full'; } },
+      fmt:b=>b.divine?`Divine Shield  ${b.divine}`:null },
+    { id:'holyStrikes', name:'Holy Strikes', cls:'paladin',
+      common:    { desc:'Every 5th melee hit stuns for 1s',               fn:p=>{ p.holyEvery=(p.holyEvery||5); p.holyStunMs=1000; p.b.holy='every 5th'; } },
+      rare:      { desc:'Every 4th hit stuns 1.5s, +50% dmg on proc',    fn:p=>{ p.holyEvery=Math.min(p.holyEvery||5,4); p.holyStunMs=1500; p.holyBonusDmg=0.5; p.b.holy='every 4th +50%'; } },
+      legendary: { desc:'Every 3rd hit stuns 2.5s, +150% dmg on proc',   fn:p=>{ p.holyEvery=Math.min(p.holyEvery||5,3); p.holyStunMs=2500; p.holyBonusDmg=1.5; p.b.holy='every 3rd +150%'; } },
+      fmt:b=>b.holy?`Holy Strikes   ${b.holy}`:null },
+    { id:'auraOfHeal', name:'Aura of Healing', cls:'paladin', givesHp:true,
+      common:    { desc:'Heal 2.5 HP per second',                         fn:p=>{ p.regen=(p.regen||0)+2.5; p.b.healAura=p.regen+'/s'; } },
+      rare:      { desc:'Heal 6 HP/sec, +15% max HP',                    fn:p=>{ p.regen=(p.regen||0)+6; p.maxHp=Math.floor(p.maxHp*1.15); p.hp=Math.min(p.hp+Math.floor(p.maxHp*0.15),p.maxHp); p.b.healAura=p.regen+'/s'; } },
+      legendary: { desc:'Heal 15 HP/sec, kills restore 8 HP',            fn:p=>{ p.regen=(p.regen||0)+15; p.killHeal=(p.killHeal||0)+8; p.b.healAura=p.regen+'/s +killheal'; } },
+      fmt:b=>b.healAura?`Aura of Heal   ${b.healAura}`:null },
+
+    // ── BERSERKER TRAITS ─────────────────────────────────────────────────────
+    { id:'bloodRage', name:'Blood Rage', cls:'berserker',
+      common:    { desc:'Below 35% HP: deal +100% damage',               fn:p=>{ p.bloodRageMult=(p.bloodRageMult||0)+1.0; p.bloodRageThresh=0.35; p.b.rage='+'+Math.round((p.bloodRageMult||0)*100)+'%'; } },
+      rare:      { desc:'Below 40% HP: deal +200% damage',               fn:p=>{ p.bloodRageMult=(p.bloodRageMult||0)+2.0; p.bloodRageThresh=0.40; p.b.rage='+'+Math.round((p.bloodRageMult||0)*100)+'%'; } },
+      legendary: { desc:'Below 50% HP: +400% dmg and +25% speed',       fn:p=>{ p.bloodRageMult=(p.bloodRageMult||0)+4.0; p.bloodRageThresh=0.50; p.bloodRageSpd=0.25; p.b.rage='+'+Math.round((p.bloodRageMult||0)*100)+'%+spd'; } },
+      fmt:b=>b.rage?`Blood Rage     ${b.rage}`:null },
+    { id:'berserkerFury', name:'Berserker Fury', cls:'berserker',
+      common:    { desc:'Gain +6% speed per 10% HP missing',             fn:p=>{ p.furyPerHp=(p.furyPerHp||0)+0.06; p.b.fury='+'+Math.round((p.furyPerHp||0)*100)+'%/10HP'; } },
+      rare:      { desc:'Gain +14% speed per 10% HP missing',            fn:p=>{ p.furyPerHp=(p.furyPerHp||0)+0.14; p.b.fury='+'+Math.round((p.furyPerHp||0)*100)+'%/10HP'; } },
+      legendary: { desc:'+28% speed and +12% dmg per 10% HP missing',   fn:p=>{ p.furyPerHp=(p.furyPerHp||0)+0.28; p.furyDmgPer=(p.furyDmgPer||0)+0.12; p.b.fury='+'+Math.round((p.furyPerHp||0)*100)+'%spd+dmg'; } },
+      fmt:b=>b.fury?`Berserker Fury ${b.fury}`:null },
+    { id:'warchief', name:'Warchief', cls:'berserker',
+      common:    { desc:'Each kill grants +12% atk speed for 4s',        fn:p=>{ p.warchiefAtkPer=(p.warchiefAtkPer||0)+0.12; p.warchiefDur=4000; p.b.warchief='+'+Math.round((p.warchiefAtkPer||0)*100)+'%/kill'; } },
+      rare:      { desc:'Each kill: +20% atk speed, +10% dmg for 4s',   fn:p=>{ p.warchiefAtkPer=(p.warchiefAtkPer||0)+0.20; p.warchiefDmgPer=(p.warchiefDmgPer||0)+0.10; p.warchiefDur=4000; p.b.warchief='+'+Math.round((p.warchiefAtkPer||0)*100)+'%atk+dmg'; } },
+      legendary: { desc:'Each kill: +35% atk speed, +20% dmg for 5s',   fn:p=>{ p.warchiefAtkPer=(p.warchiefAtkPer||0)+0.35; p.warchiefDmgPer=(p.warchiefDmgPer||0)+0.20; p.warchiefDur=5000; p.b.warchief='+'+Math.round((p.warchiefAtkPer||0)*100)+'%atk+dmg'; } },
+      fmt:b=>b.warchief?`Warchief       ${b.warchief}`:null },
+    { id:'wildStrike', name:'Wild Strike', cls:'berserker',
+      common:    { desc:'35% chance to strike twice in one swing',        fn:p=>{ p.doubleStrike=(p.doubleStrike||0)+0.35; p.b.wild=Math.round((p.doubleStrike||0)*100)+'%x2'; } },
+      rare:      { desc:'55% double-strike, cleave deals +30% damage',   fn:p=>{ p.doubleStrike=(p.doubleStrike||0)+0.55; p.cleaveMult=(p.cleaveMult||1)+0.3; p.b.wild=Math.round((p.doubleStrike||0)*100)+'%x2+cleave'; } },
+      legendary: { desc:'75% chance, may triple-strike, huge cleave',    fn:p=>{ p.doubleStrike=(p.doubleStrike||0)+0.75; p.tripleStrike=true; p.cleaveMult=(p.cleaveMult||1)+0.8; p.meleeRange=(p.meleeRange||100)+25; p.b.wild=Math.round((p.doubleStrike||0)*100)+'%x3+huge'; } },
+      fmt:b=>b.wild?`Wild Strike    ${b.wild}`:null },
+
     // ── SYNERGY TRAITS (require 2 other traits) ──────────────────────────────
     { id:'plagueStorm', name:'Plague Storm', requires:['venom','stormcaller'],
       common:    { desc:'Storm strikes apply poison (5 dmg/s 3s)',  fn:p=>{ p.stormPoison=true; p.stormPoisonDmg=5;  p.stormPoisonDur=3000; p.b.plgStorm='storm+poison'; } },
@@ -879,6 +1006,15 @@
       });
       this.tweens.add({ targets:dailyBtn, alpha:0.8, duration:500, delay:700 });
 
+      /* Achievements button */
+      const achBtn = this.add.text(cx, cy + 178, '🏆  Achievements', {
+        fontSize:'13px', fontFamily:'system-ui', color:'rgba(251,191,36,0.6)',
+      }).setOrigin(0.5).setInteractive({ useHandCursor:true }).setAlpha(0);
+      achBtn.on('pointerover', ()=>achBtn.setColor('#fbbf24'));
+      achBtn.on('pointerout',  ()=>achBtn.setColor('rgba(251,191,36,0.6)'));
+      achBtn.on('pointerdown', ()=>{ this.cameras.main.fadeOut(250,0,0,0); this.time.delayedCall(270,()=>this.scene.start('Achievements')); });
+      this.tweens.add({ targets:achBtn, alpha:0.8, duration:500, delay:800 });
+
       const startGame = () => {
         localStorage.removeItem('hoa_daily');
         this.cameras.main.fadeOut(350, 0, 0, 0);
@@ -937,6 +1073,27 @@
       desc:'Death mage. Raises fallen enemies as undead minions that fight for you.',
       perks:['Raises slain enemies as minions','Dark orbs slow targets on hit','Unique minion-buffing traits'],
       stats:{ hp:120, maxHp:120, spd:170, dmg:26, atkCd:860, pierce:0, projSpd:290, projSize:1.1 },
+    },
+    rogue: {
+      name:'Rogue', color:0x0f766e, labelCol:'#2dd4bf', hex:'#0f766e',
+      desc:'Shadow assassin. Unleashes rapid close-range daggers and vanishes into the dark.',
+      perks:['Fastest attack speed in the game','Backstab & Evasion class traits','Poisons enemies with Venom Blade'],
+      stats:{ hp:110, maxHp:110, spd:235, dmg:24, atkCd:380, pierce:0, projSpd:360, projSize:0.85 },
+      unlockAch:'speedRunner',
+    },
+    paladin: {
+      name:'Paladin', color:0xb45309, labelCol:'#fcd34d', hex:'#b45309',
+      desc:'Holy warrior. Combines melee might with divine healing and a protective aura.',
+      perks:['Consecrate aura damages nearby enemies','Divine Shield blocks attacks','Heals on kills with Aura of Healing'],
+      stats:{ hp:280, maxHp:280, spd:138, dmg:42, atkCd:560, pierce:0, projSpd:0, projSize:1, meleeRange:80 },
+      unlockAch:'millennium',
+    },
+    berserker: {
+      name:'Berserker', color:0x9f1239, labelCol:'#fb7185', hex:'#9f1239',
+      desc:'Rage incarnate. Grows deadlier the lower your health — a glass cannon of fury.',
+      perks:['Blood Rage: 2× damage at low HP','Speed scales with missing HP','Wild Strike can hit multiple times'],
+      stats:{ hp:195, maxHp:195, spd:158, dmg:62, atkCd:740, pierce:0, projSpd:0, projSize:1, meleeRange:100 },
+      unlockAch:'wave25',
     },
   };
 
@@ -1002,84 +1159,90 @@
         fontSize:'13px', fontFamily:'system-ui', color:'#64748b',
       }).setOrigin(0.5);
 
-      const clsKeys = ['hunter','knight','wizard','necromancer'];
-      const cardW = Math.min(190, (W - 80) / 4);
-      const cardH = 335;
-      const gap = 22;
-      const totalW = clsKeys.length * cardW + (clsKeys.length - 1) * gap;
-      const startX = W/2 - totalW/2;
+      /* Row 1: starter classes. Row 2: advanced locked classes */
+      const row1Keys = ['hunter','knight','wizard','necromancer'];
+      const row2Keys = ['rogue','paladin','berserker'];
+      const cardW = Math.min(170, (W - 80) / 4);
+      const cardH = 310;
+      const gap = 16;
 
-      clsKeys.forEach((key, i) => {
-        const cls = CLASSES[key];
-        const cx = startX + i * (cardW + gap) + cardW / 2;
-        const cy = H / 2 + 15;
+      const buildRow = (keys, rowCy, showLock) => {
+        const totalW = keys.length * cardW + (keys.length - 1) * gap;
+        const startX = W/2 - totalW/2;
+        keys.forEach((key, i) => {
+          const cls = CLASSES[key];
+          const unlocked = isClassUnlocked(key);
+          const cx = startX + i * (cardW + gap) + cardW / 2;
 
-        /* Background fill — interactive hit area */
-        const bg = this.add.rectangle(cx, cy, cardW, cardH, cls.color, 0.13)
-          .setInteractive({ useHandCursor: true });
+          const bg = this.add.rectangle(cx, rowCy, cardW, cardH, cls.color, unlocked ? 0.13 : 0.05)
+            .setInteractive({ useHandCursor: unlocked });
+          const ebg = this.add.graphics();
+          if (unlocked) this._ebCards.push({ g: ebg, cx, cy: rowCy, w: cardW, h: cardH, color: cls.color });
 
-        /* Electric border graphics layer */
-        const ebg = this.add.graphics();
-        this._ebCards.push({ g: ebg, cx, cy, w: cardW, h: cardH, color: cls.color });
+          this.add.circle(cx, rowCy - 106, 26, cls.color, unlocked ? 0.85 : 0.25);
+          this.add.text(cx, rowCy - 106, unlocked ? (CLASS_EMOJI[key]||'?') : '🔒', {
+            fontSize:'20px', fontFamily:'system-ui', color:'#fff',
+          }).setOrigin(0.5);
 
-        /* ── Content ── */
-        /* Icon */
-        this.add.circle(cx, cy - 118, 28, cls.color, 0.85);
-        const clsEmoji = { hunter:'🏹', knight:'⚔️', wizard:'🔮', necromancer:'💀' };
-        this.add.text(cx, cy - 118, clsEmoji[key] || key[0].toUpperCase(), {
-          fontSize:'22px', fontFamily:'system-ui', color:'#fff',
-        }).setOrigin(0.5);
+          this.add.text(cx, rowCy - 67, cls.name.toUpperCase(), {
+            fontSize:'13px', fontFamily:'system-ui', fontStyle:'bold',
+            color: unlocked ? cls.labelCol : '#4b5563', letterSpacing:3,
+          }).setOrigin(0.5);
 
-        /* Class name */
-        this.add.text(cx, cy - 76, cls.name.toUpperCase(), {
-          fontSize:'15px', fontFamily:'system-ui', fontStyle:'bold',
-          color:cls.labelCol, letterSpacing:3,
-        }).setOrigin(0.5);
-
-        /* Description */
-        this.add.text(cx, cy - 54, cls.desc, {
-          fontSize:'10px', fontFamily:'system-ui', color:'#94a3b8',
-          wordWrap:{ width: cardW - 22 }, align:'center',
-        }).setOrigin(0.5, 0);
-
-        /* Thin divider */
-        const div = this.add.graphics();
-        div.lineStyle(1, cls.color, 0.3);
-        div.lineBetween(cx - cardW*0.35, cy + 16, cx + cardW*0.35, cy + 16);
-
-        /* Stats */
-        const sd = cls.stats;
-        [`HP: ${sd.hp}`, `SPD: ${sd.spd}`, `DMG: ${sd.dmg}`, `ATK CD: ${sd.atkCd}ms`]
-          .forEach((s, si) => {
-            this.add.text(cx, cy + 26 + si * 16, s, {
-              fontSize:'11px', fontFamily:'system-ui', color:'#cbd5e1',
-            }).setOrigin(0.5);
-          });
-
-        /* Perks */
-        cls.perks.forEach((p, pi) => {
-          this.add.text(cx, cy + 102 + pi * 18, `• ${p}`, {
-            fontSize:'10px', fontFamily:'system-ui', color:cls.labelCol,
-            wordWrap:{ width: cardW - 22 }, align:'center',
+          this.add.text(cx, rowCy - 48, cls.desc, {
+            fontSize:'9px', fontFamily:'system-ui', color: unlocked ? '#94a3b8' : '#374151',
+            wordWrap:{ width: cardW - 18 }, align:'center',
           }).setOrigin(0.5, 0);
-        });
 
-        /* Hover / click */
-        bg.on('pointerover', () => bg.setFillStyle(cls.color, 0.28));
-        bg.on('pointerout',  () => bg.setFillStyle(cls.color, 0.13));
-        bg.on('pointerdown', () => {
-          localStorage.setItem('hoa_class', key);
-          this.cameras.main.fadeOut(250, 0, 0, 0);
-          this.time.delayedCall(270, () => {
-            this.scene.start('Game');
-            this.scene.launch('UI');
-          });
+          const divG = this.add.graphics();
+          divG.lineStyle(1, cls.color, unlocked ? 0.3 : 0.1);
+          divG.lineBetween(cx - cardW*0.35, rowCy + 8, cx + cardW*0.35, rowCy + 8);
+
+          const sd = cls.stats;
+          [`HP: ${sd.hp}`, `SPD: ${sd.spd}`, `DMG: ${sd.dmg}`]
+            .forEach((stat, si) => {
+              this.add.text(cx, rowCy + 18 + si * 15, stat, {
+                fontSize:'10px', fontFamily:'system-ui', color: unlocked ? '#cbd5e1' : '#374151',
+              }).setOrigin(0.5);
+            });
+
+          if (!unlocked) {
+            const ach = ACHIEVEMENTS.find(a => a.unlocks === key);
+            this.add.text(cx, rowCy + 70, ach ? `🔒 ${ach.hint}` : '🔒 LOCKED', {
+              fontSize:'9px', fontFamily:'system-ui', fontStyle:'bold', color:'#6b7280',
+              wordWrap:{ width: cardW - 16 }, align:'center',
+            }).setOrigin(0.5, 0);
+          } else {
+            cls.perks.slice(0,2).forEach((p, pi) => {
+              this.add.text(cx, rowCy + 68 + pi * 16, `• ${p}`, {
+                fontSize:'9px', fontFamily:'system-ui', color:cls.labelCol,
+                wordWrap:{ width: cardW - 18 }, align:'center',
+              }).setOrigin(0.5, 0);
+            });
+          }
+
+          if (unlocked) {
+            bg.on('pointerover', () => bg.setFillStyle(cls.color, 0.28));
+            bg.on('pointerout',  () => bg.setFillStyle(cls.color, 0.13));
+            bg.on('pointerdown', () => {
+              localStorage.setItem('hoa_class', key);
+              this.cameras.main.fadeOut(250, 0, 0, 0);
+              this.time.delayedCall(270, () => { this.scene.start('Game'); this.scene.launch('UI'); });
+            });
+          }
         });
-      });
+      };
+
+      buildRow(row1Keys, H / 2 - 20);
+      /* Row 2 divider */
+      this.add.text(W/2, H/2 + 155, 'ADVANCED CLASSES — Unlock by completing achievements', {
+        fontSize:'10px', fontFamily:'system-ui', fontStyle:'bold', color:'#4b5563', letterSpacing:2,
+      }).setOrigin(0.5);
+      buildRow(row2Keys, H/2 + 215);
 
       /* ── 1HP Mode toggle ── */
       const is1hp = () => localStorage.getItem('hoa_1hp') === '1';
-      const oneBg = this.add.rectangle(W/2, H - 56, 220, 30, 0x7f1d1d, 0.3).setInteractive();
+      const oneBg = this.add.rectangle(W/2, H - 36, 220, 28, 0x7f1d1d, 0.3).setInteractive();
       const oneBorder = this.add.graphics();
       const oneLabel = this.add.text(W/2, H - 56, '', {
         fontSize:'13px', fontFamily:'system-ui', fontStyle:'bold', color:'#fca5a5',
@@ -1089,7 +1252,7 @@
         oneBg.setFillStyle(on ? 0x7f1d1d : 0x1e1e2e, on ? 0.7 : 0.4);
         oneBorder.clear();
         oneBorder.lineStyle(on ? 2 : 1, on ? 0xef4444 : 0x4b5563, on ? 0.9 : 0.5);
-        oneBorder.strokeRect(W/2 - 110, H - 71, 220, 30);
+        oneBorder.strokeRect(W/2 - 110, H - 51, 220, 28);
         oneLabel.setText(on ? '☠  1HP MODE  —  ACTIVE' : '☠  1HP MODE  —  click to enable');
         oneLabel.setColor(on ? '#fca5a5' : '#6b7280');
       };
@@ -1101,8 +1264,8 @@
       oneBg.on('pointerover', () => oneBg.setStrokeStyle(1, 0xef4444));
       oneBg.on('pointerout',  () => oneBg.setStrokeStyle(0));
 
-      this.add.text(W/2, H - 22, 'Press ESC to return to menu', {
-        fontSize:'11px', fontFamily:'system-ui', color:'#475569',
+      this.add.text(W/2, H - 14, 'ESC — back to menu   ·   Unlock advanced classes by playing and completing achievements', {
+        fontSize:'10px', fontFamily:'system-ui', color:'#374151',
       }).setOrigin(0.5);
       this.input.keyboard.on('keydown-ESC', () => this.scene.start('Menu'));
     }
@@ -1153,6 +1316,7 @@
 
       this.waveNum  = 0; this.spawned = 0; this.total = 0; this.alive = 0;
       this.lastAtk  = 0; this.lastSlam = 0; this.lastPulse = 0; this.lastMeteor = 0;
+      this._justDashed = false; this._holyCounter = 0; this._warchiefStacks = 0; this._warchiefUntil = 0; this._lastConsecrateT = 0;
       this.lastFrostNova = -99999; this.lastAura = 0; this.lastBarrage = 0;
       this.lastBlizzard = 0; this.lastWarcry = 0; this.warcryUntil = 0;
       this.hasteUntil = 0; this.shieldActive = false; this.shieldUntilReady = 0;
@@ -1394,6 +1558,8 @@
       if (this.dead) return;
       this.waveNum++;
       this.waveKills = 0;
+      this._warchiefStacks = 0;
+      this._waveHit = false;
       const cfg = waveCfg(this.waveNum);
       this.cfg = cfg; this.spawned = 0; this.total = cfg.count; this.alive = 0;
       this.events.emit('wave', this.waveNum, cfg.boss);
@@ -1814,6 +1980,28 @@
 
     takeDamage(raw) {
       if (this.shieldActive) return 0;
+      /* Rogue Evasion */
+      if (this.ps.dodgeChance && Math.random() < this.ps.dodgeChance) {
+        const ft = this.add.text(this.pg.x, this.pg.y - 28, 'DODGE!', { fontSize:'13px', fontFamily:'system-ui', fontStyle:'bold', color:'#2dd4bf', stroke:'#000', strokeThickness:3 }).setOrigin(0.5).setDepth(50);
+        this.tweens.add({ targets:ft, y:ft.y-32, alpha:0, duration:750, onComplete:()=>ft.destroy() });
+        if (this.ps.dodgeHeal) this.ps.hp = Math.min(this.ps.maxHp, this.ps.hp + this.ps.dodgeHeal);
+        if (this.ps.dodgeSpeed) this.hasteUntil = Math.max(this.hasteUntil, this.time.now + 900);
+        this._waveHitThisTick = false;
+        return 0;
+      }
+      /* Paladin Divine Shield */
+      if (this.ps.divineBlock && Math.random() < this.ps.divineBlock) {
+        const ft2 = this.add.text(this.pg.x, this.pg.y - 28, '🛡 BLOCKED!', { fontSize:'13px', fontFamily:'system-ui', fontStyle:'bold', color:'#fcd34d', stroke:'#000', strokeThickness:3 }).setOrigin(0.5).setDepth(50);
+        this.tweens.add({ targets:ft2, y:ft2.y-30, alpha:0, duration:750, onComplete:()=>ft2.destroy() });
+        if (this.ps.divineCounter) {
+          const near = this.enemies.getChildren().filter(e=>e.active && Phaser.Math.Distance.Between(this.pg.x,this.pg.y,e.x,e.y)<80);
+          near.forEach(e=>{ e.eHp -= Math.floor(raw * this.ps.divineCounter); this.hitFlash(e); });
+        }
+        if (this.ps.divineHeal) this.ps.hp = Math.min(this.ps.maxHp, this.ps.hp + this.ps.divineHeal);
+        this._waveHitThisTick = false;
+        return 0;
+      }
+      this._waveHitThisTick = true;
       let dmg = this.ps.dmgReduce ? Math.max(1, Math.floor(raw * (1 - Math.min(0.85, this.ps.dmgReduce)))) : raw;
       dmg = Math.floor(dmg * (this.ps.curseDmgIn || 1));
       /* Bone Armor absorbs hits */
@@ -1891,6 +2079,8 @@
       if (isCrit && this.ps.critPierce && proj.pierceLeft < this.ps.critPierce) proj.pierceLeft = this.ps.critPierce;
       // Berserker stacking bonus
       const bsrkMult = this.ps.bsrkPerKill ? 1 + Math.min(this.ps.bsrkMax, (this.waveKills||0) * this.ps.bsrkPerKill) : 1;
+      const backstabM = (this.ps.backstabMult && this._justDashed) ? this.ps.backstabMult : 1;
+      if (this._justDashed) { this._justDashed = false; if (backstabM>1) { const bst=this.add.text(enemy.x,enemy.y-24,'BACKSTAB!',{fontSize:'14px',fontFamily:'system-ui',fontStyle:'bold',color:'#2dd4bf',stroke:'#000',strokeThickness:3}).setOrigin(0.5).setDepth(50); this.tweens.add({targets:bst,y:bst.y-36,alpha:0,duration:850,onComplete:()=>bst.destroy()}); } }
       // Iron Will — bonus damage when low HP
       const ironWillMult = (this.ps.ironWill && this.ps.hp < this.ps.maxHp * 0.30) ? this.ps.ironWill : 1;
       // Marked for Death — mark on first hit, bonus on subsequent hits
@@ -1914,7 +2104,9 @@
 
       const bossBonusMult = (this.ps.bossDmgBonus && this.time.now < this.bossDmgUntil) ? (1 + this.ps.bossDmgBonus) : 1;
       const curseDmgOut = this.ps.curseDmgOut || 1;
-      const dmg = Math.floor(this.ps.dmg * mult * bsrkMult * ironWillMult * markMult * bossBonusMult * curseDmgOut);
+      const bloodRageMProj = (this.ps.bloodRageMult && this.ps.hp < this.ps.maxHp*(this.ps.bloodRageThresh||0.35)) ? (1+this.ps.bloodRageMult) : 1;
+      const warchiefDmgMProj = this.ps.warchiefDmgPer ? (1+Math.min(10,this._warchiefStacks)*this.ps.warchiefDmgPer) : 1;
+      const dmg = Math.floor(this.ps.dmg * mult * bsrkMult * ironWillMult * markMult * bossBonusMult * curseDmgOut * backstabM * bloodRageMProj * warchiefDmgMProj);
       enemy.eHp -= dmg;
       this.totalDmg = (this.totalDmg || 0) + dmg;
       this.hitFlash(enemy);
@@ -2173,6 +2365,23 @@
         });
       }
 
+      // Per-run stats
+      if (enemy.isElite) this._eliteKills = (this._eliteKills||0)+1;
+      if (enemy.isBoss)  this._bossKills  = (this._bossKills||0)+1;
+      /* Kill Heal (Paladin Aura of Healing legendary) */
+      if (this.ps.killHeal) this.ps.hp = Math.min(this.ps.maxHp, this.ps.hp + this.ps.killHeal);
+      /* Warchief stacking */
+      if (this.ps.warchiefAtkPer) {
+        this._warchiefStacks = Math.min(10, (this._warchiefStacks||0)+1);
+        this._warchiefUntil = this.time.now + this.ps.warchiefDur;
+      }
+      /* Poison spread on kill */
+      if (this.ps.poisonSpread && enemy.poisonEnd > this.time.now) {
+        const near = this.enemies.getChildren().filter(e=>e.active&&e!==enemy&&Phaser.Math.Distance.Between(enemy.x,enemy.y,e.x,e.y)<80);
+        near.forEach(e=>{ e.poisonEnd=this.time.now+(this.ps.poisonDur||4000); e.poisonDmgPerTick=this.ps.poisonDmg*0.5; });
+      }
+      /* Perfect wave tracking */
+      this._waveHitThisTick = false;
       // Haste — speed burst on kill
       if (this.ps.hasteBonus) {
         const wasInactive = this.time.now >= this.hasteUntil;
@@ -2393,7 +2602,8 @@
       p.body.setVelocity(Math.cos(angle) * this.ps.projSpd, Math.sin(angle) * this.ps.projSpd);
       p.pierceLeft = this.ps.pierce;
       this.projectiles.add(p);
-      const lifetime = this.ps.projLifetime || (isWizard ? 2400 : 1800);
+      const isRogue = this.ps.class === 'rogue';
+      const lifetime = this.ps.projLifetime || (isWizard ? 2400 : isRogue ? 320 : 1800);
       this.time.delayedCall(lifetime, () => { if (p.active) p.destroy(); });
     }
 
@@ -2429,7 +2639,17 @@
         const markMult2 = (this.ps.markMult && e.marked) ? this.ps.markMult : 1;
         if (this.ps.markMult && !e.marked) e.marked = true;
         const curseDmgOutM = this.ps.curseDmgOut || 1;
-        let dmg = Math.floor(this.ps.dmg * mult * bsrkMult * warcryMult * ironWillMult * markMult2 * curseDmgOutM);
+        /* Blood Rage */
+        const bloodRageM = (this.ps.bloodRageMult && this.ps.hp < this.ps.maxHp * (this.ps.bloodRageThresh||0.35)) ? (1+this.ps.bloodRageMult) : 1;
+        /* Warchief kill-streak */
+        const warchMs = this.ps.warchiefAtkPer ? Math.min(10, this._warchiefStacks) : 0;
+        const warchiefDmgM = this.ps.warchiefDmgPer ? (1 + Math.min(10,this._warchiefStacks)*this.ps.warchiefDmgPer) : 1;
+        /* Holy Strikes bonus */
+        this._holyCounter++;
+        const isHolyProc = this.ps.holyEvery && this._holyCounter >= this.ps.holyEvery;
+        if (isHolyProc) this._holyCounter = 0;
+        const holyM = isHolyProc ? (1 + (this.ps.holyBonusDmg||0)) : 1;
+        let dmg = Math.floor(this.ps.dmg * mult * bsrkMult * warcryMult * ironWillMult * markMult2 * curseDmgOutM * bloodRageM * warchiefDmgM * holyM);
         e.eHp -= dmg;
         this.totalDmg = (this.totalDmg || 0) + dmg;
         this.hitFlash(e);
@@ -2437,9 +2657,14 @@
           const leechM = (this.ps.bloodPact && this.ps.hp < this.ps.maxHp * 0.30) ? (this.ps.bloodPact || 1) : 1;
           this.ps.hp = Math.min(this.ps.maxHp, this.ps.hp + Math.max(1, Math.floor(dmg * this.ps.vStrike * leechM)));
         }
+        if (isHolyProc && this.ps.holyStunMs) {
+          e.body.setVelocity(0,0); e.stunUntil = (e.stunUntil||0) + this.ps.holyStunMs;
+          const ht2 = this.add.text(e.x, e.y-e.eSize-12,'✦ STUN!',{fontSize:'11px',fontFamily:'system-ui',fontStyle:'bold',color:'#fcd34d',stroke:'#000',strokeThickness:2}).setOrigin(0.5);
+          this.tweens.add({targets:ht2,y:ht2.y-24,alpha:0,duration:700,onComplete:()=>ht2.destroy()});
+        }
         const t = this.add.text(e.x, e.y - e.eSize - 4, isCrit ? `${dmg}!` : dmg, {
           fontSize: isCrit ? '17px' : '14px', fontFamily:'system-ui',
-          color: isCrit ? '#facc15' : '#fbbf24', fontStyle:'bold', stroke:'#000', strokeThickness:2,
+          color: isCrit ? '#facc15' : (this.ps.class==='berserker'?'#fb7185':'#fbbf24'), fontStyle:'bold', stroke:'#000', strokeThickness:2,
         }).setOrigin(0.5);
         this.tweens.add({ targets:t, y:t.y-32, alpha:0, duration:700, onComplete:()=>t.destroy() });
         // On-hit effects (same as projectile hits)
@@ -2510,11 +2735,12 @@
     }
 
     autoAttack(time) {
-      if (time - this.lastAtk < this.ps.atkCd) return;
+      const warchAtkMult = (this.ps.warchiefAtkPer && this._warchiefStacks > 0) ? Math.max(0.35, 1 - Math.min(10,this._warchiefStacks)*this.ps.warchiefAtkPer) : 1;
+      if (time - this.lastAtk < this.ps.atkCd * warchAtkMult) return;
       const all = this.enemies.getChildren().filter(e => e.active);
       if (!all.length) return;
       this.lastAtk = time;
-      if (this.ps.class === 'knight') {
+      if (['knight','paladin','berserker'].includes(this.ps.class)) {
         this.meleeAttack(time, all);
       } else {
         const sorted = [...all].sort((a, b) =>
@@ -2535,7 +2761,17 @@
       if (up.isDown    || up2.isDown)    vy = -this.ps.spd;
       if (down.isDown  || down2.isDown)  vy =  this.ps.spd;
       if (vx && vy) { vx *= 0.707; vy *= 0.707; }
-      const hasteMult = (this.ps.hasteBonus && time < this.hasteUntil) ? (1 + this.ps.hasteBonus) : 1;
+      /* Warchief decay */
+      if (this.ps.warchiefAtkPer && this.time.now > this._warchiefUntil) this._warchiefStacks = Math.max(0, this._warchiefStacks - 1);
+      /* Berserker Fury: speed scales with missing HP */
+      let furyMult = 1;
+      if (this.ps.furyPerHp && this.ps.maxHp > 0) {
+        const hpMissingPct = Math.max(0, 1 - this.ps.hp / this.ps.maxHp);
+        furyMult = 1 + Math.floor(hpMissingPct / 0.10) * this.ps.furyPerHp;
+      }
+      /* Blood Rage speed */
+      const bloodRageSpdM = (this.ps.bloodRageSpd && this.ps.hp < this.ps.maxHp*(this.ps.bloodRageThresh||0.35)) ? (1+this.ps.bloodRageSpd) : 1;
+      const hasteMult = ((this.ps.hasteBonus && time < this.hasteUntil) ? (1 + this.ps.hasteBonus) : 1) * furyMult * bloodRageSpdM;
       /* Merge touch joystick input */
       const tc = window._touch;
       if (tc && (tc.vx || tc.vy)) {
@@ -2557,6 +2793,7 @@
           const len = Math.sqrt(dx*dx+dy*dy);
           this.dashDir = { x:dx/len, y:dy/len };
           this.dashUntil = time + 190;
+          if (this.ps.backstabMult) this._justDashed = true;
           this.dashCd = time + 1400;
           this.shieldActive = true; this.shieldUntilReady = time + 230;
           for (let i = 0; i < 4; i++) {
@@ -2863,7 +3100,23 @@
         e.hpBar.fillRect(e.x - bw/2, e.y - e.eSize - 11, bw, 4);
         e.hpBar.fillStyle(e.isBoss ? 0xfbbf24 : 0xef4444, 1);
         e.hpBar.fillRect(e.x - bw/2, e.y - e.eSize - 11, bw * Math.max(0, e.eHp / e.eMaxHp), 4);
-        /* Elite aura + label follow */
+        /* Consecrate aura (Paladin) */
+      if (this.ps.consecrateDmg && time - this._lastConsecrateT > 1000) {
+        this._lastConsecrateT = time;
+        const cR = this.ps.consecrateR || 80;
+        this.enemies.getChildren().forEach(e => {
+          if (!e.active) return;
+          if (Phaser.Math.Distance.Between(this.pg.x, this.pg.y, e.x, e.y) <= cR) {
+            e.eHp -= this.ps.consecrateDmg; this.totalDmg = (this.totalDmg||0)+this.ps.consecrateDmg;
+            this.hitFlash(e);
+            if (this.ps.consecrateSlow) { e.eSpd = e.eBaseSpd * (1-this.ps.consecrateSlow); this.time.delayedCall(1100,()=>{ if(e.active)e.eSpd=e.eBaseSpd; }); }
+            if (e.eHp <= 0 && e.active) this.killEnemy(e);
+          }
+        });
+      }
+      /* Stunned enemy — freeze velocity */
+      this.enemies.getChildren().forEach(e => { if (e.active && e.stunUntil && this.time.now < e.stunUntil && e.body) e.body.setVelocity(0,0); });
+      /* Elite aura + label follow */
         if (e.eliteAura) e.eliteAura.setPosition(e.x, e.y);
         if (e.eliteLabel) e.eliteLabel.setPosition(e.x, e.y - e.eSize - 16);
         /* Shielder — rotate shield arc toward player and show shield HP bar */
@@ -3223,6 +3476,25 @@
       if ((this.ps.kills > (meta2.bestKills || 0))) meta2.bestKills = this.ps.kills;
       if ((this.ps.level > (meta2.bestLevel || 0))) meta2.bestLevel = this.ps.level;
       saveMeta(meta2);
+      /* Update persistent stats */
+      const st = loadStats();
+      st.totalKills = (st.totalKills||0) + this.ps.kills;
+      st.totalRuns  = (st.totalRuns||0)  + 1;
+      st.totalSouls = (st.totalSouls||0) + souls;
+      st.totalBossKills = (st.totalBossKills||0) + (this._bossKills||0);
+      st.bestWave   = Math.max(st.bestWave||0, this.waveNum);
+      st.bestLevel  = Math.max(st.bestLevel||0, this.ps.level);
+      st.bestKillRun  = Math.max(st.bestKillRun||0, this.ps.kills);
+      st.bestEliteRun = Math.max(st.bestEliteRun||0, this._eliteKills||0);
+      st.bestDmgRun   = Math.max(st.bestDmgRun||0, this.totalDmg||0);
+      st.lastTimeSec  = timeSec;
+      if (this.ps.is1hp) st.best1hpSec = Math.max(st.best1hpSec||0, timeSec);
+      st['played_'+(this.ps.class||'hunter')] = true;
+      const legendaryCount = (this.ps.traits||[]).filter(id=>{ const bp=BLUEPRINTS.find(b=>b.id===id); return bp&&bp._takenTier==='legendary'; }).length;
+      st.bestLegendaryRun = Math.max(st.bestLegendaryRun||0, legendaryCount);
+      if (this._perfectWaveEver) st.perfectWaveEver = true;
+      saveStats(st);
+      this._newAchievements = checkAchievements(st);
       this.cameras.main.fadeOut(400, 0, 0, 0);
       this.time.delayedCall(420, () => {
         this.scene.stop('UI'); this.scene.stop('LevelUp');
@@ -3233,6 +3505,103 @@
           curseSouls: this.ps._curseSouls || 0, timeSec,
         });
       });
+    }
+  }
+
+
+  /* ── ACHIEVEMENTS ── */
+  class AchievementsScene extends Phaser.Scene {
+    constructor() { super('Achievements'); }
+    create() {
+      const cx = W/2;
+      this.cameras.main.setBackgroundColor('#06000f');
+      this.cameras.main.fadeIn(300,0,0,0);
+
+      this.add.text(cx, 38, '🏆  ACHIEVEMENTS', {
+        fontSize:'26px', fontFamily:'system-ui', fontStyle:'bold', color:'#fbbf24', letterSpacing:5,
+      }).setOrigin(0.5);
+
+      const granted = loadAch();
+      const st = loadStats();
+      const unlockedCount = granted.length;
+      this.add.text(cx, 72, `${unlockedCount} / ${ACHIEVEMENTS.length} unlocked`, {
+        fontSize:'13px', fontFamily:'system-ui', color:'rgba(255,255,255,0.35)',
+      }).setOrigin(0.5);
+
+      const catOrder = ['easy','medium','hard','legendary'];
+      const catLabel = { easy:'Easy', medium:'Medium', hard:'Hard', legendary:'Legendary' };
+      const catColor = { easy:'#4ade80', medium:'#60a5fa', hard:'#f87171', legendary:'#fbbf24' };
+
+      let y = 106;
+      catOrder.forEach(cat => {
+        const group = ACHIEVEMENTS.filter(a => a.cat === cat);
+        this.add.text(cx, y, catLabel[cat].toUpperCase(), {
+          fontSize:'11px', fontFamily:'system-ui', fontStyle:'bold', color:catColor[cat], letterSpacing:4,
+        }).setOrigin(0.5);
+        y += 20;
+
+        const cols = 2, cw = 360, ch = 46, gapX = 16, gapY = 6;
+        const totalRowW = cols * cw + (cols-1) * gapX;
+        const rowStartX = cx - totalRowW/2;
+
+        group.forEach((ach, idx) => {
+          const col = idx % cols;
+          const row = Math.floor(idx / cols);
+          const ax = rowStartX + col*(cw+gapX) + cw/2;
+          const ay = y + row*(ch+gapY) + ch/2;
+          const earned = granted.includes(ach.id);
+
+          const bg = this.add.rectangle(ax, ay, cw, ch, earned ? 0x1a1000 : 0x0d0d1a, 0.95)
+            .setStrokeStyle(1, earned ? 0xf59e0b : 0x1e1e3a, earned ? 0.9 : 0.6);
+
+          this.add.text(ax - cw/2 + 14, ay - 10, `${ach.icon}  ${ach.name}`, {
+            fontSize:'13px', fontFamily:'system-ui', fontStyle:'bold',
+            color: earned ? '#fcd34d' : '#6b7280',
+          }).setOrigin(0, 0.5);
+
+          this.add.text(ax - cw/2 + 14, ay + 9, earned ? ach.desc : ach.hint, {
+            fontSize:'10px', fontFamily:'system-ui',
+            color: earned ? '#a3a3a3' : '#4b5563',
+          }).setOrigin(0, 0.5);
+
+          if (earned) {
+            this.add.text(ax + cw/2 - 10, ay, '✓', {
+              fontSize:'18px', fontFamily:'system-ui', fontStyle:'bold', color:'#fbbf24',
+            }).setOrigin(1, 0.5);
+          }
+          if (ach.unlocks) {
+            const unlockTxt = earned ? `Unlocks: ${CLASSES[ach.unlocks]?.name}` : '🔒 Unlocks a class';
+            this.add.text(ax + cw/2 - 14, ay + 9, unlockTxt, {
+              fontSize:'9px', fontFamily:'system-ui', color: earned ? '#fbbf24' : '#4b5563',
+            }).setOrigin(1, 0.5);
+          }
+        });
+        y += Math.ceil(group.length / cols) * (ch + gapY) + 16;
+      });
+
+      /* Stats section */
+      y += 4;
+      this.add.text(cx, y, 'LIFETIME STATS', {
+        fontSize:'11px', fontFamily:'system-ui', fontStyle:'bold', color:'#a78bfa', letterSpacing:4,
+      }).setOrigin(0.5);
+      y += 18;
+      const statLines = [
+        [`Total Kills`, (st.totalKills||0).toLocaleString()],
+        [`Total Runs`,  (st.totalRuns||0).toLocaleString()],
+        [`Best Wave`,   (st.bestWave||0)],
+        [`Total Souls`, (st.totalSouls||0).toLocaleString()],
+        [`Bosses Slain`,(st.totalBossKills||0)],
+      ];
+      statLines.forEach(([lbl,val], si) => {
+        const sx = cx - 200 + (si%2===1 ? 220 : 0);
+        const sy2 = y + Math.floor(si/2)*22;
+        this.add.text(sx, sy2, `${lbl}: ${val}`, { fontSize:'12px', fontFamily:'system-ui', color:'rgba(255,255,255,0.45)' }).setOrigin(0,0);
+      });
+
+      this.add.text(cx, H - 28, 'Press ESC to return', {
+        fontSize:'12px', fontFamily:'system-ui', color:'#374151',
+      }).setOrigin(0.5);
+      this.input.keyboard.on('keydown-ESC', ()=>{ this.cameras.main.fadeOut(200,0,0,0); this.time.delayedCall(220,()=>this.scene.start('Menu')); });
     }
   }
 
@@ -3429,7 +3798,7 @@
         card.on('pointerdown', () => {
           fn(this.ps);
           if (!this.ps.traits) this.ps.traits = [];
-          if (!this.ps.traits.includes(bp.id)) this.ps.traits.push(bp.id);
+          if (!this.ps.traits.includes(bp.id)) { this.ps.traits.push(bp.id); bp._takenTier = tier; }
           this.game_.resume();
         });
 
@@ -3477,6 +3846,7 @@
       this.souls = d.souls; this.wave = d.wave; this.kills = d.kills;
       this.level = d.level; this.totalDmg = d.totalDmg; this.traits = d.traits || [];
       this.curseSouls = d.curseSouls || 0; this.timeSec = d.timeSec || 0;
+      this.newAch = d.newAch || [];
     }
     create() {
       const cx = W / 2;
@@ -3528,6 +3898,21 @@
         wordWrap: { width: W - 80 }, align: 'center',
       }).setOrigin(0.5, 0);
 
+      /* New Achievements unlocked this run */
+      if (this.newAch && this.newAch.length) {
+        const achY0 = traitsY + 50;
+        this.add.text(cx, achY0, '🏆  ACHIEVEMENTS UNLOCKED', {
+          fontSize:'12px', fontFamily:'system-ui', fontStyle:'bold', color:'#fbbf24', letterSpacing:3,
+        }).setOrigin(0.5);
+        this.newAch.forEach((ach, ai) => {
+          const ay = achY0 + 22 + ai * 28;
+          const abg = this.add.rectangle(cx, ay, 380, 24, 0x1a1000, 0.95).setStrokeStyle(1,0xf59e0b,0.8);
+          this.add.text(cx, ay, `${ach.icon}  ${ach.name}  —  ${ach.desc}`, {
+            fontSize:'12px', fontFamily:'system-ui', fontStyle:'bold', color:'#fcd34d',
+          }).setOrigin(0.5);
+          this.tweens.add({ targets:[abg], alpha:{from:0,to:0.95}, duration:400, delay:ai*150 });
+        });
+      }
       /* Continue button */
       const btnY = H - 80;
       const btn = this.add.rectangle(cx, btnY, 280, 48, 0x4c1d95, 1)
@@ -3679,7 +4064,7 @@
     transparent: true,
     parent: 'game-container',
     physics: { default: 'arcade', arcade: { debug: false } },
-    scene: [MenuScene, ClassSelectScene, GameScene, UIScene, LevelUpScene, SummaryScene, MetaScene, PauseMenuScene],
+    scene: [MenuScene, ClassSelectScene, GameScene, UIScene, LevelUpScene, SummaryScene, MetaScene, PauseMenuScene, AchievementsScene],
   });
   </script>
 
