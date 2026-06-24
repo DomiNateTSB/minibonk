@@ -13,7 +13,8 @@
     #aurora-bg canvas { width: 100%; height: 100%; }
     #game-container { position: fixed; inset: 0; z-index: 1; }
     #game-container canvas { touch-action: none; }
-    /* Touch controls */
+
+    /* ── Touch controls — landscape default ── */
     #tc-wrap { display:none; position:fixed; inset:0; z-index:60; pointer-events:none; }
     #tc-joy-zone { position:absolute; left:0; top:0; width:55%; height:100%; pointer-events:all; }
     #tc-base { position:absolute; display:none; width:112px; height:112px; border-radius:50%;
@@ -30,6 +31,15 @@
       border:2px solid rgba(167,139,250,0.45); background:rgba(10,4,26,0.48);
       pointer-events:all; display:flex; align-items:center; justify-content:center;
       font-size:18px; user-select:none; -webkit-user-select:none; }
+
+    /* ── Portrait overrides — controls locked to bottom 38% ── */
+    @media (orientation: portrait) {
+      /* Joy zone: left half of bottom 38% only */
+      #tc-joy-zone { top:62%; height:38%; width:55%; }
+      /* Dash: bottom-right corner, higher clearance */
+      #tc-dash { right:32px; bottom:14%; }
+      /* Pause stays top-right */
+    }
   </style>
 </head>
 <body>
@@ -4744,7 +4754,17 @@
     transparent: true,
     parent: 'game-container',
     physics: { default: 'arcade', arcade: { debug: false } },
+    scale: {
+      mode: Phaser.Scale.RESIZE,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+    },
     scene: [MenuScene, ClassSelectScene, GameScene, UIScene, LevelUpScene, SummaryScene, MetaScene, PauseMenuScene, AchievementsScene],
+  });
+
+  /* Reload on orientation change so scenes re-layout with correct W/H.
+     localStorage preserves all progress — no run data is lost. */
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => window.location.reload(), 350);
   });
   </script>
 
