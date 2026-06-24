@@ -1836,23 +1836,31 @@
       };
       animate();
 
-      /* Capture scene ref explicitly — 'this' can lose binding inside DOM handlers */
+      /* Capture scene ref before any DOM handlers are registered */
       const scene = this;
-      const closeOverlay = () => { cancelAnimationFrame(raf); overlay.remove(); scene.input.enabled = true; };
 
-      /* Disable Phaser input while overlay is open so it doesn't swallow clicks */
+      /* The Phaser canvas physically intercepts pointer events even when behind a z-index overlay.
+         Set pointer-events:none on it so DOM buttons on the overlay can receive clicks/taps. */
+      const gameCanvas = document.querySelector('#game-container canvas') || document.querySelector('canvas');
+      if (gameCanvas) gameCanvas.style.pointerEvents = 'none';
       scene.input.enabled = false;
 
-      for (const ev of ['click','touchend']) {
-        backBtn.addEventListener(ev, e => { e.preventDefault(); closeOverlay(); });
-        playBtn.addEventListener(ev, e => {
-          e.preventDefault();
-          closeOverlay();
-          localStorage.setItem('hoa_class', key);
-          scene.cameras.main.fadeOut(250, 0, 0, 0);
-          scene.time.delayedCall(270, () => { scene.scene.start('Game'); scene.scene.launch('UI'); });
-        });
-      }
+      const closeOverlay = () => {
+        cancelAnimationFrame(raf);
+        overlay.remove();
+        if (gameCanvas) gameCanvas.style.pointerEvents = '';
+        scene.input.enabled = true;
+      };
+
+      backBtn.onclick = () => closeOverlay();
+
+      playBtn.onclick = () => {
+        closeOverlay();
+        localStorage.setItem('hoa_class', key);
+        /* Start game immediately — no fade needed, ClassSelect will disappear */
+        scene.scene.start('Game');
+        scene.scene.launch('UI');
+      };
     }
 
     create() {
