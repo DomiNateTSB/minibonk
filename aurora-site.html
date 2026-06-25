@@ -6873,6 +6873,23 @@
       nameBtn.on('pointerover', () => nameBtn.setColor('rgba(255,255,255,0.7)'));
       nameBtn.on('pointerout',  () => nameBtn.setColor('rgba(255,255,255,0.3)'));
       nameBtn.on('pointerdown', async () => {
+        if (confirm('Change display name? (This will sign you out)')) {
+          await _sb.auth.signOut();
+          localStorage.clear();
+          window._player = null;
+          window.location.reload();
+        }
+      });
+
+      /* Log Out button */
+      const _loBg = this.add.rectangle(W - 54, H - 18, 88, 22, 0x1a0a1a, 0.9)
+        .setStrokeStyle(1, 0x6b21a8, 0.5).setDepth(20).setInteractive({ useHandCursor: true });
+      const _loT = this.add.text(W - 54, H - 18, '→ Log Out', {
+        fontSize: '11px', fontFamily: 'system-ui', color: 'rgba(167,139,250,0.55)',
+      }).setOrigin(0.5).setDepth(21);
+      _loBg.on('pointerover', () => { _loBg.setFillColor(0x2d1a3a); _loT.setColor('#c4b5fd'); });
+      _loBg.on('pointerout',  () => { _loBg.setFillColor(0x1a0a1a); _loT.setColor('rgba(167,139,250,0.55)'); });
+      _loBg.on('pointerdown', async () => {
         if (confirm('Sign out of Thornrift?')) {
           await _sb.auth.signOut();
           localStorage.clear();
@@ -8371,25 +8388,6 @@ void main(){
     (function loop(t){requestAnimationFrame(loop);program.uniforms.uTime.value=t*0.0004;renderer.render({scene:mesh});})(0);
   </script>
 
-  <!-- ── Legal footer ── -->
-  <div id="legal-footer" style="
-    position:fixed; bottom:0; left:0; right:0;
-    text-align:center; padding:6px 0 7px;
-    font-family:system-ui,sans-serif; font-size:10px;
-    color:rgba(255,255,255,0.22);
-    background:rgba(4,0,13,0.82);
-    backdrop-filter:blur(4px);
-    z-index:9999;
-    letter-spacing:0.5px;
-    pointer-events:auto;
-  ">
-    © 2026 Daniel &nbsp;·&nbsp;
-    <a href="#" onclick="showLegal('tos'); return false;" style="color:rgba(167,139,250,0.6);text-decoration:none;">Terms of Service</a>
-    &nbsp;·&nbsp;
-    <a href="#" onclick="showLegal('pp'); return false;" style="color:rgba(167,139,250,0.6);text-decoration:none;">Privacy Policy</a>
-    &nbsp;·&nbsp;
-    <a href="mailto:daniel@kodutankod.se" style="color:rgba(167,139,250,0.6);text-decoration:none;">Contact</a>
-  </div>
 
   <!-- ── Legal overlay ── -->
   <div id="legal-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(4,0,13,0.97);overflow-y:auto;padding:40px 20px 60px;font-family:system-ui,sans-serif;">
