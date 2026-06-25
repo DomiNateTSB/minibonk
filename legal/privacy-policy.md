@@ -7,12 +7,12 @@
 
 ## 1. Introduction
 
-This Privacy Policy explains how Daniel Garcia ("I", "me", "the Developer"), a private individual, collects, uses, stores, and protects your personal data when you use Thornrift ("the Game", "the Service") at thornrift.com.
+This Privacy Policy explains how Daniel ("I", "me", "the Developer"), a private individual, collects, uses, stores, and protects your personal data when you use Thornrift ("the Game", "the Service") at thornrift.com.
 
 I take your privacy seriously. This policy is written to comply with the **General Data Protection Regulation (GDPR)** (EU Regulation 2016/679) and applicable Swedish data protection law.
 
 **Data controller:**  
-Daniel Garcia  
+Daniel  
 Email: **daniel@kodutankod.se**
 
 If you have any questions or requests regarding your personal data, please contact me at the email address above.
@@ -245,7 +245,7 @@ For significant changes affecting your rights, I will make reasonable efforts to
 
 For any questions, concerns, or requests regarding this Privacy Policy or your personal data, please contact:
 
-**Daniel Garcia**  
+**Daniel**  
 Email: **daniel@kodutankod.se**
 
 I aim to respond to all privacy-related inquiries within **30 days**.

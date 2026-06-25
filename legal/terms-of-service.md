@@ -7,7 +7,7 @@
 
 ## 1. Introduction and Acceptance
 
-Welcome to Thornrift ("the Game", "the Service"). Thornrift is developed and operated by Daniel Garcia ("I", "me", "the Developer"), a private individual. By accessing, playing, or otherwise using Thornrift at thornrift.com or any related services, you ("you", "the Player", "User") agree to be bound by these Terms of Service ("Terms").
+Welcome to Thornrift ("the Game", "the Service"). Thornrift is developed and operated by Daniel ("I", "me", "the Developer"), a private individual. By accessing, playing, or otherwise using Thornrift at thornrift.com or any related services, you ("you", "the Player", "User") agree to be bound by these Terms of Service ("Terms").
 
 If you do not agree to these Terms in their entirety, you must immediately cease using the Service.
 
@@ -202,7 +202,7 @@ I reserve the right to update these Terms at any time. When I make material chan
 
 If you have any questions about these Terms of Service, please contact:
 
-**Daniel Garcia**  
+**Daniel**  
 Email: **daniel@kodutankod.se**
 
 ---
