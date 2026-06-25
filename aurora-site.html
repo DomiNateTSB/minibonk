@@ -211,6 +211,16 @@
   <div id="aurora-bg"></div>
   <div id="game-container"></div>
 
+  <!-- Google new-user name picker -->
+  <div id="google-name-overlay" style="display:none;position:fixed;inset:0;z-index:300;background:rgba(4,0,13,0.97);align-items:center;justify-content:center;flex-direction:column;gap:14px;font-family:system-ui;">
+    <img src="/logo.png" style="width:120px;margin-bottom:8px;" />
+    <h2 style="color:#a78bfa;font-size:16px;letter-spacing:2px;margin:0;">CHOOSE A DISPLAY NAME</h2>
+    <p style="color:rgba(255,255,255,0.4);font-size:12px;margin:0;">This is shown on the leaderboard.</p>
+    <input id="gn-name" class="auth-input" type="text" placeholder="Display name (max 16 chars)" maxlength="16" autocomplete="off" style="text-align:center;" />
+    <button class="auth-btn" onclick="_doGoogleName()">ENTER THORNRIFT</button>
+    <div id="gn-error" style="color:#f87171;font-size:12px;min-height:16px;"></div>
+  </div>
+
   <!-- GooeyNav overlay for menu Achievements + Inventory buttons -->
   <div id="gooey-menu-nav" style="display:none;position:fixed;left:50%;transform:translateX(-50%);top:calc(50% + 215px);z-index:10;"></div>
 
@@ -598,6 +608,23 @@
       options: { redirectTo: window.location.origin + window.location.pathname },
     });
     if (error) { _authSetLoading(false); _authSetError(error.message); }
+  }
+
+  async function _doGoogleName() {
+    const name = (document.getElementById('gn-name').value || '').trim();
+    const errEl = document.getElementById('gn-error');
+    errEl.textContent = '';
+    if (!name) { errEl.textContent = 'Choose a display name.'; return; }
+    if (!/^[a-zA-Z0-9 _\-]{1,16}$/.test(name)) { errEl.textContent = 'Only letters, numbers, spaces, _ or -'; return; }
+    const session = window._googlePendingSession;
+    if (!session) { location.reload(); return; }
+    const { error } = await _sb.from('game_players').insert({ id: session.user.id, name });
+    if (error) { errEl.textContent = error.message.includes('unique') ? 'Name taken — try another.' : error.message; return; }
+    window._player = { id: session.user.id, name, email: (session.user.email||'').toLowerCase() };
+    localStorage.setItem('hoa_name', name);
+    document.getElementById('google-name-overlay').style.display = 'none';
+    await _loadPlayerDataFromSupabase(session.user.id);
+    _startPhaser();
   }
 
   async function _doSignIn() {
@@ -8328,28 +8355,13 @@
     }
 
     /* New Google user — no profile yet. Prompt for display name. */
-    const suggestedName = (session.user.user_metadata?.full_name || session.user.email || '').replace(/\s+/g,'').slice(0,16);
-    document.getElementById('auth-overlay').style.display = 'flex';
-    _authTab('signup');
-    document.getElementById('su-email').value = session.user.email || '';
-    document.getElementById('su-email').disabled = true;
-    document.getElementById('su-password').style.display = 'none';
-    document.getElementById('su-name').value = suggestedName;
-    document.getElementById('su-name').focus();
-    document.getElementById('su-btn').textContent = 'SET DISPLAY NAME';
-    document.getElementById('su-btn').onclick = async () => {
-      const name = document.getElementById('su-name').value.trim();
-      if (!name) { _authSetError('Choose a display name.'); return; }
-      if (!/^[a-zA-Z0-9 _\-]{1,16}$/.test(name)) { _authSetError('Only letters, numbers, spaces, _ or -'); return; }
-      _authSetLoading(true);
-      const { error } = await _sb.from('game_players').insert({ id: session.user.id, name });
-      if (error) { _authSetLoading(false); _authSetError(error.message.includes('unique') ? 'Name taken — try another.' : error.message); return; }
-      window._player = { id: session.user.id, name, email: (session.user.email||'').toLowerCase() };
-      localStorage.setItem('hoa_name', name);
-      await _loadPlayerDataFromSupabase(session.user.id);
-      document.getElementById('auth-overlay').style.display = 'none';
-      _startPhaser();
-    };
+    window._googlePendingSession = session;
+    const suggested = (session.user.user_metadata?.full_name || session.user.email || '').replace(/[^a-zA-Z0-9_\- ]/g,'').slice(0,16).trim();
+    const gnEl = document.getElementById('google-name-overlay');
+    const gnInput = document.getElementById('gn-name');
+    if (gnEl) { gnEl.style.display = 'flex'; }
+    if (gnInput) { gnInput.value = suggested; gnInput.focus(); gnInput.select(); }
+    document.getElementById('auth-overlay').style.display = 'none';
   }
 
   /* Check for existing session on page load, then listen for OAuth callbacks */
