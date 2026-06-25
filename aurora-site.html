@@ -2152,6 +2152,7 @@
 
       const startGame = () => {
         localStorage.removeItem('hoa_daily');
+        _ov.style.display = 'none';
         this.cameras.main.fadeOut(350, 0, 0, 0);
         this.time.delayedCall(370, () => { this.scene.start('ClassSelect'); });
       };
