@@ -2066,6 +2066,7 @@
       /* ── Menu pills with BorderGlow (fixed overlay, no Phaser DOM) ── */
       {
         const _ov = document.createElement('div');
+        _ov.id = 'menu-pills-ov';
         _ov.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:15;opacity:0;transition:opacity .6s;';
         document.body.appendChild(_ov);
 
@@ -2152,7 +2153,8 @@
 
       const startGame = () => {
         localStorage.removeItem('hoa_daily');
-        _ov.style.display = 'none';
+        const _pillOv = document.getElementById('menu-pills-ov');
+        if (_pillOv) _pillOv.style.display = 'none';
         this.cameras.main.fadeOut(350, 0, 0, 0);
         this.time.delayedCall(370, () => { this.scene.start('ClassSelect'); });
       };
