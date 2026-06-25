@@ -35,7 +35,7 @@ const out = src.slice(0, lastMatch.index) +
 
 fs.mkdirSync('dist', { recursive: true });
 fs.writeFileSync(path.join('dist', 'index.html'), out, 'utf8');
-// Copy logo asset
-const logoSrc = 'transparentlogo.png';
+// Copy logo asset — source from assets/ so it's tracked in git
+const logoSrc = fs.existsSync('assets/logo.png') ? 'assets/logo.png' : 'transparentlogo.png';
 if (fs.existsSync(logoSrc)) fs.copyFileSync(logoSrc, path.join('dist', 'logo.png'));
 console.log('Built dist/index.html (' + Math.round(out.length / 1024) + ' KB)');
