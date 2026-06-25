@@ -571,7 +571,8 @@
   /* ── SUPABASE CLIENT ── */
   const _sb = supabase.createClient(
     'https://biclaeemulhkdejyeysv.supabase.co',
-    'sb_publishable_6o1Iaj3yMd5thivLqY8ttQ_L19qyZ5-'
+    'sb_publishable_6o1Iaj3yMd5thivLqY8ttQ_L19qyZ5-',
+    { auth: { lock: async (_name, _timeout, fn) => fn() } }
   );
 
   /* In-session player cache — populated on login, used everywhere */
