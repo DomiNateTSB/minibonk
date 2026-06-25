@@ -8371,20 +8371,11 @@
     document.getElementById('auth-overlay').style.display = 'none';
   }
 
-  /* Check for existing session on page load, then listen for OAuth callbacks */
-  (async () => {
-    try {
-      const _sessionTimeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000));
-      const { data: { session } } = await Promise.race([_sb.auth.getSession(), _sessionTimeout]);
-      await _handleSession(session);
-    } catch(e) {
-      console.warn('[Auth] getSession timed out or failed:', e.message);
-      await _handleSession(null);
-    }
-  })();
-
+  /* Use INITIAL_SESSION instead of getSession() to avoid Web Locks deadlock */
   _sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && !window._phaserStarted) {
+    if (event === 'INITIAL_SESSION') {
+      await _handleSession(session);
+    } else if (event === 'SIGNED_IN' && !window._phaserStarted) {
       await _handleSession(session);
     }
   });
