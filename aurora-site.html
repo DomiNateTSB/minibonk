@@ -578,7 +578,7 @@
   }
 
   async function _doSignUp() {
-    const name = document.getElementById('su-name').value.trim().slice(0, 16);
+    const name = document.getElementById('su-name').value.trim().slice(0, 16).replace(/[^a-zA-Z0-9_\- ]/g, '');
     const email = document.getElementById('su-email').value.trim();
     const password = document.getElementById('su-password').value;
     if (!name) { _authSetError('Please enter a display name.'); return; }
@@ -741,14 +741,16 @@
       });
 
       const bp = JSON.parse(localStorage.getItem('hoa_bp') || '{}');
+      /* F-05: clamp all stat values to reasonable maximums before writing to DB */
+      const _clamp = (v, min, max) => Math.min(max, Math.max(min, Math.floor(Number(v) || 0)));
       await Promise.all([
         _sb.from('game_progress').upsert({
           player_id:  uid,
-          souls:      meta.souls || 0,
+          souls:      _clamp(meta.souls,    0, 10_000_000),
           upgrades:   meta.upgrades || {},
-          best_wave:  meta.bestWave || 0,
-          best_kills: meta.bestKills || 0,
-          best_level: meta.bestLevel || 0,
+          best_wave:  _clamp(meta.bestWave,  0, 9999),
+          best_kills: _clamp(meta.bestKills, 0, 99999),
+          best_level: _clamp(meta.bestLevel, 0, 100),
           /* bp_owned and bp_premium are NEVER written by the client —
              only the stripe-webhook Edge Function may set these.
              We only sync XP progress (level, xp, claimed) which are non-sensitive. */
@@ -762,18 +764,18 @@
         }),
         _sb.from('game_stats').upsert({
           player_id: uid,
-          total_kills: stats.totalKills || 0,
-          total_runs: stats.totalRuns || 0,
-          total_souls: stats.totalSouls || 0,
-          total_boss_kills: stats.totalBossKills || 0,
-          best_wave: stats.bestWave || 0,
-          best_level: stats.bestLevel || 0,
-          best_kill_run: stats.bestKillRun || 0,
-          best_elite_run: stats.bestEliteRun || 0,
-          best_dmg_run: stats.bestDmgRun || 0,
-          best_legendary_run: stats.bestLegendaryRun || 0,
-          best_1hp_sec: stats.best1hpSec || 0,
-          last_time_sec: stats.lastTimeSec || 0,
+          total_kills:      _clamp(stats.totalKills,      0, 100_000_000),
+          total_runs:       _clamp(stats.totalRuns,       0, 100_000),
+          total_souls:      _clamp(stats.totalSouls,      0, 100_000_000),
+          total_boss_kills: _clamp(stats.totalBossKills,  0, 1_000_000),
+          best_wave:        _clamp(stats.bestWave,        0, 9999),
+          best_level:       _clamp(stats.bestLevel,       0, 100),
+          best_kill_run:    _clamp(stats.bestKillRun,     0, 99999),
+          best_elite_run:   _clamp(stats.bestEliteRun,    0, 9999),
+          best_dmg_run:     _clamp(stats.bestDmgRun,      0, 999_999_999),
+          best_legendary_run: _clamp(stats.bestLegendaryRun, 0, 9999),
+          best_1hp_sec:     _clamp(stats.best1hpSec,     0, 86400),
+          last_time_sec:    _clamp(stats.lastTimeSec,    0, 86400),
           perfect_wave_ever: stats.perfectWaveEver || false,
           classes_played: classesPlayed,
           updated_at: new Date().toISOString(),
@@ -847,23 +849,28 @@
   async function postScore(name, wave, kills, level, cls, is1hp) {
     const table = is1hp ? 'aurora_leaderboard_1hp' : 'aurora_leaderboard';
     try {
+      /* Use the authenticated user JWT so RLS auth.uid() check passes */
+      const { data: { session: _sc } } = await _sb.auth.getSession();
+      const _authToken = _sc?.access_token || SB_KEY;
+      const _hdr = { 'apikey': SB_KEY, 'Authorization': `Bearer ${_authToken}`, 'Content-Type': 'application/json' };
+
       /* Fetch existing entry for this player */
       const r = await fetch(
         `${SB_URL}/rest/v1/${table}?name=eq.${encodeURIComponent(name)}&select=id,wave,kills`,
-        { headers: SB_HDR }
+        { headers: _hdr }
       );
       const existing = await r.json();
       if (!Array.isArray(existing)) return;
       const payload = { name, wave, kills, level, class_name: cls || 'hunter' };
       if (existing.length === 0) {
         await fetch(`${SB_URL}/rest/v1/${table}`, {
-          method: 'POST', headers: SB_HDR, body: JSON.stringify(payload),
+          method: 'POST', headers: _hdr, body: JSON.stringify(payload),
         });
       } else {
         const e = existing[0];
         if (wave > e.wave || (wave === e.wave && kills > e.kills)) {
           await fetch(`${SB_URL}/rest/v1/${table}?id=eq.${e.id}`, {
-            method: 'PATCH', headers: SB_HDR, body: JSON.stringify(payload),
+            method: 'PATCH', headers: _hdr, body: JSON.stringify(payload),
           });
         }
       }
@@ -1164,11 +1171,13 @@
   async function _syncInvItem(itemId, qty) {
     const uid = window._player && window._player.id;
     if (!uid) return;
+    /* F-03: only sync known item IDs — reject arbitrary strings */
+    if (!ITEM_EFFECTS[itemId]) return;
     try {
       if (qty <= 0) {
         await _sb.from('player_inventory').delete().eq('user_id', uid).eq('item_id', itemId);
       } else {
-        await _sb.from('player_inventory').upsert({ user_id: uid, item_id: itemId, quantity: qty });
+        await _sb.from('player_inventory').upsert({ user_id: uid, item_id: itemId, quantity: Math.min(qty, 99) });
       }
     } catch {}
   }
@@ -7577,6 +7586,8 @@
                 headers: { Authorization: `Bearer ${_sess?.access_token}` },
               });
               if (error || !data?.url) throw new Error(error?.message || 'No URL');
+              /* F-02: validate redirect is a legitimate Stripe checkout URL */
+              if (!data.url.startsWith('https://checkout.stripe.com/')) throw new Error('Invalid checkout URL');
               window.location.href = data.url;
             } catch (e) {
               t1.setText('⚠ Error'); t2.setText('Please try again').setColor('#fca5a5');
