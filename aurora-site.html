@@ -7739,7 +7739,7 @@
       /* ── Scrollable container ── */
       const COLS = Math.max(2, Math.floor((W - 32) / 148));
       const cardW = Math.floor((W - 32 - (COLS - 1) * 10) / COLS);
-      const cardH = 138;
+      const cardH = 162;
       const gapX = 10, gapY = 10;
       const sx = (W - (COLS * cardW + (COLS - 1) * gapX)) / 2;
 
@@ -7834,9 +7834,9 @@
         }).setOrigin(0.5, 0));
 
         /* Desc */
-        this._cont.add(this.add.text(ccx, y + 86, info.desc, {
-          fontSize: '9px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.45)',
-          wordWrap: { width: cardW - 14 }, align: 'center', lineSpacing: 1,
+        this._cont.add(this.add.text(ccx, y + 88, info.desc, {
+          fontSize: '11px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.6)',
+          wordWrap: { width: cardW - 14 }, align: 'center', lineSpacing: 3,
         }).setOrigin(0.5, 0));
 
         /* Qty badge */
@@ -7852,10 +7852,10 @@
         /* Use button */
         const active = getRunItems();
         const alreadyQueued = active.includes(itemId);
-        const useBg = this.add.rectangle(ccx, y + cardH - 16, cardW - 16, 22, alreadyQueued ? 0x064e3b : 0x1a0a30)
+        const useBg = this.add.rectangle(ccx, y + cardH - 18, cardW - 16, 22, alreadyQueued ? 0x064e3b : 0x1a0a30)
           .setStrokeStyle(1, alreadyQueued ? 0x34d399 : tc, 0.9)
           .setInteractive({ useHandCursor: true });
-        const useT = this.add.text(ccx, y + cardH - 16, alreadyQueued ? '✓ Queued' : '▶  Use', {
+        const useT = this.add.text(ccx, y + cardH - 18, alreadyQueued ? '✓ Queued' : '▶  Use', {
           fontSize: '10px', fontFamily: 'system-ui', fontStyle: 'bold',
           color: alreadyQueued ? '#34d399' : tcHex,
         }).setOrigin(0.5);
