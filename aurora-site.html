@@ -7703,7 +7703,8 @@
       }).setOrigin(0.5).setDepth(11);
 
       /* ── Tabs ── */
-      this._activeTab = 'items';
+      this._activeTab = window._invTab || 'items';
+      window._invTab = null;
       const TAB_Y = 58, TAB_W = 130, TAB_H = 30;
       const _mkTab = (label, key, tx) => {
         const isActive = this._activeTab === key;
@@ -7722,7 +7723,6 @@
       };
       _mkTab('⚗  ITEMS', 'items', cx - TAB_W / 2 - 4);
       _mkTab('✨  COSMETICS', 'cosmetics', cx + TAB_W / 2 + 4);
-      if (window._invTab) { this._activeTab = window._invTab; window._invTab = null; }
 
       /* ── Subheader text (items tab only) ── */
       this._activeBar = null;
