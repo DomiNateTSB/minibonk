@@ -859,32 +859,38 @@
   async function postScore(name, wave, kills, level, cls, is1hp) {
     const table = is1hp ? 'aurora_leaderboard_1hp' : 'aurora_leaderboard';
     try {
-      /* Use the authenticated user JWT so RLS auth.uid() check passes */
       const { data: { session: _sc } } = await _sb.auth.getSession();
-      const _authToken = _sc?.access_token || SB_KEY;
-      const _hdr = { 'apikey': SB_KEY, 'Authorization': `Bearer ${_authToken}`, 'Content-Type': 'application/json' };
+      if (!_sc?.access_token) { console.warn('[LB] No auth session — score not posted'); return; }
+      const _authToken = _sc.access_token;
+      const _uid = _sc.user?.id;
+      if (!_uid) { console.warn('[LB] No user id — score not posted'); return; }
+      const _hdr = { 'apikey': SB_KEY, 'Authorization': `Bearer ${_authToken}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
 
-      /* Fetch existing entry for this player */
+      /* Fetch existing entry keyed by player_id */
       const r = await fetch(
-        `${SB_URL}/rest/v1/${table}?name=eq.${encodeURIComponent(name)}&select=id,wave,kills`,
+        `${SB_URL}/rest/v1/${table}?player_id=eq.${encodeURIComponent(_uid)}&select=player_id,wave,kills`,
         { headers: _hdr }
       );
+      if (!r.ok) { console.warn('[LB] fetch existing failed', r.status, await r.text()); return; }
       const existing = await r.json();
       if (!Array.isArray(existing)) return;
-      const payload = { name, wave, kills, level, class_name: cls || 'hunter' };
+
+      const payload = { player_id: _uid, name, wave, kills, level, class_name: cls || 'hunter' };
       if (existing.length === 0) {
-        await fetch(`${SB_URL}/rest/v1/${table}`, {
+        const ins = await fetch(`${SB_URL}/rest/v1/${table}`, {
           method: 'POST', headers: _hdr, body: JSON.stringify(payload),
         });
+        if (!ins.ok) console.warn('[LB] insert failed', ins.status, await ins.text());
       } else {
         const e = existing[0];
         if (wave > e.wave || (wave === e.wave && kills > e.kills)) {
-          await fetch(`${SB_URL}/rest/v1/${table}?id=eq.${e.id}`, {
+          const up = await fetch(`${SB_URL}/rest/v1/${table}?player_id=eq.${encodeURIComponent(_uid)}`, {
             method: 'PATCH', headers: _hdr, body: JSON.stringify(payload),
           });
+          if (!up.ok) console.warn('[LB] update failed', up.status, await up.text());
         }
       }
-    } catch {}
+    } catch(err) { console.warn('[LB] postScore error', err); }
   }
 
   async function fetchLeaderboard(is1hp) {
