@@ -1231,7 +1231,7 @@
     'rune_pierce1':  ps => { ps.pierce = (ps.pierce||0) + 1; },
     'rune_vita2':    ps => { ps.hpMax=(ps.hpMax||100)+20; ps.hp=Math.min((ps.hp||100)+20,ps.hpMax); },
     'rune_boss1':    ps => { ps.bossDmgBonus = (ps.bossDmgBonus||0) + 0.04; },
-    'rune_dodge1':   ps => { ps.dodgeChance = (ps.dodgeChance||0) + 5; },
+    'rune_dodge1':   ps => { ps.dodgeChance = (ps.dodgeChance||0) + 0.05; },
     'rune_xp1':      ps => { ps._runXpBoost = (ps._runXpBoost||0) + 0.10; },
     'rune_aurora1':  ps => { ps.dmg=(ps.dmg||10)*1.03; ps.speed=(ps.speed||100)*1.03; },
     'rune_echo1':    ps => { ps._runXpBoost = (ps._runXpBoost||0) + 0.25; },
