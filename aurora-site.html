@@ -8372,12 +8372,12 @@
     document.getElementById('auth-overlay').style.display = 'none';
   }
 
-  /* Use INITIAL_SESSION instead of getSession() to avoid Web Locks deadlock */
-  _sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'INITIAL_SESSION') {
-      await _handleSession(session);
-    } else if (event === 'SIGNED_IN' && !window._phaserStarted) {
-      await _handleSession(session);
+  /* onAuthStateChange runs inside supabase's internal lock — awaiting _handleSession
+     here causes a deadlock because _handleSession makes DB queries that wait for the
+     same lock to release. Use setTimeout(0) to defer until after the lock is freed. */
+  _sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'INITIAL_SESSION' || (event === 'SIGNED_IN' && !window._phaserStarted)) {
+      setTimeout(() => _handleSession(session), 0);
     }
   });
 
