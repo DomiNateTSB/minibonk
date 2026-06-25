@@ -214,6 +214,15 @@
   <!-- GooeyNav overlay for menu Achievements + Inventory buttons -->
   <div id="gooey-menu-nav" style="display:none;position:fixed;left:50%;transform:translateX(-50%);top:calc(50% + 215px);z-index:10;"></div>
 
+  <!-- Log Out button — shown only in Menu scene -->
+  <div id="logout-btn" style="display:none;position:fixed;bottom:16px;right:16px;z-index:50;">
+    <button onclick="(async()=>{ if(!confirm('Sign out of Thornrift?')) return; await window._sb.auth.signOut(); localStorage.clear(); window._player=null; location.reload(); })()" style="background:rgba(15,7,30,0.85);border:1px solid rgba(124,58,237,0.3);color:rgba(167,139,250,0.55);font-family:system-ui;font-size:11px;font-weight:600;padding:6px 14px;border-radius:20px;cursor:pointer;letter-spacing:0.5px;transition:all .15s;backdrop-filter:blur(4px);"
+      onmouseover="this.style.color='#c4b5fd';this.style.borderColor='rgba(124,58,237,0.7)'"
+      onmouseout="this.style.color='rgba(167,139,250,0.55)';this.style.borderColor='rgba(124,58,237,0.3)'">
+      → Log Out
+    </button>
+  </div>
+
   <!-- Touch controls (shown only during gameplay on touch devices) -->
   <div id="tc-wrap">
     <div id="tc-joy-zone"></div>
@@ -8261,10 +8270,14 @@
       nav.style.transition = 'opacity 0.5s';
       nav.style.display = 'flex';
       setTimeout(() => { nav.style.opacity = '1'; }, 800);
+      const lb = document.getElementById('logout-btn');
+      if (lb) lb.style.display = 'block';
     };
     window._hideGooeyNav = () => {
       nav.style.opacity = '0';
       setTimeout(() => { nav.style.display = 'none'; }, 500);
+      const lb = document.getElementById('logout-btn');
+      if (lb) lb.style.display = 'none';
     };
   })();
 
