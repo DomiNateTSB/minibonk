@@ -19,7 +19,6 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: CORS })
     }
 
-    // Verify caller is an authenticated admin
     const anonClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -30,14 +29,12 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: CORS })
     }
 
-    // Service role client — never exposed to client
     const admin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('SB_SERVICE_ROLE') ?? '',
       { auth: { autoRefreshToken: false, persistSession: false } }
     )
 
-    // Fetch all data in parallel
     const [usersRes, progressRes, statsRes, lbRes, lb1hpRes] = await Promise.all([
       admin.auth.admin.listUsers({ perPage: 1000 }),
       admin.from('game_progress').select('player_id, bp_owned, bp_premium, souls, best_wave, best_kills'),
@@ -52,18 +49,40 @@ Deno.serve(async (req: Request) => {
     const lb = lbRes.data ?? []
     const lb1hp = lb1hpRes.data ?? []
 
-    // Index by player_id for fast lookup
     const progressMap = Object.fromEntries(progress.map(p => [p.player_id, p]))
     const statsMap    = Object.fromEntries(stats.map(s => [s.player_id, s]))
 
-    // Overview counts
-    const bpOwners   = progress.filter(p => p.bp_owned).length
-    const bpPremium  = progress.filter(p => p.bp_premium).length
-    const totalRuns  = stats.reduce((a, s) => a + (s.total_runs || 0), 0)
-    const totalKills = stats.reduce((a, s) => a + (s.total_kills || 0), 0)
-    const totalBossKills = stats.reduce((a, s) => a + (s.total_boss_kills || 0), 0)
+    // Overview
+    const bpOwners      = progress.filter(p => p.bp_owned).length
+    const bpPremium     = progress.filter(p => p.bp_premium).length
+    const bpStandard    = bpOwners - bpPremium
+    const totalRuns     = stats.reduce((a, s) => a + (s.total_runs || 0), 0)
+    const totalKills    = stats.reduce((a, s) => a + (s.total_kills || 0), 0)
+    const totalBossKills= stats.reduce((a, s) => a + (s.total_boss_kills || 0), 0)
 
-    // Class distribution — count unique players per class
+    // Revenue estimate
+    const revenueEstimate = bpStandard * 4.99 + bpPremium * 9.99
+
+    // Drop-off: registered but never played a run
+    const playerIdsWithRuns = new Set(stats.filter(s => (s.total_runs || 0) > 0).map(s => s.player_id))
+    const dropOff = users.filter(u => !playerIdsWithRuns.has(u.id)).length
+
+    // Top wave ever
+    const topEntry = lb[0] ?? null
+
+    // Avg wave per class from leaderboard
+    const classWaves: Record<string, number[]> = {}
+    for (const row of lb) {
+      if (!row.class_name) continue
+      if (!classWaves[row.class_name]) classWaves[row.class_name] = []
+      classWaves[row.class_name].push(row.wave)
+    }
+    const avgWaveByClass: Record<string, number> = {}
+    for (const [cls, waves] of Object.entries(classWaves)) {
+      avgWaveByClass[cls] = Math.round(waves.reduce((a, b) => a + b, 0) / waves.length)
+    }
+
+    // Class distribution
     const classCounts: Record<string, number> = {}
     for (const s of stats) {
       const cp = s.classes_played || {}
@@ -72,7 +91,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // BP buyers enriched with email + created_at
+    // BP buyers
     const bpBuyers = users
       .filter(u => progressMap[u.id]?.bp_owned)
       .map(u => ({
@@ -85,7 +104,7 @@ Deno.serve(async (req: Request) => {
       }))
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
-    // Full player list
+    // All players
     const players = users.map(u => ({
       id: u.id,
       email: u.email,
@@ -99,7 +118,7 @@ Deno.serve(async (req: Request) => {
       total_kills: statsMap[u.id]?.total_kills ?? 0,
     })).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
-    // Recent signups (last 7 days grouped by day)
+    // Signups last 7 days
     const now = Date.now()
     const signupsByDay: Record<string, number> = {}
     for (let i = 6; i >= 0; i--) {
@@ -114,13 +133,13 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({
       overview: {
         totalUsers: users.length,
-        bpOwners,
-        bpPremium,
-        totalRuns,
-        totalKills,
-        totalBossKills,
+        bpOwners, bpPremium, bpStandard,
+        totalRuns, totalKills, totalBossKills,
+        revenueEstimate, dropOff,
+        topEntry,
       },
       classCounts,
+      avgWaveByClass,
       bpBuyers,
       players,
       leaderboard: lb,
