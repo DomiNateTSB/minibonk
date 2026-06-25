@@ -1134,7 +1134,7 @@
     { level:95, type:'rune',      value:'cosmos1',     name:'Rune of the Cosmos',   icon:'🌌', desc:'This run: +8% to all stats — ultimate power' },
     { level:96, type:'trail',     value:'prismatic',   name:'Prismatic Trail',      icon:'✨', desc:'Cosmetic: leave a rainbow prismatic trail as you move' },
     { level:97, type:'title',     value:'Legendary',   name:'Title: Legendary',     icon:'🏷️', desc:'Equip the "Legendary" title on your profile' },
-    { level:98, type:'echo',      value:'god1',        name:'Echo of the God',      icon:'✦',  desc:'Next run: cannot die, max HP fully restored between every wave' },
+    { level:98, type:'echo',      value:'god1',        name:'Echo of the Undying',  icon:'✦',  desc:'Next run: when you would die, survive at 50% HP and unleash a shockwave that destroys nearby enemies — once per run' },
     { level:99, type:'burst',     value:'divine',      name:'Divine Death Burst',   icon:'💥', desc:'Cosmetic: ascend in a pillar of white light on death' },
     { level:100,type:'ascended',  value:'golden_aura', name:'ASCENDED',             icon:'👑', desc:'Unlock the permanent golden aura — visible on all characters across all runs forever' },
   ];
@@ -1208,7 +1208,7 @@
     'echo_dom1':     ps => { ps._waveShield = (ps._waveShield||0) + 100; },
     'echo_asc1':     ps => { ps._startLevel = Math.max(ps._startLevel||1, 3); },
     'echo_inf1':     ps => { ps._infiniteRange = true; },
-    'echo_god1':     ps => { ps._godMode = true; },
+    'echo_god1':     ps => { ps._undying = true; },
     'echo_berserk1': ps => { ps.dmg = (ps.dmg||10)*1.25; ps.atkRate = (ps.atkRate||1)*1.15; },
     'echo_storm1':   ps => { ps.dmg = (ps.dmg||10)*1.15; ps.piercing = (ps.piercing||0)+3; },
     'echo_lich1':    ps => { ps.extraLives = (ps.extraLives||0)+1; ps.dmg = (ps.dmg||10)*1.10; },
@@ -3724,11 +3724,28 @@
       this.tweens.killTweensOf(this._vignette);
       this.tweens.add({ targets:this._vignette, alpha:0, duration:520, ease:'power2.in' });
       if (this.ps.hp <= 0) {
-        if ((this.ps.extraLives || 0) > 0 && !this._usedExtraLife) {
+        if (this.ps._undying && !this._usedUndying) {
+          /* Echo of the Undying — one-time revival with shockwave */
+          this._usedUndying = true;
+          this.ps.hp = Math.floor(this.ps.maxHp * 0.50);
+          /* Shockwave: deal 500% of base dmg to all enemies within 200px */
+          const _udDmg = Math.floor((this.ps.dmg || 10) * 5);
+          this.enemies.getChildren().filter(e => e.active && Phaser.Math.Distance.Between(this.pg.x, this.pg.y, e.x, e.y) < 200)
+            .forEach(e => { e.eHp -= _udDmg; this.hitFlash(e); });
+          /* Visual shockwave ring */
+          const _ring = this.add.circle(this.pg.x, this.pg.y, 20, 0xffffff, 0.8).setDepth(55);
+          this.tweens.add({ targets:_ring, scaleX:10, scaleY:10, alpha:0, duration:400, ease:'power2.out', onComplete:()=>_ring.destroy() });
+          /* Popup */
+          const _udt = this.add.text(this.pg.x, this.pg.y - 48, '✦ UNDYING!', {
+            fontSize:'20px', fontFamily:'system-ui', fontStyle:'bold',
+            color:'#c4b5fd', stroke:'#000', strokeThickness:4,
+          }).setOrigin(0.5).setDepth(60);
+          this.tweens.add({ targets:_udt, y:_udt.y - 54, alpha:0, duration:1400, onComplete:()=>_udt.destroy() });
+          window._SFX && window._SFX.levelUp && window._SFX.levelUp();
+        } else if ((this.ps.extraLives || 0) > 0 && !this._usedExtraLife) {
           this._usedExtraLife = true;
           this.ps.hp = 1;
           this.ps.extraLives--;
-          /* Flash a golden "LIFELINE!" popup */
           const lft = this.add.text(this.pg.x, this.pg.y - 48, '✦ LIFELINE!', {
             fontSize:'20px', fontFamily:'system-ui', fontStyle:'bold',
             color:'#fbbf24', stroke:'#000', strokeThickness:4,
