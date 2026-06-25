@@ -8313,22 +8313,56 @@
     });
   }
 
-  /* Check for existing session on page load */
+  /* Handle session — called on page load and on OAuth callback */
+  async function _handleSession(session) {
+    if (!session) { document.getElementById('auth-overlay').style.display = 'flex'; return; }
+    if (window._phaserStarted) return; // already running
+
+    const { data: profile } = await _sb.from('game_players').select('name').eq('id', session.user.id).single();
+    if (profile) {
+      window._player = { id: session.user.id, name: profile.name, email: (session.user.email || '').toLowerCase() };
+      localStorage.setItem('hoa_name', profile.name);
+      await _loadPlayerDataFromSupabase(session.user.id);
+      _startPhaser();
+      return;
+    }
+
+    /* New Google user — no profile yet. Prompt for display name. */
+    const suggestedName = (session.user.user_metadata?.full_name || session.user.email || '').replace(/\s+/g,'').slice(0,16);
+    document.getElementById('auth-overlay').style.display = 'flex';
+    _authTab('signup');
+    document.getElementById('su-email').value = session.user.email || '';
+    document.getElementById('su-email').disabled = true;
+    document.getElementById('su-password').style.display = 'none';
+    document.getElementById('su-name').value = suggestedName;
+    document.getElementById('su-name').focus();
+    document.getElementById('su-btn').textContent = 'SET DISPLAY NAME';
+    document.getElementById('su-btn').onclick = async () => {
+      const name = document.getElementById('su-name').value.trim();
+      if (!name) { _authSetError('Choose a display name.'); return; }
+      if (!/^[a-zA-Z0-9 _\-]{1,16}$/.test(name)) { _authSetError('Only letters, numbers, spaces, _ or -'); return; }
+      _authSetLoading(true);
+      const { error } = await _sb.from('game_players').insert({ id: session.user.id, name });
+      if (error) { _authSetLoading(false); _authSetError(error.message.includes('unique') ? 'Name taken — try another.' : error.message); return; }
+      window._player = { id: session.user.id, name, email: (session.user.email||'').toLowerCase() };
+      localStorage.setItem('hoa_name', name);
+      await _loadPlayerDataFromSupabase(session.user.id);
+      document.getElementById('auth-overlay').style.display = 'none';
+      _startPhaser();
+    };
+  }
+
+  /* Check for existing session on page load, then listen for OAuth callbacks */
   (async () => {
     const { data: { session } } = await _sb.auth.getSession();
-    if (session) {
-      const { data: profile } = await _sb.from('game_players').select('name').eq('id', session.user.id).single();
-      if (profile) {
-        window._player = { id: session.user.id, name: profile.name, email: (session.user.email || '').toLowerCase() };
-        localStorage.setItem('hoa_name', profile.name);
-        await _loadPlayerDataFromSupabase(session.user.id);
-        _startPhaser();
-        return;
-      }
-    }
-    /* No valid session — show auth overlay */
-    document.getElementById('auth-overlay').style.display = 'flex';
+    await _handleSession(session);
   })();
+
+  _sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && !window._phaserStarted) {
+      await _handleSession(session);
+    }
+  });
 
   /* Orientation detection — matchMedia is the only reliable method on iOS Safari.
      resize and orientationchange both have known issues with locked viewports. */
