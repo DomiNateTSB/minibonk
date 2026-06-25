@@ -183,6 +183,15 @@
         <input class="auth-input" id="su-name"     type="text"     placeholder="Display name (max 16 chars)" maxlength="16" autocomplete="off" />
         <input class="auth-input" id="su-email"    type="email"    placeholder="Email address" autocomplete="email" />
         <input class="auth-input" id="su-password" type="password" placeholder="Password (min 6 chars)"      autocomplete="new-password" />
+        <label style="display:flex;align-items:flex-start;gap:8px;margin:10px 0 4px;cursor:pointer;font-family:system-ui;font-size:11px;color:rgba(255,255,255,0.55);line-height:1.5;">
+          <input type="checkbox" id="su-legal" style="margin-top:2px;accent-color:#7c3aed;cursor:pointer;flex-shrink:0;" />
+          <span>I have read and agree to the
+            <a href="#" onclick="showLegal('tos'); return false;" style="color:#a78bfa;text-decoration:underline;">Terms of Service</a>
+            and
+            <a href="#" onclick="showLegal('pp'); return false;" style="color:#a78bfa;text-decoration:underline;">Privacy Policy</a>,
+            and I consent to the processing of my personal data as described therein.
+          </span>
+        </label>
         <button class="auth-btn" id="su-btn" onclick="_doSignUp()">CREATE ACCOUNT</button>
       </div>
 
@@ -584,6 +593,7 @@
     if (!name) { _authSetError('Please enter a display name.'); return; }
     if (!email || !password) { _authSetError('Please fill in all fields.'); return; }
     if (password.length < 6) { _authSetError('Password must be at least 6 characters.'); return; }
+    if (!document.getElementById('su-legal').checked) { _authSetError('You must agree to the Terms of Service and Privacy Policy to create an account.'); return; }
     _authSetLoading(true); _authSetError('');
     const { data: signUpData, error: signUpError } = await _sb.auth.signUp({ email, password });
     if (signUpError) { _authSetLoading(false); _authSetError(signUpError.message); return; }
