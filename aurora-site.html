@@ -8373,8 +8373,14 @@
 
   /* Check for existing session on page load, then listen for OAuth callbacks */
   (async () => {
-    const { data: { session } } = await _sb.auth.getSession();
-    await _handleSession(session);
+    try {
+      const _sessionTimeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000));
+      const { data: { session } } = await Promise.race([_sb.auth.getSession(), _sessionTimeout]);
+      await _handleSession(session);
+    } catch(e) {
+      console.warn('[Auth] getSession timed out or failed:', e.message);
+      await _handleSession(null);
+    }
   })();
 
   _sb.auth.onAuthStateChange(async (event, session) => {
