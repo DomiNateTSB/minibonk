@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>Halls of Aurora</title>
+  <title>Thornrift</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #06000f; touch-action: none; }
@@ -41,6 +41,9 @@
       /* Pause stays top-right */
     }
   </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <!-- Auth overlay — shown before game starts if not logged in -->
@@ -49,8 +52,8 @@
       backdrop-filter:blur(8px); align-items:center; justify-content:center; font-family:system-ui; }
     #auth-box { width:340px; background:rgba(15,5,30,0.98); border:1.5px solid rgba(124,58,237,0.5);
       border-radius:16px; padding:36px 32px 28px; box-shadow:0 0 60px rgba(124,58,237,0.2); }
-    #auth-title { color:#a78bfa; font-size:11px; letter-spacing:4px; font-weight:bold;
-      text-align:center; margin-bottom:6px; }
+    #auth-title { display:block; width:280px; max-width:90%; margin:0 auto 4px;
+      mix-blend-mode:screen; filter:brightness(1.1) drop-shadow(0 0 16px #7c3aed); }
     #auth-game-name { color:#fff; font-size:28px; font-weight:bold; text-align:center;
       margin-bottom:28px; }
     .auth-tabs { display:flex; border-bottom:1px solid rgba(124,58,237,0.3); margin-bottom:24px; }
@@ -77,11 +80,90 @@
     .auth-forgot:hover { color:#a78bfa; }
     #auth-loading { display:none; text-align:center; color:rgba(255,255,255,0.4);
       font-size:13px; margin-top:10px; }
+
+  /* ── BorderGlow ── */
+  .border-glow-card {
+    --edge-proximity:0; --cursor-angle:45deg; --edge-sensitivity:30;
+    --color-sensitivity:calc(var(--edge-sensitivity) + 20);
+    --border-radius:28px; --glow-padding:30px; --cone-spread:25;
+    position:relative; border-radius:var(--border-radius); isolation:isolate;
+    transform:translate3d(0,0,0.01px); display:grid;
+    border:1px solid rgb(255 255 255 / 15%);
+    background:var(--card-bg,#120F17); overflow:visible;
+    box-shadow:rgba(0,0,0,.15) 0 2px 4px,rgba(0,0,0,.15) 0 4px 8px,rgba(0,0,0,.15) 0 8px 16px;
+  }
+  .border-glow-card::before,.border-glow-card::after,.border-glow-card>.edge-light {
+    content:""; position:absolute; inset:0; border-radius:inherit;
+    transition:opacity .25s ease-out; z-index:-1;
+  }
+  .border-glow-card:not(:hover)::before,.border-glow-card:not(:hover)::after,
+  .border-glow-card:not(:hover)>.edge-light { opacity:0; transition:opacity .75s ease-in-out; }
+  .border-glow-card::before {
+    border:1px solid transparent;
+    background:
+      linear-gradient(var(--card-bg,#120F17) 0 100%) padding-box,
+      linear-gradient(rgb(255 255 255 / 0%) 0% 100%) border-box,
+      var(--gradient-one) border-box, var(--gradient-two) border-box,
+      var(--gradient-three) border-box, var(--gradient-four) border-box,
+      var(--gradient-five) border-box, var(--gradient-six) border-box,
+      var(--gradient-seven) border-box, var(--gradient-base) border-box;
+    opacity:calc((var(--edge-proximity) - var(--color-sensitivity)) / (100 - var(--color-sensitivity)));
+    mask-image:conic-gradient(from var(--cursor-angle) at center,
+      black calc(var(--cone-spread) * 1%),
+      transparent calc((var(--cone-spread) + 15) * 1%),
+      transparent calc((100 - var(--cone-spread) - 15) * 1%),
+      black calc((100 - var(--cone-spread)) * 1%));
+  }
+  .border-glow-card::after {
+    border:1px solid transparent;
+    background:
+      var(--gradient-one) padding-box, var(--gradient-two) padding-box,
+      var(--gradient-three) padding-box, var(--gradient-four) padding-box,
+      var(--gradient-five) padding-box, var(--gradient-six) padding-box,
+      var(--gradient-seven) padding-box, var(--gradient-base) padding-box;
+    mask-image:
+      linear-gradient(to bottom,black,black),
+      radial-gradient(ellipse at 50% 50%,black 40%,transparent 65%),
+      radial-gradient(ellipse at 66% 66%,black 5%,transparent 40%),
+      radial-gradient(ellipse at 33% 33%,black 5%,transparent 40%),
+      radial-gradient(ellipse at 66% 33%,black 5%,transparent 40%),
+      radial-gradient(ellipse at 33% 66%,black 5%,transparent 40%),
+      conic-gradient(from var(--cursor-angle) at center,transparent 5%,black 15%,black 85%,transparent 95%);
+    mask-composite:subtract,add,add,add,add,add;
+    opacity:calc(var(--fill-opacity,.35) * (var(--edge-proximity) - var(--color-sensitivity)) / (100 - var(--color-sensitivity)));
+    mix-blend-mode:soft-light;
+  }
+  .border-glow-card>.edge-light {
+    inset:calc(var(--glow-padding) * -1); pointer-events:none; z-index:1;
+    mask-image:conic-gradient(from var(--cursor-angle) at center,
+      black 2.5%,transparent 10%,transparent 90%,black 97.5%);
+    opacity:calc((var(--edge-proximity) - var(--edge-sensitivity)) / (100 - var(--edge-sensitivity)));
+    mix-blend-mode:plus-lighter;
+  }
+  .border-glow-card>.edge-light::before {
+    content:""; position:absolute; inset:var(--glow-padding); border-radius:inherit;
+    box-shadow:
+      inset 0 0 0 1px var(--glow-color),
+      inset 0 0 3px 0 var(--glow-color-50),
+      inset 0 0 10px 0 var(--glow-color-30),
+      inset 0 0 25px 2px var(--glow-color-20),
+      0 0 3px 0 var(--glow-color-50),
+      0 0 10px 0 var(--glow-color-30),
+      0 0 25px 2px var(--glow-color-20),
+      0 0 50px 2px var(--glow-color-10);
+  }
+  .border-glow-inner { display:flex; flex-direction:column; position:relative; overflow:visible; z-index:1; }
+  .menu-pill-btn { transition:opacity .5s; }
+  .menu-pill-btn .border-glow-inner { align-items:center; justify-content:center; white-space:nowrap; }
+  .pill-icon { font-size:15px; line-height:1; flex-shrink:0; }
+  .pill-label { font-family:'Cinzel',serif; font-weight:700; letter-spacing:1.5px; color:#d4c5f9; font-size:11.5px; line-height:1; }
+  .pill-badge { font-family:'Cinzel',serif; font-size:9px; font-weight:600; color:#a78bfa; background:rgba(139,92,246,.25); border:1px solid rgba(139,92,246,.4); border-radius:20px; padding:1px 6px; margin-left:4px; line-height:1.4; flex-shrink:0; }
+
   </style>
 
   <div id="auth-overlay" style="display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;">
     <div id="auth-box">
-      <p id="auth-title">HALLS OF AURORA</p>
+      <img id="auth-title" src="/logo.png" alt="Thornrift" />
       <h2 id="auth-game-name">Sign In</h2>
       <div class="auth-tabs">
         <button class="auth-tab active" id="tab-signin" onclick="_authTab('signin')">Sign In</button>
@@ -112,6 +194,9 @@
 
   <div id="aurora-bg"></div>
   <div id="game-container"></div>
+
+  <!-- GooeyNav overlay for menu Achievements + Inventory buttons -->
+  <div id="gooey-menu-nav" style="display:none;position:fixed;left:50%;transform:translateX(-50%);top:calc(50% + 215px);z-index:10;"></div>
 
   <!-- Touch controls (shown only during gameplay on touch devices) -->
   <div id="tc-wrap">
@@ -346,6 +431,16 @@
       }).join('');
     }
 
+    /* Escape any HTML characters in untrusted server strings before inserting into innerHTML */
+    function _esc(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function renderRows(scores) {
       const rows = document.getElementById('lb-rows');
       const you = localStorage.getItem('hoa_name') || '';
@@ -356,8 +451,12 @@
       }
       const medals = ['🥇','🥈','🥉'];
       rows.innerHTML = scores.map((s, i) => {
+        /* Sanitize all server-sourced strings before interpolation */
+        const safeName  = _esc(s.name);
+        const safeWave  = _esc(Math.round(Number(s.wave) || 0));
+        const safeKills = _esc(Math.round(Number(s.kills) || 0));
         const medal  = medals[i] || `<span style="color:rgba(255,255,255,0.35);font-size:11px">${i+1}.</span>`;
-        const emoji  = CLASS_EMOJI_DOM[s.class_name] || '❓';
+        const emoji  = CLASS_EMOJI_DOM[_esc(s.class_name)] || '❓';
         const isYou  = s.name === you;
         const divider = i === 9 ? 'border-top:1px dashed rgba(124,58,237,0.3);margin-top:4px;padding-top:4px;' : '';
         return `<div style="
@@ -370,13 +469,13 @@
           <span style="font-size:13px">${emoji}</span>
           <span style="flex:1;font-size:12px;color:${isYou ? '#c4b5fd' : 'rgba(255,255,255,0.8)'};
             white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:${isYou?'bold':'normal'}">
-            ${s.name}${isYou?' ◀':''}
+            ${safeName}${isYou?' ◀':''}
           </span>
           <span style="font-size:11px;color:rgba(255,255,255,0.5);white-space:nowrap">
-            Wave <b style="color:#e2e8f0">${s.wave}</b>
+            Wave <b style="color:#e2e8f0">${safeWave}</b>
           </span>
           <span style="font-size:10px;color:rgba(255,255,255,0.35);white-space:nowrap">
-            ${s.kills}k
+            ${safeKills}k
           </span>
         </div>`;
       }).join('');
@@ -428,7 +527,9 @@
   })();
   </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2/dist/umd/supabase.min.js"
+          integrity="sha384-JWEyvHh+lRf0sN/WWY+QTQwX+CyWqmNg4tkc8GQzAMEtR2wGNrCJlvnu1lHD1kDm"
+          crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
   <script>
   /* ── SUPABASE CLIENT ── */
@@ -512,7 +613,7 @@
     if (!email) { _authSetError('Enter your email address first.'); return; }
     _authSetLoading(true);
     const { error } = await _sb.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://halls-of-aurora.vercel.app',
+      redirectTo: 'https://thornrift.com',
     });
     _authSetLoading(false);
     if (error) { _authSetError(error.message); }
@@ -525,8 +626,19 @@
     /* Load player profile */
     const { data: profile } = await _sb.from('game_players').select('name').eq('id', user.id).single();
     if (!profile) return;
-    window._player = { id: user.id, name: profile.name };
+    window._player = { id: user.id, name: profile.name, email: (user.email || '').toLowerCase() };
     localStorage.setItem('hoa_name', profile.name);
+    /* Dev account: seed full inventory once — bound to UUID, not username */
+    if (user.id === 'c59e044b-932b-4278-9da6-338d621ecbbc' && !localStorage.getItem('hoa_dev_seeded')) {
+      const _devInv = {};
+      BATTLE_PASS_REWARDS.forEach(function(r) {
+        if (r.type === 'echo')    _devInv['echo_' + r.value] = (_devInv['echo_' + r.value] || 0) + 3;
+        else if (r.type === 'rune')    _devInv['rune_' + r.value] = (_devInv['rune_' + r.value] || 0) + 3;
+        else if (r.type === 'xpboost') { const k = 'xpboost_' + (r.value*100).toFixed(0); _devInv[k] = (_devInv[k] || 0) + 3; }
+      });
+      localStorage.setItem('hoa_inventory', JSON.stringify(_devInv));
+      localStorage.setItem('hoa_dev_seeded', '1');
+    }
     /* Load all player data into localStorage cache */
     await _loadPlayerDataFromSupabase(user.id);
     /* Hide auth overlay, let the game start */
@@ -590,6 +702,29 @@
       }));
       localStorage.setItem('hoa_history', JSON.stringify(hist));
     }
+    /* Inventory */
+    const { data: invRows } = await _sb.from('player_inventory').select('item_id,quantity').eq('user_id', uid);
+    if (invRows) {
+      const inv = {};
+      invRows.forEach(r => { inv[r.item_id] = r.quantity; });
+      localStorage.setItem('hoa_inv', JSON.stringify(inv));
+    }
+    /* Battle Pass — merge Supabase bp_data into hoa_bp, preserving higher local progress */
+    if (progressRes.data) {
+      const p = progressRes.data;
+      if (p.bp_owned || p.bp_data) {
+        const remote = p.bp_data || { level: 0, xp: 0, claimed: [], owned: false };
+        const local  = JSON.parse(localStorage.getItem('hoa_bp') || '{}');
+        const merged = {
+          owned:   p.bp_owned || remote.owned || local.owned || false,
+          premium: p.bp_premium || remote.premium || local.premium || false,
+          level:   Math.max(remote.level || 0, local.level || 0),
+          xp:      Math.max(remote.xp    || 0, local.xp    || 0),
+          claimed: [...new Set([...(remote.claimed || []), ...(local.claimed || [])])],
+        };
+        localStorage.setItem('hoa_bp', JSON.stringify(merged));
+      }
+    }
   }
 
   async function _syncToSupabase() {
@@ -605,14 +740,19 @@
         classesPlayed[k.replace('played_', '')] = true;
       });
 
+      const bp = JSON.parse(localStorage.getItem('hoa_bp') || '{}');
       await Promise.all([
         _sb.from('game_progress').upsert({
-          player_id: uid,
-          souls: meta.souls || 0,
-          upgrades: meta.upgrades || {},
-          best_wave: meta.bestWave || 0,
+          player_id:  uid,
+          souls:      meta.souls || 0,
+          upgrades:   meta.upgrades || {},
+          best_wave:  meta.bestWave || 0,
           best_kills: meta.bestKills || 0,
           best_level: meta.bestLevel || 0,
+          /* bp_owned and bp_premium are NEVER written by the client —
+             only the stripe-webhook Edge Function may set these.
+             We only sync XP progress (level, xp, claimed) which are non-sensitive. */
+          bp_data:    { level: Math.max(0, Math.min(100, Math.floor(bp.level || 0))), xp: Math.max(0, Math.floor(bp.xp || 0)), claimed: (bp.claimed || []).filter(n => Number.isInteger(n) && n >= 1 && n <= 100) },
           updated_at: new Date().toISOString(),
         }),
         _sb.from('game_achievements').upsert({
@@ -860,112 +1000,233 @@
   const META_MAX   = META_COSTS.length;
 
   /* ── BATTLE PASS ── */
-  const XP_PER_BP_LEVEL = 300;
+  /* XP required to earn each Battle Pass level (variable curve) */
+  function getXpForLevel(lvl) {
+    if (lvl <= 10) return 400;
+    if (lvl <= 30) return 800;
+    if (lvl <= 70) return 1200;
+    if (lvl <= 99) return 2000;
+    return 4000; // level 100
+  }
+
   const BATTLE_PASS_REWARDS = [
-    { level:1,  type:'souls',     value:100,           name:'+100 Souls',           icon:'✦' },
-    { level:2,  type:'xpboost',   value:0.10,          name:'+10% XP Boost',        icon:'⭐' },
-    { level:3,  type:'souls',     value:200,           name:'+200 Souls',           icon:'✦' },
-    { level:4,  type:'title',     value:'Wanderer',    name:'Title: Wanderer',      icon:'🏷️' },
-    { level:5,  type:'souls',     value:300,           name:'+300 Souls',           icon:'✦' },
-    { level:6,  type:'xpboost',   value:0.15,          name:'+15% XP Boost',        icon:'⭐' },
-    { level:7,  type:'souls',     value:400,           name:'+400 Souls',           icon:'✦' },
-    { level:8,  type:'title',     value:'Scout',       name:'Title: Scout',         icon:'🏷️' },
-    { level:9,  type:'souls',     value:500,           name:'+500 Souls',           icon:'✦' },
-    { level:10, type:'elite_skin',value:'hunter',      name:'Hunter Elite',         icon:'👑' },
-    { level:11, type:'souls',     value:600,           name:'+600 Souls',           icon:'✦' },
-    { level:12, type:'title',     value:'Veteran',     name:'Title: Veteran',       icon:'🏷️' },
-    { level:13, type:'xpboost',   value:0.20,          name:'+20% XP Boost',        icon:'⭐' },
-    { level:14, type:'souls',     value:700,           name:'+700 Souls',           icon:'✦' },
-    { level:15, type:'souls',     value:800,           name:'+800 Souls',           icon:'✦' },
-    { level:16, type:'title',     value:'Warrior',     name:'Title: Warrior',       icon:'🏷️' },
-    { level:17, type:'xpboost',   value:0.25,          name:'+25% XP Boost',        icon:'⭐' },
-    { level:18, type:'souls',     value:1000,          name:'+1000 Souls',          icon:'✦' },
-    { level:19, type:'title',     value:'Warlord',     name:'Title: Warlord',       icon:'🏷️' },
-    { level:20, type:'elite_skin',value:'knight',      name:'Knight Elite',         icon:'👑' },
-    { level:21, type:'souls',     value:1200,          name:'+1200 Souls',          icon:'✦' },
-    { level:22, type:'xpboost',   value:0.30,          name:'+30% XP Boost',        icon:'⭐' },
-    { level:23, type:'souls',     value:1400,          name:'+1400 Souls',          icon:'✦' },
-    { level:24, type:'title',     value:'Champion',    name:'Title: Champion',      icon:'🏷️' },
-    { level:25, type:'souls',     value:1600,          name:'+1600 Souls',          icon:'✦' },
-    { level:26, type:'xpboost',   value:0.35,          name:'+35% XP Boost',        icon:'⭐' },
-    { level:27, type:'souls',     value:1800,          name:'+1800 Souls',          icon:'✦' },
-    { level:28, type:'title',     value:'Conqueror',   name:'Title: Conqueror',     icon:'🏷️' },
-    { level:29, type:'xpboost',   value:0.40,          name:'+40% XP Boost',        icon:'⭐' },
-    { level:30, type:'elite_skin',value:'wizard',      name:'Wizard Elite',         icon:'👑' },
-    { level:31, type:'souls',     value:2000,          name:'+2000 Souls',          icon:'✦' },
-    { level:32, type:'xpboost',   value:0.50,          name:'+50% XP Boost',        icon:'⭐' },
-    { level:33, type:'souls',     value:2200,          name:'+2200 Souls',          icon:'✦' },
-    { level:34, type:'title',     value:'Overlord',    name:'Title: Overlord',      icon:'🏷️' },
-    { level:35, type:'souls',     value:2500,          name:'+2500 Souls',          icon:'✦' },
-    { level:36, type:'xpboost',   value:0.50,          name:'+50% XP Boost',        icon:'⭐' },
-    { level:37, type:'souls',     value:2800,          name:'+2800 Souls',          icon:'✦' },
-    { level:38, type:'title',     value:'Dreadlord',   name:'Title: Dreadlord',     icon:'🏷️' },
-    { level:39, type:'souls',     value:3000,          name:'+3000 Souls',          icon:'✦' },
-    { level:40, type:'elite_skin',value:'necromancer', name:'Necromancer Elite',    icon:'👑' },
-    { level:41, type:'meta_excl', value:'ex_dmg1',     name:"Veteran's Edge I",     icon:'⚡' },
-    { level:42, type:'souls',     value:3200,          name:'+3200 Souls',          icon:'✦' },
-    { level:43, type:'title',     value:'Phantom',     name:'Title: Phantom',       icon:'🏷️' },
-    { level:44, type:'xpboost',   value:1.00,          name:'+100% XP Boost',       icon:'⭐' },
-    { level:45, type:'souls',     value:3500,          name:'+3500 Souls',          icon:'✦' },
-    { level:46, type:'meta_excl', value:'ex_hp1',      name:"Titan's Blood I",      icon:'❤️' },
-    { level:47, type:'souls',     value:3800,          name:'+3800 Souls',          icon:'✦' },
-    { level:48, type:'title',     value:'Shadowbane',  name:'Title: Shadowbane',    icon:'🏷️' },
-    { level:49, type:'xpboost',   value:1.00,          name:'+100% XP Boost',       icon:'⭐' },
-    { level:50, type:'elite_skin',value:'rogue',       name:'Rogue Elite',          icon:'👑' },
-    { level:51, type:'souls',     value:4000,          name:'+4000 Souls',          icon:'✦' },
-    { level:52, type:'meta_excl', value:'ex_spd1',     name:"Winds of War I",       icon:'💨' },
-    { level:53, type:'title',     value:'Voidwalker',  name:'Title: Voidwalker',    icon:'🏷️' },
-    { level:54, type:'souls',     value:4500,          name:'+4500 Souls',          icon:'✦' },
-    { level:55, type:'xpboost',   value:1.00,          name:'+100% XP Boost',       icon:'⭐' },
-    { level:56, type:'meta_excl', value:'ex_regen1',   name:'Phoenix Pulse I',      icon:'🔥' },
-    { level:57, type:'souls',     value:5000,          name:'+5000 Souls',          icon:'✦' },
-    { level:58, type:'title',     value:'Eternal',     name:'Title: Eternal',       icon:'🏷️' },
-    { level:59, type:'xpboost',   value:1.00,          name:'+100% XP Boost',       icon:'⭐' },
-    { level:60, type:'elite_skin',value:'paladin',     name:'Paladin Elite',        icon:'👑' },
-    { level:61, type:'border',    value:'gold',        name:'Gold Card Border',     icon:'🖼️' },
-    { level:62, type:'souls',     value:5500,          name:'+5500 Souls',          icon:'✦' },
-    { level:63, type:'title',     value:'Archmage',    name:'Title: Archmage',      icon:'🏷️' },
-    { level:64, type:'xpboost',   value:1.00,          name:'+100% XP Boost',       icon:'⭐' },
-    { level:65, type:'souls',     value:6000,          name:'+6000 Souls',          icon:'✦' },
-    { level:66, type:'border',    value:'crimson',     name:'Crimson Border',       icon:'🖼️' },
-    { level:67, type:'title',     value:'Deathbringer',name:'Title: Deathbringer',  icon:'🏷️' },
-    { level:68, type:'souls',     value:6500,          name:'+6500 Souls',          icon:'✦' },
-    { level:69, type:'xpboost',   value:1.00,          name:'+100% XP Boost',       icon:'⭐' },
-    { level:70, type:'elite_skin',value:'berserker',   name:'Berserker Elite',      icon:'👑' },
-    { level:71, type:'souls',     value:7000,          name:'+7000 Souls',          icon:'✦' },
-    { level:72, type:'border',    value:'void',        name:'Void Card Border',     icon:'🖼️' },
-    { level:73, type:'title',     value:'Riftborn',    name:'Title: Riftborn',      icon:'🏷️' },
-    { level:74, type:'souls',     value:7500,          name:'+7500 Souls',          icon:'✦' },
-    { level:75, type:'xpboost',   value:2.00,          name:'+200% XP Boost',       icon:'⭐' },
-    { level:76, type:'border',    value:'aurora',      name:'Aurora Card Border',   icon:'🖼️' },
-    { level:77, type:'title',     value:'Godslayer',   name:'Title: Godslayer',     icon:'🏷️' },
-    { level:78, type:'souls',     value:8000,          name:'+8000 Souls',          icon:'✦' },
-    { level:79, type:'xpboost',   value:2.00,          name:'+200% XP Boost',       icon:'⭐' },
-    { level:80, type:'souls',     value:8500,          name:'+8500 Souls',          icon:'✦' },
-    { level:81, type:'trail',     value:'crimson',     name:'Crimson Trail',        icon:'✨' },
-    { level:82, type:'title',     value:'Ascendant',   name:'Title: Ascendant',     icon:'🏷️' },
-    { level:83, type:'souls',     value:9000,          name:'+9000 Souls',          icon:'✦' },
-    { level:84, type:'burst',     value:'gold',        name:'Gold Death Burst',     icon:'💥' },
-    { level:85, type:'xpboost',   value:2.00,          name:'+200% XP Boost',       icon:'⭐' },
-    { level:86, type:'trail',     value:'void',        name:'Void Trail',           icon:'✨' },
-    { level:87, type:'title',     value:'Immortal',    name:'Title: Immortal',      icon:'🏷️' },
-    { level:88, type:'souls',     value:9500,          name:'+9500 Souls',          icon:'✦' },
-    { level:89, type:'burst',     value:'aurora',      name:'Aurora Death Burst',   icon:'💥' },
-    { level:90, type:'trail',     value:'aurora',      name:'Aurora Trail',         icon:'✨' },
-    { level:91, type:'souls',     value:10000,         name:'+10000 Souls',         icon:'✦' },
-    { level:92, type:'title',     value:'Transcendent',name:'Title: Transcendent',  icon:'🏷️' },
-    { level:93, type:'burst',     value:'prismatic',   name:'Prismatic Burst',      icon:'💥' },
-    { level:94, type:'xpboost',   value:2.00,          name:'+200% XP Boost',       icon:'⭐' },
-    { level:95, type:'souls',     value:12000,         name:'+12000 Souls',         icon:'✦' },
-    { level:96, type:'trail',     value:'prismatic',   name:'Prismatic Trail',      icon:'✨' },
-    { level:97, type:'title',     value:'Legendary',   name:'Title: Legendary',     icon:'🏷️' },
-    { level:98, type:'souls',     value:15000,         name:'+15000 Souls',         icon:'✦' },
-    { level:99, type:'burst',     value:'divine',      name:'Divine Death Burst',   icon:'💥' },
-    { level:100,type:'ascended',  value:'golden_aura', name:'ASCENDED',             icon:'👑' },
+    /* ── Levels 1-10  (fast, starter rewards) ── */
+    { level:1,  type:'echo',      value:'fury1',       name:'Echo of Fury',         icon:'⚡', desc:'Next run: +20% damage for the first 3 waves' },
+    { level:2,  type:'xpboost',   value:0.10,  name:'+10% XP Boost',  icon:'⭐', desc:'Earn +10% XP from combat this run' },
+    { level:3,  type:'rune',      value:'vita1',       name:'Rune of Vitality',     icon:'💎', desc:'This run: +10 max HP' },
+    { level:4,  type:'title',     value:'Wanderer',    name:'Title: Wanderer',      icon:'🏷️', desc:'Equip the "Wanderer" title on your profile' },
+    { level:5,  type:'echo',      value:'shield1',     name:'Echo of Iron',         icon:'🛡️', desc:'Next run: absorb the first killing blow — survive at 1 HP' },
+    { level:6,  type:'xpboost',   value:0.15,  name:'+15% XP Boost',  icon:'⭐', desc:'Earn +15% XP from combat this run' },
+    { level:7,  type:'rune',      value:'crit1',       name:'Rune of Precision',    icon:'🔷', desc:'This run: +3% critical hit chance' },
+    { level:8,  type:'title',     value:'Scout',       name:'Title: Scout',         icon:'🏷️', desc:'Equip the "Scout" title on your profile' },
+    { level:9,  type:'echo',      value:'phoenix1',    name:'Echo of the Phoenix',  icon:'🔥', desc:'Next run: revive once with 30% HP when killed' },
+    { level:10, type:'elite_skin',value:'hunter',      name:'Hunter Elite',         icon:'👑', desc:'Unlock the golden Hunter elite skin — glowing emerald aura' },
+    /* ── Levels 11-20 ── */
+    { level:11, type:'rune',      value:'swift1',      name:'Rune of Swiftness',    icon:'💨', desc:'This run: +2% movement speed' },
+    { level:12, type:'title',     value:'Veteran',     name:'Title: Veteran',       icon:'🏷️', desc:'Equip the "Veteran" title on your profile' },
+    { level:13, type:'xpboost',   value:0.20,  name:'+20% XP Boost',  icon:'⭐', desc:'Earn +20% XP from combat this run' },
+    { level:14, type:'echo',      value:'venge1',      name:'Echo of Vengeance',    icon:'⚔️', desc:'Next run: deal +50% damage while below 40% HP' },
+    { level:15, type:'rune',      value:'power1',      name:'Rune of Power',        icon:'🔴', desc:'This run: +2% damage' },
+    { level:16, type:'title',     value:'Warrior',     name:'Title: Warrior',       icon:'🏷️', desc:'Equip the "Warrior" title on your profile' },
+    { level:17, type:'xpboost',   value:0.25,  name:'+25% XP Boost',  icon:'⭐', desc:'Earn +25% XP from combat this run' },
+    { level:18, type:'echo',      value:'plenty1',     name:'Echo of Plenty',       icon:'🎁', desc:'Next run: gain +3 extra trait choices at your first level-up' },
+    { level:19, type:'title',     value:'Warlord',     name:'Title: Warlord',       icon:'🏷️', desc:'Equip the "Warlord" title on your profile' },
+    { level:20, type:'elite_skin',value:'knight',      name:'Knight Elite',         icon:'👑', desc:'Unlock the Knight elite skin — radiant silver aura with azure light' },
+    /* ── Levels 21-30 ── */
+    { level:21, type:'rune',      value:'iron1',       name:'Rune of Iron',         icon:'🛡️', desc:'This run: -3% damage taken' },
+    { level:22, type:'xpboost',   value:0.30,  name:'+30% XP Boost',  icon:'⭐', desc:'Earn +30% XP from combat this run' },
+    { level:23, type:'echo',      value:'wind1',       name:'Echo of Wind',         icon:'💨', desc:'Next run: +35% movement speed for the first 5 waves' },
+    { level:24, type:'title',     value:'Champion',    name:'Title: Champion',      icon:'🏷️', desc:'Equip the "Champion" title on your profile' },
+    { level:25, type:'rune',      value:'souls1',      name:'Rune of Fortune',      icon:'✦',  desc:'This run: +5% bonus souls' },
+    { level:26, type:'xpboost',   value:0.35,  name:'+35% XP Boost',  icon:'⭐', desc:'Earn +35% XP from combat this run' },
+    { level:27, type:'echo',      value:'berserk1',    name:'Echo of the Berserker',icon:'🪓', desc:'Next run: each kill adds +5% damage (stacks up to +50%)' },
+    { level:28, type:'title',     value:'Conqueror',   name:'Title: Conqueror',     icon:'🏷️', desc:'Equip the "Conqueror" title on your profile' },
+    { level:29, type:'xpboost',   value:0.40,  name:'+40% XP Boost',  icon:'⭐', desc:'Earn +40% XP from combat this run' },
+    { level:30, type:'elite_skin',value:'wizard',      name:'Wizard Elite',         icon:'👑', desc:'Unlock the Wizard elite skin — crackling violet arcane aura' },
+    /* ── Levels 31-40 ── */
+    { level:31, type:'rune',      value:'pierce1',     name:'Rune of Piercing',     icon:'🔷', desc:'This run: start with +1 projectile pierce' },
+    { level:32, type:'xpboost',   value:0.50,  name:'+50% XP Boost',  icon:'⭐', desc:'Earn +50% XP from combat this run' },
+    { level:33, type:'echo',      value:'arc1',        name:'Echo of the Arcane',   icon:'🌀', desc:'Next run: +30% projectile size for the first 5 waves' },
+    { level:34, type:'title',     value:'Overlord',    name:'Title: Overlord',      icon:'🏷️', desc:'Equip the "Overlord" title on your profile' },
+    { level:35, type:'rune',      value:'vita2',       name:'Rune of Endurance',    icon:'💎', desc:'This run: +20 max HP' },
+    { level:36, type:'xpboost',   value:0.50,  name:'+50% XP Boost',  icon:'⭐', desc:'Earn +50% XP from combat this run' },
+    { level:37, type:'echo',      value:'haste1',      name:'Echo of Haste',        icon:'⚡', desc:'Next run: -20% attack cooldown for the first 4 waves' },
+    { level:38, type:'title',     value:'Dreadlord',   name:'Title: Dreadlord',     icon:'🏷️', desc:'Equip the "Dreadlord" title on your profile' },
+    { level:39, type:'rune',      value:'boss1',       name:'Rune of Slaying',      icon:'☠️', desc:'This run: +4% damage against bosses' },
+    { level:40, type:'elite_skin',value:'necromancer', name:'Necromancer Elite',    icon:'👑', desc:'Unlock the Necromancer elite skin — swirling dark-purple death aura' },
+    /* ── Levels 41-50 (exclusive meta upgrades) ── */
+    { level:41, type:'meta_excl', value:'ex_dmg1',     name:"Veteran's Edge I",     icon:'⚡', desc:'Exclusive meta upgrade: +2% permanent damage (unlocks in Shop)' },
+    { level:42, type:'rune',      value:'dodge1',      name:'Rune of Shadows',      icon:'🌑', desc:'This run: +5% dodge chance' },
+    { level:43, type:'title',     value:'Phantom',     name:'Title: Phantom',       icon:'🏷️', desc:'Equip the "Phantom" title on your profile' },
+    { level:44, type:'xpboost',   value:1.00,  name:'+100% XP Boost', icon:'⭐', desc:'Double XP earned from combat this run' },
+    { level:45, type:'echo',      value:'wave1',       name:'Echo of Resilience',   icon:'💚', desc:'Next run: clearing each wave restores 15% of your max HP (3 waves)' },
+    { level:46, type:'meta_excl', value:'ex_hp1',      name:"Titan's Blood I",      icon:'❤️', desc:'Exclusive meta upgrade: +30 permanent HP (unlocks in Shop)' },
+    { level:47, type:'rune',      value:'xp1',         name:'Rune of Channeling',   icon:'🔮', desc:'This run: +10% XP gain' },
+    { level:48, type:'title',     value:'Shadowbane',  name:'Title: Shadowbane',    icon:'🏷️', desc:'Equip the "Shadowbane" title on your profile' },
+    { level:49, type:'xpboost',   value:1.00,  name:'+100% XP Boost', icon:'⭐', desc:'Double XP earned from combat this run' },
+    { level:50, type:'elite_skin',value:'rogue',       name:'Rogue Elite',          icon:'👑', desc:'Unlock the Rogue elite skin — shadowy phantom silhouette with dark trail' },
+    /* ── Levels 51-60 ── */
+    { level:51, type:'echo',      value:'storm1',      name:'Echo of the Storm',    icon:'⚡', desc:'Next run: every 5th kill releases chain lightning (lasts 1 wave)' },
+    { level:52, type:'meta_excl', value:'ex_spd1',     name:"Winds of War I",       icon:'💨', desc:'Exclusive meta upgrade: +5% permanent speed (unlocks in Shop)' },
+    { level:53, type:'title',     value:'Voidwalker',  name:'Title: Voidwalker',    icon:'🏷️', desc:'Equip the "Voidwalker" title on your profile' },
+    { level:54, type:'rune',      value:'aurora1',     name:'Rune of Aurora',       icon:'🌌', desc:'This run: +3% damage and +3% speed' },
+    { level:55, type:'xpboost',   value:1.00,  name:'+100% XP Boost', icon:'⭐', desc:'Double XP earned from combat this run' },
+    { level:56, type:'meta_excl', value:'ex_regen1',   name:'Phoenix Pulse I',      icon:'🔥', desc:'Exclusive meta upgrade: +0.5 HP/s passive regen (unlocks in Shop)' },
+    { level:57, type:'echo',      value:'trait1',      name:'Echo of Choice',       icon:'🎯', desc:'Next run: freely choose any trait at your next level-up' },
+    { level:58, type:'title',     value:'Eternal',     name:'Title: Eternal',       icon:'🏷️', desc:'Equip the "Eternal" title on your profile' },
+    { level:59, type:'xpboost',   value:1.00,  name:'+100% XP Boost', icon:'⭐', desc:'Double XP earned from combat this run' },
+    { level:60, type:'elite_skin',value:'paladin',     name:'Paladin Elite',        icon:'👑', desc:'Unlock the Paladin elite skin — blazing golden holy aura' },
+    /* ── Levels 61-70 (card borders) ── */
+    { level:61, type:'border',    value:'gold',        name:'Gold Card Border',     icon:'🖼️', desc:'Cosmetic: golden border framing your class card in the lobby' },
+    { level:62, type:'rune',      value:'echo1',       name:'Rune of Echoes',       icon:'🔷', desc:'This run: each stacked trait is 5% stronger' },
+    { level:63, type:'title',     value:'Archmage',    name:'Title: Archmage',      icon:'🏷️', desc:'Equip the "Archmage" title on your profile' },
+    { level:64, type:'xpboost',   value:1.00,  name:'+100% XP Boost', icon:'⭐', desc:'Double XP earned from combat this run' },
+    { level:65, type:'echo',      value:'dom1',        name:'Echo of Dominion',     icon:'🛡️', desc:'Next run: a shield absorbs 100 damage per wave for 3 waves' },
+    { level:66, type:'border',    value:'crimson',     name:'Crimson Border',       icon:'🖼️', desc:'Cosmetic: deep crimson border framing your class card in the lobby' },
+    { level:67, type:'title',     value:'Deathbringer',name:'Title: Deathbringer',  icon:'🏷️', desc:'Equip the "Deathbringer" title on your profile' },
+    { level:68, type:'rune',      value:'wave1',       name:'Rune of Endurance',    icon:'💚', desc:'This run: gain +8 max HP per wave survived' },
+    { level:69, type:'xpboost',   value:1.00,  name:'+100% XP Boost', icon:'⭐', desc:'Double XP earned from combat this run' },
+    { level:70, type:'elite_skin',value:'berserker',   name:'Berserker Elite',      icon:'👑', desc:'Unlock the Berserker elite skin — raging crimson fury aura with ember particles' },
+    /* ── Levels 71-80 ── */
+    { level:71, type:'echo',      value:'lich1',       name:'Echo of the Lich',     icon:'☠️', desc:'Next run: kill 3 enemies to summon a shadow ally for 1 wave' },
+    { level:72, type:'border',    value:'void',        name:'Void Card Border',     icon:'🖼️', desc:'Cosmetic: swirling void-purple border framing your class card' },
+    { level:73, type:'title',     value:'Riftborn',    name:'Title: Riftborn',      icon:'🏷️', desc:'Equip the "Riftborn" title on your profile' },
+    { level:74, type:'rune',      value:'boss2',       name:'Rune of Dominance',    icon:'☠️', desc:'This run: +5% damage per boss killed (stacks)' },
+    { level:75, type:'xpboost',   value:2.00,  name:'+200% XP Boost', icon:'⭐', desc:'Triple XP earned from combat this run' },
+    { level:76, type:'border',    value:'aurora',      name:'Aurora Card Border',   icon:'🖼️', desc:'Cosmetic: radiant aurora-blue border framing your class card' },
+    { level:77, type:'title',     value:'Godslayer',   name:'Title: Godslayer',     icon:'🏷️', desc:'Equip the "Godslayer" title on your profile' },
+    { level:78, type:'rune',      value:'wrath1',      name:'Rune of Wrath',        icon:'🩸', desc:'This run: +10% damage, -10% max HP — a pact of power' },
+    { level:79, type:'xpboost',   value:2.00,  name:'+200% XP Boost', icon:'⭐', desc:'Triple XP earned from combat this run' },
+    { level:80, type:'echo',      value:'asc1',        name:'Echo of Ascension',    icon:'⬆️', desc:'Next run: begin at level 3 with XP head start already banked' },
+    /* ── Levels 81-90 (rare cosmetics) ── */
+    { level:81, type:'trail',     value:'crimson',     name:'Crimson Trail',        icon:'✨', desc:'Cosmetic: leave a blazing crimson particle trail as you move' },
+    { level:82, type:'title',     value:'Ascendant',   name:'Title: Ascendant',     icon:'🏷️', desc:'Equip the "Ascendant" title on your profile' },
+    { level:83, type:'rune',      value:'orbs1',       name:'Rune of Bounty',       icon:'💎', desc:'This run: boss waves drop 2 extra trait orbs' },
+    { level:84, type:'burst',     value:'gold',        name:'Gold Death Burst',     icon:'💥', desc:'Cosmetic: explode into a shower of gold particles on death' },
+    { level:85, type:'xpboost',   value:2.00,  name:'+200% XP Boost', icon:'⭐', desc:'Triple XP earned from combat this run' },
+    { level:86, type:'trail',     value:'void',        name:'Void Trail',           icon:'✨', desc:'Cosmetic: leave a shifting void-purple shadow trail as you move' },
+    { level:87, type:'title',     value:'Immortal',    name:'Title: Immortal',      icon:'🏷️', desc:'Equip the "Immortal" title on your profile' },
+    { level:88, type:'rune',      value:'sup1',        name:'Rune of Supremacy',    icon:'👑', desc:'This run: +6% to all stats (dmg, speed, HP)' },
+    { level:89, type:'burst',     value:'aurora',      name:'Aurora Death Burst',   icon:'💥', desc:'Cosmetic: explode into aurora-blue energy waves on death' },
+    { level:90, type:'trail',     value:'aurora',      name:'Aurora Trail',         icon:'✨', desc:'Cosmetic: leave a shimmering cyan aurora trail as you move' },
+    /* ── Levels 91-99 ── */
+    { level:91, type:'echo',      value:'inf1',        name:'Echo of Infinity',     icon:'∞',  desc:'Next run: your projectiles fly with infinite range' },
+    { level:92, type:'title',     value:'Transcendent',name:'Title: Transcendent',  icon:'🏷️', desc:'Equip the "Transcendent" title on your profile' },
+    { level:93, type:'burst',     value:'prismatic',   name:'Prismatic Burst',      icon:'💥', desc:'Cosmetic: explode into a rainbow prismatic light show on death' },
+    { level:94, type:'xpboost',   value:2.00,  name:'+200% XP Boost', icon:'⭐', desc:'Triple XP earned from combat this run' },
+    { level:95, type:'rune',      value:'cosmos1',     name:'Rune of the Cosmos',   icon:'🌌', desc:'This run: +8% to all stats — ultimate power' },
+    { level:96, type:'trail',     value:'prismatic',   name:'Prismatic Trail',      icon:'✨', desc:'Cosmetic: leave a rainbow prismatic trail as you move' },
+    { level:97, type:'title',     value:'Legendary',   name:'Title: Legendary',     icon:'🏷️', desc:'Equip the "Legendary" title on your profile' },
+    { level:98, type:'echo',      value:'god1',        name:'Echo of the God',      icon:'✦',  desc:'Next run: cannot die, max HP fully restored between every wave' },
+    { level:99, type:'burst',     value:'divine',      name:'Divine Death Burst',   icon:'💥', desc:'Cosmetic: ascend in a pillar of white light on death' },
+    { level:100,type:'ascended',  value:'golden_aura', name:'ASCENDED',             icon:'👑', desc:'Unlock the permanent golden aura — visible on all characters across all runs forever' },
   ];
 
-  function loadBP()  { try { return JSON.parse(localStorage.getItem('hoa_bp')) || { level:0, xp:0, claimed:[], owned:false }; } catch { return { level:0, xp:0, claimed:[], owned:false }; } }
+  function loadBP()  {
+    if (window._player && window._player.id === 'c59e044b-932b-4278-9da6-338d621ecbbc') {
+      try { const _s = JSON.parse(localStorage.getItem('hoa_bp') || '{}'); return { level:100, xp:0, claimed:_s.claimed||[], owned:true }; } catch(_e) { return { level:100, xp:0, claimed:[], owned:true }; }
+    }
+    try { return JSON.parse(localStorage.getItem('hoa_bp')) || { level:0, xp:0, claimed:[], owned:false }; } catch { return { level:0, xp:0, claimed:[], owned:false }; }
+  }
   function saveBP(d) { try { localStorage.setItem('hoa_bp', JSON.stringify(d)); } catch {} }
+
+  /* ──────────── INVENTORY ──────────── */
+  function loadInventory() {
+    try { return JSON.parse(localStorage.getItem('hoa_inv') || '{}'); } catch { return {}; }
+  }
+  function saveInventory(inv) {
+    try { localStorage.setItem('hoa_inv', JSON.stringify(inv)); } catch {}
+  }
+  function addToInventory(itemId, qty) {
+    const inv = loadInventory();
+    inv[itemId] = (inv[itemId] || 0) + qty;
+    saveInventory(inv);
+    _syncInvItem(itemId, inv[itemId]);
+  }
+  function useFromInventory(itemId) {
+    const inv = loadInventory();
+    if (!(inv[itemId] > 0)) return false;
+    inv[itemId] -= 1;
+    const newQty = inv[itemId];
+    if (newQty <= 0) delete inv[itemId];
+    saveInventory(inv);
+    _syncInvItem(itemId, newQty || 0);
+    /* Queue this item to apply at next run start */
+    const active = JSON.parse(localStorage.getItem('hoa_run_active') || '[]');
+    active.push(itemId);
+    localStorage.setItem('hoa_run_active', JSON.stringify(active));
+    return true;
+  }
+  function getRunItems()   { try { return JSON.parse(localStorage.getItem('hoa_run_active') || '[]'); } catch { return []; } }
+  function clearRunItems() { localStorage.removeItem('hoa_run_active'); }
+
+  /* Supabase inventory sync (fire-and-forget) */
+  async function _syncInvItem(itemId, qty) {
+    const uid = window._player && window._player.id;
+    if (!uid) return;
+    try {
+      if (qty <= 0) {
+        await _sb.from('player_inventory').delete().eq('user_id', uid).eq('item_id', itemId);
+      } else {
+        await _sb.from('player_inventory').upsert({ user_id: uid, item_id: itemId, quantity: qty });
+      }
+    } catch {}
+  }
+
+  /* Item effects applied to ps at run start */
+  const ITEM_EFFECTS = {
+    'echo_fury1':    ps => { ps.dmg = (ps.dmg||10) * 1.20; },
+    'echo_shield1':  ps => { ps.extraLives = (ps.extraLives||0) + 1; },
+    'echo_phoenix1': ps => { ps.extraLives = (ps.extraLives||0) + 1; },
+    'echo_venge1':   ps => { ps._vengeanceDmg = (ps._vengeanceDmg||0) + 0.50; },
+    'echo_plenty1':  ps => { ps.maxHp = Math.floor((ps.maxHp||100)*1.20); ps.hp = ps.maxHp; },
+    'echo_arc1':     ps => { ps.projSize = (ps.projSize||1) * 1.30; },
+    'echo_haste1':   ps => { ps.atkRate = (ps.atkRate||1) * 0.80; },
+    'echo_wind1':    ps => { ps.speed = (ps.speed||100) * 1.35; },
+    'echo_wave1':    ps => { ps._waveHealPct = (ps._waveHealPct||0) + 0.15; },
+    'echo_trait1':   ps => { ps._runXpBoost = (ps._runXpBoost||0) + 0.40; },
+    'echo_dom1':     ps => { ps._waveShield = (ps._waveShield||0) + 100; },
+    'echo_asc1':     ps => { ps._startLevel = Math.max(ps._startLevel||1, 3); },
+    'echo_inf1':     ps => { ps._infiniteRange = true; },
+    'echo_god1':     ps => { ps._godMode = true; },
+    'echo_berserk1': ps => { ps.dmg = (ps.dmg||10)*1.25; ps.atkRate = (ps.atkRate||1)*1.15; },
+    'echo_storm1':   ps => { ps.dmg = (ps.dmg||10)*1.15; ps.piercing = (ps.piercing||0)+3; },
+    'echo_lich1':    ps => { ps.extraLives = (ps.extraLives||0)+1; ps.dmg = (ps.dmg||10)*1.10; },
+    'xpboost_10':    ps => { ps._runXpBoost = (ps._runXpBoost||0) + 0.10; },
+    'xpboost_15':    ps => { ps._runXpBoost = (ps._runXpBoost||0) + 0.15; },
+    'xpboost_20':    ps => { ps._runXpBoost = (ps._runXpBoost||0) + 0.20; },
+    'xpboost_25':    ps => { ps._runXpBoost = (ps._runXpBoost||0) + 0.25; },
+    'xpboost_30':    ps => { ps._runXpBoost = (ps._runXpBoost||0) + 0.30; },
+    'xpboost_35':    ps => { ps._runXpBoost = (ps._runXpBoost||0) + 0.35; },
+    'xpboost_40':    ps => { ps._runXpBoost = (ps._runXpBoost||0) + 0.40; },
+    'xpboost_50':    ps => { ps._runXpBoost = (ps._runXpBoost||0) + 0.50; },
+    'xpboost_100':   ps => { ps._runXpBoost = (ps._runXpBoost||0) + 1.00; },
+    'xpboost_200':   ps => { ps._runXpBoost = (ps._runXpBoost||0) + 2.00; },
+    'rune_vita1':    ps => { ps.hpMax=(ps.hpMax||100)+10; ps.hp=Math.min((ps.hp||100)+10,ps.hpMax); },
+    'rune_crit1':    ps => { ps.critChance = (ps.critChance||0) + 0.03; },
+    'rune_swift1':   ps => { ps.speed = (ps.speed||100) * 1.02; },
+    'rune_power1':   ps => { ps.dmg = (ps.dmg||10) * 1.02; },
+    'rune_iron1':    ps => { ps.dmgReduce = (ps.dmgReduce||0) + 0.05; },
+    'rune_souls1':   ps => { ps.soulMult = (ps.soulMult||1) + 0.10; },
+    'rune_pierce1':  ps => { ps.pierce = (ps.pierce||0) + 1; },
+    'rune_vita2':    ps => { ps.hpMax=(ps.hpMax||100)+20; ps.hp=Math.min((ps.hp||100)+20,ps.hpMax); },
+    'rune_boss1':    ps => { ps.bossDmgBonus = (ps.bossDmgBonus||0) + 0.04; },
+    'rune_dodge1':   ps => { ps.dodgeChance = (ps.dodgeChance||0) + 5; },
+    'rune_xp1':      ps => { ps._runXpBoost = (ps._runXpBoost||0) + 0.10; },
+    'rune_aurora1':  ps => { ps.dmg=(ps.dmg||10)*1.03; ps.speed=(ps.speed||100)*1.03; },
+    'rune_echo1':    ps => { ps._runXpBoost = (ps._runXpBoost||0) + 0.25; },
+    'rune_wave1':    ps => { ps._hpPerWave = (ps._hpPerWave||0) + 8; },
+    'rune_boss2':    ps => { ps.bossOrbBonus = (ps.bossOrbBonus||0) + 2; },
+    'rune_wrath1':   ps => { ps.dmg=(ps.dmg||10)*1.10; ps.hpMax=Math.max(10,(ps.hpMax||100)*0.90); ps.hp=Math.min(ps.hp||1,ps.hpMax); },
+    'rune_orbs1':    ps => { ps.bossOrbBonus = (ps.bossOrbBonus||0) + 2; },
+    'rune_sup1':     ps => { ps.dmg=(ps.dmg||10)*1.06; ps.speed=(ps.speed||100)*1.06; ps.hpMax=(ps.hpMax||100)*1.06; ps.hp=Math.min(ps.hp||1,ps.hpMax); },
+    'rune_cosmos1':  ps => { ps.dmg=(ps.dmg||10)*1.08; ps.speed=(ps.speed||100)*1.08; ps.hpMax=(ps.hpMax||100)*1.08; ps.hp=Math.min(ps.hp||1,ps.hpMax); },
+  };
+  function applyRunItems(ps) {
+    const items = getRunItems();
+    clearRunItems();
+    items.forEach(id => { if (ITEM_EFFECTS[id]) ITEM_EFFECTS[id](ps); });
+  }
 
   function loadMeta() {
     try {
@@ -1623,18 +1884,52 @@
   /* ── MENU ── */
   class MenuScene extends Phaser.Scene {
     constructor() { super('Menu'); }
+
+    preload() {
+      if (!this.textures.exists('thornrift_logo')) this.load.image('thornrift_logo', '/logo.png');
+    }
+
     create() {
       const meta = loadMeta();
       const cx = W / 2, cy = H / 2;
-      const title = this.add.text(cx, cy - 80, 'HALLS OF AURORA', {
-        fontSize: Math.min(62, W / 13) + 'px',
-        fontFamily: 'system-ui', fontStyle: 'bold', color: '#ffffff',
-      }).setOrigin(0.5).setAlpha(0);
-      const sub = this.add.text(cx, cy - 14, 'A survivor roguelite', {
-        fontSize: '18px', fontFamily: 'system-ui', color: '#a78bfa',
-      }).setOrigin(0.5).setAlpha(0);
-      const hint = this.add.text(cx, cy + 55, 'Press ENTER or click to play', {
-        fontSize: '16px', fontFamily: 'system-ui', color: '#7c3aed',
+      const logoW = Math.min(440, W * 0.65);
+
+      /* ── Battle Pass purchase return handler ── */
+      if (window._bpJustPurchased) {
+        const _purchasedTier = window._bpJustPurchased;
+        window._bpJustPurchased = null;
+        /* Show "processing" toast */
+        const _toastBg = this.add.graphics().setDepth(30);
+        _toastBg.fillStyle(0x0a0518, 0.97); _toastBg.fillRoundedRect(cx - 200, 18, 400, 52, 10);
+        _toastBg.lineStyle(1.5, 0xffd700, 0.8); _toastBg.strokeRoundedRect(cx - 200, 18, 400, 52, 10);
+        const _toastT = this.add.text(cx, 44, '⚔  Processing your Battle Pass purchase…', {
+          fontSize: '13px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#ffd700',
+        }).setOrigin(0.5).setDepth(31);
+        /* After 3s, reload from Supabase and confirm */
+        this.time.delayedCall(3000, async () => {
+          if (window._player) await _loadPlayerDataFromSupabase(window._player.id);
+          const bp = loadBP();
+          _toastBg.clear();
+          _toastBg.fillStyle(0x052e16, 0.97); _toastBg.fillRoundedRect(cx - 200, 18, 400, 52, 10);
+          _toastBg.lineStyle(1.5, 0x16a34a, 0.9); _toastBg.strokeRoundedRect(cx - 200, 18, 400, 52, 10);
+          const msg = bp.owned
+            ? (_purchasedTier === 'premium'
+                ? '🎉  Battle Pass Premium unlocked! Levels 1–25 claimed.'
+                : '🎉  Battle Pass unlocked! Start earning rewards.')
+            : '⌛  Purchase confirmed — may take a moment to reflect.';
+          _toastT.setText(msg).setColor(bp.owned ? '#4ade80' : '#fbbf24');
+          this.time.delayedCall(4000, () => {
+            this.tweens.add({ targets: [_toastBg, _toastT], alpha: 0, duration: 600 });
+          });
+        });
+      }
+      const title = this.add.image(cx, cy - 160, 'thornrift_logo')
+        .setOrigin(0.5)
+        .setDisplaySize(logoW, Math.round(logoW * 0.52))
+        .setBlendMode(Phaser.BlendModes.SCREEN)
+        .setAlpha(0);
+      const hint = this.add.text(cx, cy + 20, 'Press ENTER or click to play', {
+        fontSize: '15px', fontFamily: 'system-ui', color: '#a78bfa',
       }).setOrigin(0.5).setAlpha(0);
 
       const scores = [];
@@ -1642,19 +1937,18 @@
       if (meta.bestKills) scores.push(`Most kills: ${meta.bestKills}`);
       if (meta.bestLevel) scores.push(`Highest level: ${meta.bestLevel}`);
       if (scores.length) {
-        this.add.text(cx, cy + 95, scores.join('   ·   '), {
+        this.add.text(cx, cy + 55, scores.join('   ·   '), {
           fontSize: '12px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.4)',
         }).setOrigin(0.5);
       }
       if (meta.souls > 0) {
-        this.add.text(cx, cy + 118, `✦ ${meta.souls} souls saved`, {
+        this.add.text(cx, cy + 78, `✦ ${meta.souls} souls saved`, {
           fontSize: '13px', fontFamily: 'system-ui', color: '#fbbf24',
         }).setOrigin(0.5).setAlpha(0.85);
       }
 
-      this.tweens.add({ targets: title, alpha: 1, y: cy - 70, duration: 700, ease: 'power3.out', delay: 100 });
-      this.tweens.add({ targets: sub,   alpha: 1, y: cy - 4,  duration: 600, ease: 'power3.out', delay: 300 });
-      this.tweens.add({ targets: hint,  alpha: 1, duration: 500, delay: 600, onComplete: () =>
+      this.tweens.add({ targets: title, alpha: 1, y: cy - 100, duration: 700, ease: 'power3.out', delay: 100 });
+      this.tweens.add({ targets: hint, alpha: 1, duration: 500, delay: 600, onComplete: () =>
         this.tweens.add({ targets: hint, alpha: 0, duration: 700, yoyo: true, repeat: -1 })
       });
 
@@ -1664,7 +1958,7 @@
       const _dailyLabel = _dailyEntry
         ? '🗓  Daily · Score ' + _dailyEntry.score + ' (wave ' + _dailyEntry.wave + ')'
         : '🗓  Daily Challenge';
-      const dailyBtn = this.add.text(cx, cy + 148, _dailyLabel, {
+      const dailyBtn = this.add.text(cx, cy + 108, _dailyLabel, {
         fontSize:'14px', fontFamily:'system-ui', fontStyle:'bold', color:'#fbbf24',
       }).setOrigin(0.5).setInteractive({ useHandCursor:true }).setAlpha(0);
       dailyBtn.on('pointerover', ()=>dailyBtn.setAlpha(1));
@@ -1681,49 +1975,83 @@
       });
       this.tweens.add({ targets:dailyBtn, alpha:0.8, duration:500, delay:700 });
 
-      /* Achievements button */
-      /* ── Battle Pass banner button ── */
-      const bpBtnY = cy + 178;
-      const bpBtnW = 220, bpBtnH = 40;
-      const bpBg = this.add.graphics().setAlpha(0);
-      /* outer glow rings */
-      [8,5,2].forEach((pad, gi) => {
-        bpBg.fillStyle(0xffd700, [0.04, 0.07, 0.12][gi]);
-        bpBg.fillRoundedRect(cx - bpBtnW/2 - pad, bpBtnY - bpBtnH/2 - pad, bpBtnW + pad*2, bpBtnH + pad*2, 10 + pad);
-      });
-      bpBg.fillStyle(0x1a0630, 1);
-      bpBg.fillRoundedRect(cx - bpBtnW/2, bpBtnY - bpBtnH/2, bpBtnW, bpBtnH, 10);
-      bpBg.lineStyle(1.5, 0xffd700, 0.7);
-      bpBg.strokeRoundedRect(cx - bpBtnW/2, bpBtnY - bpBtnH/2, bpBtnW, bpBtnH, 10);
+      /* ── Menu pills with BorderGlow (fixed overlay, no Phaser DOM) ── */
+      {
+        const _ov = document.createElement('div');
+        _ov.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:15;opacity:0;transition:opacity .6s;';
+        document.body.appendChild(_ov);
 
-      const bpLabel = this.add.text(cx, bpBtnY - 6, '⚔  BATTLE PASS', {
-        fontSize: '14px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#ffd700',
-      }).setOrigin(0.5).setAlpha(0);
-      const bpSub = this.add.text(cx, bpBtnY + 10, 'COMING SOON', {
-        fontSize: '9px', fontFamily: 'system-ui', color: 'rgba(251,191,36,0.5)', letterSpacing: 3,
-      }).setOrigin(0.5).setAlpha(0);
+        const _GPOS = ['80% 55%','69% 34%','8% 6%','41% 38%','86% 85%','82% 18%','51% 4%'];
+        const _GKEYS = ['one','two','three','four','five','six','seven'];
+        const _CMAP = [0,1,2,0,1,2,1];
 
-      bpBg.setInteractive(
-        new Phaser.Geom.Rectangle(cx - bpBtnW/2, bpBtnY - bpBtnH/2, bpBtnW, bpBtnH),
-        Phaser.Geom.Rectangle.Contains
-      ).setInteractive({ useHandCursor: true });
-      bpBg.on('pointerover',  () => { bpBg.setAlpha(1.1); bpLabel.setColor('#fff'); });
-      bpBg.on('pointerout',   () => { bpBg.setAlpha(0.85); bpLabel.setColor('#ffd700'); });
-      bpBg.on('pointerdown',  () => {
-        this.cameras.main.fadeOut(250, 0, 0, 0);
-        this.time.delayedCall(270, () => this.scene.start('BattlePass'));
-      });
+        const _applyVars = (el, glowH, glowS, glowL, colors, bg) => {
+          el.style.setProperty('--card-bg', bg);
+          const b = `${glowH}deg ${glowS}% ${glowL}%`;
+          [[100,''],[60,'-60'],[50,'-50'],[40,'-40'],[30,'-30'],[20,'-20'],[10,'-10']]
+            .forEach(([o,k]) => el.style.setProperty(`--glow-color${k}`, `hsl(${b} / ${o}%)`));
+          _GKEYS.forEach((k,i) => el.style.setProperty(`--gradient-${k}`,
+            `radial-gradient(at ${_GPOS[i]}, ${colors[Math.min(_CMAP[i],colors.length-1)]} 0px, transparent 50%)`));
+          el.style.setProperty('--gradient-base', `linear-gradient(${colors[0]} 0 100%)`);
+        };
 
-      this.tweens.add({ targets: [bpBg, bpLabel, bpSub], alpha: 0.85, duration: 500, delay: 750 });
-      this.tweens.add({ targets: [bpBg, bpLabel], alpha: 0.6, duration: 1100, yoyo: true, repeat: -1, delay: 1300 });
+        const _pill = (innerHTML, topPx, leftPx, w, glowH, glowS, glowL, colors, bg, onClick) => {
+          const card = document.createElement('div');
+          card.className = 'border-glow-card menu-pill-btn';
+          card.style.cssText = `position:absolute;left:calc(50% + ${leftPx}px);top:calc(50% + ${topPx}px);transform:translate(-50%,-50%);width:${w}px;pointer-events:all;cursor:pointer;`;
+          card.style.setProperty('--border-radius', '100px');
+          card.style.setProperty('--glow-padding', '22px');
+          card.style.setProperty('--edge-sensitivity', '12');
+          card.style.setProperty('--cone-spread', '18');
+          _applyVars(card, glowH, glowS, glowL, colors, bg);
+          const el = document.createElement('span'); el.className = 'edge-light';
+          const inn = document.createElement('div'); inn.className = 'border-glow-inner';
+          inn.style.cssText = 'padding:.55em 1.3em;';
+          inn.innerHTML = innerHTML;
+          card.appendChild(el); card.appendChild(inn);
+          card.addEventListener('pointermove', e => {
+            const r = card.getBoundingClientRect();
+            const x = e.clientX-r.left, y = e.clientY-r.top;
+            const ecx = r.width/2, ecy = r.height/2, dx = x-ecx, dy = y-ecy;
+            const kx = dx ? ecx/Math.abs(dx) : Infinity, ky = dy ? ecy/Math.abs(dy) : Infinity;
+            const edge = Math.min(Math.max(1/Math.min(kx,ky),0),1);
+            let ang = Math.atan2(dy,dx)*180/Math.PI+90; if(ang<0) ang+=360;
+            card.style.setProperty('--edge-proximity',(edge*100).toFixed(2));
+            card.style.setProperty('--cursor-angle',ang.toFixed(2)+'deg');
+          });
+          card.addEventListener('pointerleave',()=>card.style.setProperty('--edge-proximity','0'));
+          card.addEventListener('click', onClick);
+          _ov.appendChild(card);
+          return card;
+        };
 
-      const achBtn = this.add.text(cx, cy + 228, '🏆  Achievements', {
-        fontSize:'13px', fontFamily:'system-ui', color:'rgba(251,191,36,0.6)',
-      }).setOrigin(0.5).setInteractive({ useHandCursor:true }).setAlpha(0);
-      achBtn.on('pointerover', ()=>achBtn.setColor('#fbbf24'));
-      achBtn.on('pointerout',  ()=>achBtn.setColor('rgba(251,191,36,0.6)'));
-      achBtn.on('pointerdown', ()=>{ this.cameras.main.fadeOut(250,0,0,0); this.time.delayedCall(270,()=>this.scene.start('Achievements')); });
-      this.tweens.add({ targets:achBtn, alpha:0.8, duration:500, delay:800 });
+        /* Battle Pass */
+        _pill(
+          '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="font-family:\'Cinzel\',serif;font-weight:700;font-size:13px;color:#ffd700;letter-spacing:3px;">⚔&nbsp; Battle Pass</div><div style="font-family:\'Cinzel\',serif;font-size:7.5px;color:rgba(251,191,36,0.7);letter-spacing:5px;">BUY NOW</div></div>',
+          145, 0, 230,
+          43, 85, 60, ['#fbbf24','#d97706','#fde68a'], 'rgba(14,6,2,0.92)',
+          () => { this.cameras.main.fadeOut(250,0,0,0); this.time.delayedCall(270,()=>this.scene.start('BattlePass')); }
+        );
+
+        /* Achievements + Inventory pills */
+        const _invCount = Object.values(loadInventory()).reduce((a,b)=>a+b,0);
+        _pill(
+          '<div style="display:flex;align-items:center;gap:7px;"><span class="pill-icon">🏆</span><span class="pill-label">Achievements</span></div>',
+          205, -83, 168,
+          270, 70, 74, ['#a78bfa','#7c3aed','#c4b5fd'], 'rgba(10,4,22,0.9)',
+          () => { this.cameras.main.fadeOut(250,0,0,0); this.time.delayedCall(270,()=>this.scene.start('Achievements')); }
+        );
+        _pill(
+          `<div style="display:flex;align-items:center;gap:7px;"><span class="pill-icon">🎒</span><span class="pill-label">Inventory</span>${_invCount>0?'<span class="pill-badge">'+_invCount+'</span>':''}</div>`,
+          205, 83, 168,
+          270, 70, 74, ['#a78bfa','#7c3aed','#c4b5fd'], 'rgba(10,4,22,0.9)',
+          () => { this.cameras.main.fadeOut(250,0,0,0); this.time.delayedCall(270,()=>this.scene.start('Inventory')); }
+        );
+
+        this.time.delayedCall(700, () => { _ov.style.opacity = '1'; });
+        this.events.once('shutdown', () => _ov.remove());
+        this.events.once('destroy',  () => _ov.remove());
+      }
 
       const startGame = () => {
         localStorage.removeItem('hoa_daily');
@@ -2108,12 +2436,38 @@
       this._defImg   = this.add.image(lx, py+10, tk1).setDepth(2);
       this._eliteImg = this.add.image(rx, py+10, tk2).setDepth(2).setAlpha(0.38);
 
-      /* Lock overlay */
-      const lg = this.add.graphics().setDepth(3);
-      lg.fillStyle(0x06000f, 0.68);
-      lg.fillRoundedRect(rx-panW/2+1, py-panH/2+1, panW-2, panH-2, 7);
-      this.add.text(rx, py-14, '🔒', { fontSize:'22px' }).setOrigin(0.5).setDepth(4);
-      this.add.text(rx, py+12, 'COMING SOON', { fontSize:'9px', fontFamily:'system-ui', fontStyle:'bold', color:'#6b7280' }).setOrigin(0.5).setDepth(4);
+      /* Lock / equipped overlay */
+      {
+        const _bpLevels = { hunter:10, knight:20, wizard:30, necromancer:40, rogue:50, paladin:60, berserker:70 };
+        const _bpLv = _bpLevels[key] || 10;
+        const _curBpLv = loadBP().level || 0;
+        const _isEquipped = localStorage.getItem('hoa_eq_skin_' + key) === '1';
+        if (_isEquipped) {
+          /* Skin equipped — show full-brightness elite model with equipped badge */
+          this._eliteImg.setAlpha(1);
+          const egBg = this.add.graphics().setDepth(3);
+          egBg.fillStyle(0x064e3b, 0.82); egBg.fillRoundedRect(rx-52, py+panH/2-28, 104, 24, 6);
+          egBg.lineStyle(1.5, 0x34d399, 0.9); egBg.strokeRoundedRect(rx-52, py+panH/2-28, 104, 24, 6);
+          this.add.text(rx, py+panH/2-16, '✓  EQUIPPED', { fontSize:'10px', fontFamily:'system-ui', fontStyle:'bold', color:'#34d399' }).setOrigin(0.5).setDepth(4);
+        } else if (_curBpLv >= _bpLv) {
+          /* Unlocked via BP — show overlay with "go equip" hint */
+          const lg = this.add.graphics().setDepth(3);
+          lg.fillStyle(0x06000f, 0.68);
+          lg.fillRoundedRect(rx-panW/2+1, py-panH/2+1, panW-2, panH-2, 7);
+          this.add.text(rx, py-16, '👑', { fontSize:'24px' }).setOrigin(0.5).setDepth(4);
+          this.add.text(rx, py+8,  'ELITE UNLOCKED', { fontSize:'8px', fontFamily:'system-ui', fontStyle:'bold', color:'#ffd700' }).setOrigin(0.5).setDepth(4);
+          this.add.text(rx, py+22, 'Equip in Inventory', { fontSize:'8px', fontFamily:'system-ui', color:'#a78bfa' }).setOrigin(0.5).setDepth(4);
+        } else {
+          /* Locked — show BP unlock info */
+          const lg = this.add.graphics().setDepth(3);
+          lg.fillStyle(0x06000f, 0.68);
+          lg.fillRoundedRect(rx-panW/2+1, py-panH/2+1, panW-2, panH-2, 7);
+          this.add.text(rx, py-20, '⚔', { fontSize:'24px' }).setOrigin(0.5).setDepth(4);
+          this.add.text(rx, py+2,  'BATTLE PASS', { fontSize:'10px', fontFamily:'system-ui', fontStyle:'bold', color:'#fbbf24' }).setOrigin(0.5).setDepth(4);
+          this.add.text(rx, py+18, 'Reach Level ' + _bpLv, { fontSize:'9px', fontFamily:'system-ui', color:'#a78bfa' }).setOrigin(0.5).setDepth(4);
+          this.add.text(rx, py+32, 'You are Level ' + _curBpLv, { fontSize:'8px', fontFamily:'system-ui', color:'rgba(255,255,255,0.3)' }).setOrigin(0.5).setDepth(4);
+        }
+      }
 
       /* Buttons */
       const btnY = py + panH/2 + 32;
@@ -2228,7 +2582,7 @@
       const row1Keys = ['hunter','knight','wizard','necromancer'];
       const row2Keys = ['rogue','paladin','berserker'];
       const cardW = Math.min(170, (W - 80) / 4);
-      const cardH = 238;
+      const cardH = 256;
       const gap = 16;
 
       /* Row centres — keep clear of header (y≈83) and footer */
@@ -2261,32 +2615,32 @@
 
           this.add.text(cx, rowCy - hh + 76, cls.desc, {
             fontSize:'8px', fontFamily:'system-ui', color: unlocked ? '#94a3b8' : '#374151',
-            wordWrap:{ width: cardW - 18 }, align:'center',
+            wordWrap:{ width: cardW - 18 }, align:'center', lineSpacing: 2,
           }).setOrigin(0.5, 0);
 
           const divG = this.add.graphics();
           divG.lineStyle(1, cls.color, unlocked ? 0.3 : 0.08);
-          divG.lineBetween(cx - cardW*0.35, rowCy + 4, cx + cardW*0.35, rowCy + 4);
+          divG.lineBetween(cx - cardW*0.35, rowCy + 14, cx + cardW*0.35, rowCy + 14);
 
           const sd = cls.stats;
           [`HP: ${sd.hp}`, `SPD: ${sd.spd}`, `DMG: ${sd.dmg}`]
             .forEach((stat, si) => {
-              this.add.text(cx, rowCy + 14 + si * 14, stat, {
+              this.add.text(cx, rowCy + 26 + si * 15, stat, {
                 fontSize:'10px', fontFamily:'system-ui', color: unlocked ? '#cbd5e1' : '#374151',
               }).setOrigin(0.5);
             });
 
           if (!unlocked) {
             const ach = ACHIEVEMENTS.find(a => a.unlocks === key);
-            this.add.text(cx, rowCy + 60, ach ? `🔒 ${ach.hint}` : '🔒 LOCKED', {
+            this.add.text(cx, rowCy + 76, ach ? `🔒 ${ach.hint}` : '🔒 LOCKED', {
               fontSize:'9px', fontFamily:'system-ui', fontStyle:'bold', color:'#6b7280',
               wordWrap:{ width: cardW - 16 }, align:'center',
             }).setOrigin(0.5, 0);
           } else {
             cls.perks.slice(0,2).forEach((p, pi) => {
-              this.add.text(cx, rowCy + 60 + pi * 15, `• ${p}`, {
-                fontSize:'9px', fontFamily:'system-ui', color:cls.labelCol,
-                wordWrap:{ width: cardW - 18 }, align:'center',
+              this.add.text(cx, rowCy + 76 + pi * 26, `• ${p}`, {
+                fontSize:'8.5px', fontFamily:'system-ui', color:cls.labelCol,
+                wordWrap:{ width: cardW - 18 }, align:'center', lineSpacing: 1,
               }).setOrigin(0.5, 0);
             });
           }
@@ -2414,11 +2768,15 @@
       if (this.ps._startLevel > 1) {
         this.ps.xp = this.ps.xpNext - 1;
       }
+      /* Apply inventory items queued for this run */
+      applyRunItems(this.ps);
       this.dead     = false; this.paused = false;
       this.orbitals = [];
       this.dashCd = 0; this.dashUntil = 0; this.dashDir = {x:0,y:0};
       this._runStart = Date.now();
       this.isDaily = localStorage.getItem('hoa_daily') === '1';
+      this._mouseAim = localStorage.getItem('hoa_mouseaim') === '1';
+      this._aimCrosshair = this.add.graphics().setDepth(55);
 
       /* ── Orientation-change run restore ── */
       try {
@@ -2451,6 +2809,8 @@
 
       /* Player */
       this.pg = this.add.graphics();
+      if (localStorage.getItem('hoa_eq_skin_' + (this.ps.class || 'hunter')) === '1')
+        this.drawPlayer = this.drawPlayerElite.bind(this);
       this.drawPlayer();
       this.pg.x = W / 2; this.pg.y = H / 2;
       this.physics.add.existing(this.pg);
@@ -2487,6 +2847,72 @@
       window._triggerPause = doPause;
 
       window._showTouchControls(true);
+
+      /* ── Permanent BP cosmetics: trail + ASCENDED aura ── */
+      {
+        const _eqTrail = localStorage.getItem('hoa_eq_trail');
+        const _TRAIL_COLS = { crimson:0xef4444, void:0x6d28d9, aurora:0x06b6d4, prismatic:0xf0abfc };
+        let _trailColor = _eqTrail ? (_TRAIL_COLS[_eqTrail] || 0) : 0, _prismatic = _eqTrail === 'prismatic';
+
+        if (_trailColor || _prismatic) {
+          let _trailHue = 0;
+          this._trailEvent = this.time.addEvent({
+            delay: 42, loop: true,
+            callback: () => {
+              if (!this.pg || this.dead) return;
+              let col = _trailColor;
+              if (_prismatic) {
+                _trailHue = (_trailHue + 0.055) % 1;
+                /* HSV → RGB */
+                const h = _trailHue, v = 1;
+                const i = Math.floor(h * 6), f = h * 6 - i;
+                const q = v * (1 - f), tv = v * f;
+                let r, g, b;
+                switch (i % 6) {
+                  case 0: r=v;  g=tv; b=0;  break;
+                  case 1: r=q;  g=v;  b=0;  break;
+                  case 2: r=0;  g=v;  b=tv; break;
+                  case 3: r=0;  g=q;  b=v;  break;
+                  case 4: r=tv; g=0;  b=v;  break;
+                  default:r=v;  g=0;  b=q;  break;
+                }
+                col = (Math.floor(r*255)<<16)|(Math.floor(g*255)<<8)|Math.floor(b*255);
+              }
+              /* Trail dot at player position — draw at local (0,0), position the object */
+              const tg = this.add.graphics().setDepth(2);
+              tg.setPosition(this.pg.x, this.pg.y);
+              tg.fillStyle(col, 0.22); tg.fillCircle(0, 0, 13);
+              tg.fillStyle(col, 0.55); tg.fillCircle(0, 0, 6);
+              tg.fillStyle(0xffffff, 0.7); tg.fillCircle(0, 0, 2.5);
+              tg.setBlendMode(Phaser.BlendModes.ADD);
+              this.tweens.add({ targets: tg, alpha: 0, scaleX: 0.15, scaleY: 0.15, duration: 420, ease: 'Sine.easeOut', onComplete: () => tg.destroy() });
+            }
+          });
+        }
+
+        /* ASCENDED: rainbow pulsing aura ring */
+        if (localStorage.getItem('hoa_eq_aura')) {
+          const _aG = this.add.graphics().setDepth(2);
+          let _aT = 0;
+          this._auraEvent = this.time.addEvent({
+            delay: 16, loop: true,
+            callback: () => {
+              if (!this.pg) return;
+              _aT += 0.05;
+              _aG.clear();
+              const aColors = [0xef4444, 0xf97316, 0xffd700, 0x22c55e, 0x3b82f6, 0xa855f7];
+              const pulse = 26 + Math.sin(_aT * 2.2) * 5;
+              aColors.forEach((ac, ci) => {
+                _aG.fillStyle(ac, 0.18 - ci * 0.02);
+                _aG.fillCircle(this.pg.x, this.pg.y, pulse - ci * 3);
+              });
+              _aG.setBlendMode(Phaser.BlendModes.ADD);
+              _aG.setPosition(0, 0);
+            }
+          });
+        }
+      }
+
       this.time.delayedCall(900, () => this.startWave());
     }
 
@@ -2794,6 +3220,10 @@
       this.waveKills = 0;
       this._warchiefStacks = 0;
       this._waveHit = false;
+      /* inventory item hooks: wave heal, wave shield */
+      if (this.ps._hpPerWave)    this.ps.hp = Math.min(this.ps.maxHp, this.ps.hp + this.ps._hpPerWave);
+      if (this.ps._waveHealPct)  this.ps.hp = Math.min(this.ps.maxHp, this.ps.hp + Math.floor(this.ps.maxHp * this.ps._waveHealPct));
+      if (this.ps._waveShield)   this.ps._waveShieldCur = (this.ps._waveShieldCur || 0) + this.ps._waveShield;
       const cfg = waveCfg(this.waveNum);
       this.cfg = cfg; this.spawned = 0; this.total = cfg.count; this.alive = 0;
       this.events.emit('wave', this.waveNum, cfg.boss);
@@ -3241,6 +3671,13 @@
       this._waveHitThisTick = true;
       let dmg = this.ps.dmgReduce ? Math.max(1, Math.floor(raw * (1 - Math.min(0.85, this.ps.dmgReduce)))) : raw;
       dmg = Math.floor(dmg * (this.ps.curseDmgIn || 1));
+      /* Wave Shield (echo_dom1) absorbs damage at wave start */
+      if (this.ps._waveShieldCur > 0) {
+        const abs = Math.min(dmg, this.ps._waveShieldCur);
+        this.ps._waveShieldCur -= abs;
+        dmg = Math.max(0, dmg - abs);
+        if (dmg <= 0) return 0;
+      }
       /* Bone Armor absorbs hits */
       if (this.ps.boneArmor && this.ps.boneStacks > 0) {
         const absorbed = Math.min(dmg, this.ps.boneStacks * this.ps.bonePerStack);
@@ -3250,6 +3687,12 @@
       }
       if (dmg <= 0) return 0;
       this.ps.hp -= dmg;
+      /* Vengeance (echo_venge1): counter-damage nearby enemies when hit */
+      if (dmg > 0 && this.ps._vengeanceDmg) {
+        const vengDmg = Math.floor(raw * this.ps._vengeanceDmg);
+        this.enemies.getChildren().filter(e => e.active && Phaser.Math.Distance.Between(this.pg.x, this.pg.y, e.x, e.y) < 120)
+          .forEach(e => { e.eHp -= vengDmg; this.hitFlash(e); });
+      }
       window._SFX.hurt();
       /* Break streak on damage */
       if (this._streak > 4) this.events.emit('streakBroken', this._streak);
@@ -3728,7 +4171,7 @@
 
     onXP(player, orb) {
       if (!orb.active) return;
-      this.ps.xp += Math.floor(orb.xpVal * (this.ps.xpMult || 1));
+      this.ps.xp += Math.floor(orb.xpVal * (this.ps.xpMult || 1) * (1 + (this.ps._runXpBoost || 0)));
       orb.destroy();
       if (this.ps.xp >= this.ps.xpNext) {
         this.ps.xp -= this.ps.xpNext;
@@ -4002,6 +4445,190 @@
         g.lineStyle(2.5, 0xffffff, 0.9); g.lineBetween(18, -14, 18, 14);
         g.lineStyle(2.5, 0xffffff, 0.9); g.lineBetween(10,   0, 26,  0);
 
+      /* ── KNIGHT ELITE "Iron Titan" ─────────────────────────────── */
+      } else if (cls === 'knight') {
+        /* Ground heavy aura */
+        g.fillStyle(0x93c5fd, 0.04 + p * 0.04); g.fillEllipse(0, 18, 68, 14);
+
+        /* Orbiting shield runes */
+        for (let i = 0; i < 4; i++) {
+          const a = t * 0.8 + i * Math.PI / 2;
+          const rr = 36 + Math.sin(t * 2 + i) * 4;
+          gc(0x60a5fa, 0.4 + Math.sin(t * 1.5 + i) * 0.15, Math.cos(a) * rr, Math.sin(a) * rr * 0.3 - 10, 2.5, 3);
+        }
+
+        /* Legs — heavy greaves */
+        g.fillStyle(0x1e3a5f, 1.0); g.fillRect(-11, 8, 9, 14);
+        g.fillStyle(0x1e3a5f, 1.0); g.fillRect(2, 8, 9, 14);
+        gc(0x93c5fd, 0.5, -6, 10, 4, 2); gc(0x93c5fd, 0.5, 6, 10, 4, 2);
+
+        /* Body — radiant plate */
+        g.fillStyle(0x1d4ed8, 1.0); g.fillEllipse(0, -5, 30, 38);
+        g.fillStyle(0x3b82f6, 0.55); g.fillEllipse(0, -5, 24, 32);
+        /* Glowing chest rune */
+        g.lineStyle(3, 0xbfdbfe, 0.8 + sp * 0.2); g.strokeCircle(0, -8, 5);
+        gc(0x93c5fd, 0.7, 0, -8, 3, 3);
+
+        /* Pauldrons */
+        gc(0x2563eb, 1.0, -17, -14, 9, 3);
+        gc(0x2563eb, 1.0,  17, -14, 9, 3);
+        gc(0x93c5fd, 0.6, -17, -14, 4, 2);
+        gc(0x93c5fd, 0.6,  17, -14, 4, 2);
+
+        /* Head — full visor helm */
+        g.fillStyle(0x1d4ed8, 1.0); g.fillCircle(0, -26, 12);
+        g.fillStyle(0x1e3a5f, 1.0); g.fillRect(-9, -32, 18, 10);
+        /* Visor glow slit */
+        g.lineStyle(3, 0x93c5fd, 0.9 + sp * 0.1); g.lineBetween(-7, -27, 7, -27);
+        gc(0x60a5fa, 0.8, 0, -27, 5, 3);
+        /* Helm crest */
+        g.fillStyle(0x60a5fa, 0.8); g.fillTriangle(-4, -37, 0, -46, 4, -37);
+        gc(0x93c5fd, 0.6, 0, -41, 3, 3);
+
+        /* Greatsword — blazing blue */
+        gl(0x60a5fa, 0.15, 20, -26, -44, -26, 16, 6);
+        gl(0x93c5fd, 0.5,  8,  -26, -44, -26, 16, 4);
+        g.lineStyle(3, 0xffffff, 0.95); g.lineBetween(-26, -44, -26, 16);
+        g.lineStyle(3, 0xbfdbfe, 0.8); g.lineBetween(-36, -14, -16, -14);
+        gc(0xffffff, 1.0, -26, -44, 4, 4);
+        gc(0x93c5fd, 0.5, -26, -44, 8, 3);
+
+        /* Tower shield */
+        g.fillStyle(0x1e40af, 1.0);
+        g.fillRect(14, -24, 20, 36);
+        g.fillStyle(0x3b82f6, 0.5);
+        g.fillRect(16, -22, 16, 32);
+        g.lineStyle(2, 0x93c5fd, 0.9); g.strokeRect(14, -24, 20, 36);
+        g.lineStyle(2, 0x60a5fa, 0.7); g.lineBetween(24, -24, 24, 12);
+        g.lineStyle(2, 0x60a5fa, 0.7); g.lineBetween(14, -6, 34, -6);
+        gc(0x93c5fd, 0.8, 24, -6, 3, 3);
+
+      /* ── WIZARD ELITE "Arcane Ascendant" ─────────────────────────── */
+      } else if (cls === 'wizard') {
+        /* Arcane ground sigil */
+        for (let r = 0; r < 3; r++) {
+          g.lineStyle(1, 0xa855f7, 0.15 + p * 0.1);
+          g.strokeCircle(0, 16, 22 + r * 8);
+        }
+        for (let i = 0; i < 6; i++) {
+          const a = t * 0.5 + i * Math.PI / 3;
+          g.lineStyle(1, 0xc084fc, 0.25 + Math.sin(t * 2 + i) * 0.1);
+          g.lineBetween(0, 16, Math.cos(a) * 30, 16 + Math.sin(a) * 10);
+        }
+
+        /* Orbiting spell orbs */
+        for (let i = 0; i < 5; i++) {
+          const a = t * 1.2 + i * Math.PI * 2 / 5;
+          const rr = 34 + Math.sin(t * 2.5 + i) * 5;
+          const orbCol = [0xa855f7, 0xc084fc, 0xe879f9, 0x818cf8, 0x7c3aed][i];
+          gc(orbCol, 0.7 + Math.sin(t * 3 + i) * 0.25, Math.cos(a) * rr, Math.sin(a) * rr * 0.35 - 8, 3.5, 4);
+        }
+
+        /* Flowing robes */
+        g.fillStyle(0x4c1d95, 0.9);
+        g.fillTriangle(-16, -8, -22 + Math.sin(t * 0.9) * 4, 22, 0, 10);
+        g.fillTriangle(16, -8,  22 + Math.sin(t + 1) * 4,   22, 0, 10);
+        g.fillStyle(0x6d28d9, 0.7);
+        g.fillTriangle(-12, -4, -16 + Math.sin(t) * 3, 20, 2, 10);
+
+        /* Body */
+        g.fillStyle(0x4c1d95, 1.0); g.fillEllipse(0, -5, 26, 36);
+        g.fillStyle(0x7c3aed, 0.4); g.fillEllipse(0, -5, 20, 30);
+        /* Arcane chest glyph */
+        g.lineStyle(1.5, 0xc084fc, 0.8 + sp * 0.2);
+        g.lineBetween(0, -18, -6, -6); g.lineBetween(0, -18, 6, -6); g.lineBetween(-6, -6, 6, -6);
+        gc(0xa855f7, 0.7, 0, -12, 3, 3);
+
+        /* Head — tall pointed hat */
+        g.fillStyle(0x3b0764, 1.0); g.fillCircle(0, -26, 10);
+        g.fillStyle(0x4c1d95, 1.0); g.fillTriangle(-12, -22, 12, -22, 0, -52);
+        g.fillStyle(0x7c3aed, 0.4); g.fillTriangle(-8, -24, 8, -24, 0, -44);
+        /* Hat band glow */
+        g.lineStyle(2.5, 0xc084fc, 0.8 + sp * 0.2); g.lineBetween(-12, -22, 12, -22);
+        /* Arcane eyes */
+        gc(0xe879f9, 1.0, -4, -26, 2.5, 5);
+        gc(0xe879f9, 1.0,  4, -26, 2.5, 5);
+
+        /* Staff (left) */
+        gl(0x6d28d9, 0.4, 12, -24, -50, -24, 16, 4);
+        g.lineStyle(4, 0x7c3aed, 0.95); g.lineBetween(-24, -50, -24, 16);
+        /* Orb atop staff */
+        gc(0xc084fc, 1.0, -24, -50, 7, 5);
+        gc(0xe879f9, 0.8, -24, -50, 4, 4);
+        /* Orbiting micro-orbs around staff orb */
+        for (let i = 0; i < 3; i++) {
+          const a = t * 2.5 + i * Math.PI * 2 / 3;
+          gc(0xf0abfc, 0.7, -24 + Math.cos(a) * 11, -50 + Math.sin(a) * 6, 1.5, 2);
+        }
+
+      /* ── NECROMANCER ELITE "Death Lord" ──────────────────────────── */
+      } else if (cls === 'necromancer') {
+        /* Soul pool / necrotic ground */
+        g.fillStyle(0x14532d, 0.06 + p * 0.05); g.fillEllipse(0, 18, 58, 13);
+        for (let r = 0; r < 3; r++) {
+          g.lineStyle(1, 0x16a34a, 0.08 + p * 0.07);
+          g.strokeCircle(0, 16, 16 + r * 10);
+        }
+
+        /* Floating soul orbs */
+        for (let i = 0; i < 7; i++) {
+          const a = t * 0.9 + i * Math.PI * 2 / 7;
+          const rr = 32 + Math.sin(t * 1.8 + i * 1.3) * 7;
+          const hy = -8 + Math.sin(t * 2.2 + i) * 12;
+          gc(0x4ade80, 0.45 + Math.sin(t * 2.5 + i) * 0.3, Math.cos(a) * rr, Math.sin(a) * rr * 0.3 + hy, 2.5, 4);
+        }
+
+        /* Tattered robes */
+        g.fillStyle(0x0a0f0a, 0.95);
+        g.fillTriangle(-15, -6, -21 + Math.sin(t * 0.7) * 5, 22, 2, 12);
+        g.fillTriangle(15, -6,  21 + Math.sin(t + 1.2) * 5, 22, -2, 12);
+        g.lineStyle(1, 0x16a34a, 0.3 + sp * 0.2);
+        g.lineBetween(-15, -4, -20, 20); g.lineBetween(15, -4, 20, 20);
+
+        /* Body — death shroud */
+        g.fillStyle(0x0a0f0a, 1.0); g.fillEllipse(0, -5, 26, 36);
+        g.fillStyle(0x14532d, 0.35); g.fillEllipse(0, -5, 20, 30);
+        /* Glowing ribs */
+        for (let r = 0; r < 4; r++) {
+          const ry = -16 + r * 6;
+          g.lineStyle(1.5, 0x4ade80, 0.35 + sp * 0.25);
+          g.lineBetween(-9, ry, 9, ry);
+          gc(0x4ade80, 0.3 + sp * 0.2, 0, ry, 2, 2);
+        }
+
+        /* Skull head */
+        g.fillStyle(0xe5e7eb, 1.0); g.fillCircle(0, -26, 12);
+        g.fillStyle(0x0a0f0a, 1.0); g.fillEllipse(-4, -25, 6, 7); /* left eye socket */
+        g.fillStyle(0x0a0f0a, 1.0); g.fillEllipse( 4, -25, 6, 7); /* right eye socket */
+        gc(0x4ade80, 0.95, -4, -25, 3, 4);
+        gc(0x4ade80, 0.95,  4, -25, 3, 4);
+        /* Jaw */
+        g.fillStyle(0xe5e7eb, 1.0); g.fillRect(-7, -16, 14, 5);
+        /* Crown of bone */
+        for (let i = -2; i <= 2; i++) {
+          g.fillStyle(0xf9fafb, 1.0); g.fillTriangle(i * 5 - 2, -36, i * 5 + 2, -36, i * 5, -44 + Math.abs(i) * 4);
+        }
+
+        /* Scythe (left) — necrotic green */
+        gl(0x16a34a, 0.35, 14, -22, -48, -22, 16, 5);
+        g.lineStyle(4, 0x14532d, 1.0); g.lineBetween(-22, -48, -22, 20);
+        g.lineStyle(2, 0x4ade80, 0.9); g.lineBetween(-22, -48, -22, 20);
+        /* Scythe blade */
+        g.fillStyle(0x4ade80, 0.9);
+        g.fillTriangle(-22, -48, -22, -26, -42, -44);
+        g.lineStyle(1.5, 0x86efac, 0.8); g.lineBetween(-22, -48, -42, -44);
+        gc(0x4ade80, 0.7, -22, -48, 4, 4);
+
+        /* Off-hand — glowing soul gem */
+        gc(0x4ade80, 0.8, 22, -18, 6, 5);
+        g.lineStyle(2, 0x86efac, 0.6 + sp * 0.3); g.strokeCircle(22, -18, 6);
+        /* Soul beams emanating */
+        for (let i = 0; i < 4; i++) {
+          const ba = t * 3 + i * Math.PI / 2;
+          g.lineStyle(1, 0x4ade80, 0.4 + Math.sin(t * 4 + i) * 0.25);
+          g.lineBetween(22, -18, 22 + Math.cos(ba) * 12, -18 + Math.sin(ba) * 12);
+        }
+
       /* ── BERSERKER ELITE "Chaos God" ────────────────────────────── */
       } else {
         /* Rage aura — layered red rings */
@@ -4149,7 +4776,10 @@
       const nearest = enemies.reduce((a, b) =>
         Phaser.Math.Distance.Between(px, py, a.x, a.y) <= Phaser.Math.Distance.Between(px, py, b.x, b.y) ? a : b
       );
-      const swingAngle = Phaser.Math.Angle.Between(px, py, nearest.x, nearest.y);
+      const ptr = this.input.activePointer;
+      const swingAngle = this._mouseAim
+        ? Phaser.Math.Angle.Between(px, py, ptr.worldX, ptr.worldY)
+        : Phaser.Math.Angle.Between(px, py, nearest.x, nearest.y);
       const arc = this.add.graphics();
       const isBerserker = this.ps.class === 'berserker';
       const isPaladin   = this.ps.class === 'paladin';
@@ -4328,6 +4958,18 @@
       window._SFX.shoot(this.ps.class);
       if (['knight','paladin','berserker'].includes(this.ps.class)) {
         this.meleeAttack(time, all);
+      } else if (this._mouseAim) {
+        /* Mouse-aim: fire toward cursor; multi-shots fan around the aim angle */
+        const ptr = this.input.activePointer;
+        const baseAngle = Phaser.Math.Angle.Between(this.pg.x, this.pg.y, ptr.worldX, ptr.worldY);
+        const multiCount = 1 + (this.ps.multi || 0);
+        const spread = multiCount > 1 ? 0.20 : 0; /* radians between shots */
+        const halfSpread = (multiCount - 1) * spread / 2;
+        for (let m = 0; m < multiCount; m++) {
+          const a = baseAngle - halfSpread + m * spread;
+          const D = 1500;
+          this.fireAt({ x: this.pg.x + Math.cos(a) * D, y: this.pg.y + Math.sin(a) * D });
+        }
       } else {
         const sorted = [...all].sort((a, b) =>
           Phaser.Math.Distance.Between(this.pg.x, this.pg.y, a.x, a.y) -
@@ -4339,6 +4981,23 @@
 
     update(time, delta) {
       if (this.dead || this.paused) return;
+      /* Mouse-aim crosshair */
+      if (this._aimCrosshair) {
+        this._aimCrosshair.clear();
+        if (this._mouseAim) {
+          const ptr = this.input.activePointer;
+          const mx = ptr.worldX, my = ptr.worldY;
+          this._aimCrosshair.lineStyle(1.5, 0xfbbf24, 0.75);
+          this._aimCrosshair.strokeCircle(mx, my, 9);
+          this._aimCrosshair.lineBetween(mx - 16, my, mx - 11, my);
+          this._aimCrosshair.lineBetween(mx + 11, my, mx + 16, my);
+          this._aimCrosshair.lineBetween(mx, my - 16, mx, my - 11);
+          this._aimCrosshair.lineBetween(mx, my + 11, mx, my + 16);
+          /* dim line from player to cursor */
+          this._aimCrosshair.lineStyle(1, 0xfbbf24, 0.12);
+          this._aimCrosshair.lineBetween(this.pg.x, this.pg.y, mx, my);
+        }
+      }
 
       const { up, down, left, right, up2, down2, left2, right2 } = this.keys;
       let vx = 0, vy = 0;
@@ -5125,6 +5784,7 @@
       if ((this.waveNum  > (meta2.bestWave  || 0))) meta2.bestWave  = this.waveNum;
       if ((this.ps.kills > (meta2.bestKills || 0))) meta2.bestKills = this.ps.kills;
       if ((this.ps.level > (meta2.bestLevel || 0))) meta2.bestLevel = this.ps.level;
+      meta2.souls = (meta2.souls || 0) + souls; /* add souls NOW so _syncToSupabase picks them up */
       saveMeta(meta2);
       /* Update persistent stats */
       const st = loadStats();
@@ -5147,13 +5807,24 @@
       this._newAchievements = checkAchievements(st);
       saveRunHistory({ cls: this.ps.class || 'hunter', wave: this.waveNum, kills: this.ps.kills || 0, level: this.ps.level, traits: (this.ps.traits || []).slice(), timeSec, date: new Date().toLocaleDateString() });
       /* Sync all data to Supabase in background */
-      /* Battle Pass XP */
-      const bpXp = Math.min(500, Math.floor(100 + this.waveNum * 15 + (this.ps.kills || 0) * 2 + (this.ps.level || 1) * 10));
+      /* Battle Pass XP — variable curve, cap 250/run, +20% for pass owners */
       const bpd = loadBP();
+      const _bpBase = Math.min(250, Math.floor(25 + this.waveNum * 14 + (this.ps.kills || 0) * 0.8 + (this.ps.level || 1) * 10));
+      const bpXp = bpd.owned ? Math.floor(_bpBase * 1.2) : _bpBase;
       bpd.xp = (bpd.xp || 0) + bpXp;
-      while (bpd.xp >= XP_PER_BP_LEVEL && (bpd.level || 0) < 100) {
-        bpd.xp -= XP_PER_BP_LEVEL;
+      while ((bpd.level || 0) < 100) {
+        const _needed = getXpForLevel((bpd.level || 0) + 1);
+        if (bpd.xp < _needed) break;
+        bpd.xp -= _needed;
         bpd.level = (bpd.level || 0) + 1;
+        /* Deliver reward for this new BP level */
+        const _rw = BATTLE_PASS_REWARDS.find(r => r.level === bpd.level);
+        if (_rw) {
+          if (_rw.type === 'echo')    addToInventory('echo_' + _rw.value, 1);
+          else if (_rw.type === 'rune')    addToInventory('rune_' + _rw.value, 1);
+          else if (_rw.type === 'xpboost') addToInventory('xpboost_' + (_rw.value * 100).toFixed(0), 1);
+          /* elite_skin, title, border, trail, burst, meta_excl — unlocked by bp.level comparison */
+        }
       }
       saveBP(bpd);
       _syncToSupabase();
@@ -5384,6 +6055,41 @@
       this._traitContainer = this.add.container(W - 10, H - 36);
       this._lastTraitCount = -1;
       this._traitsMinimized = false;
+
+      /* ── Aim-mode toggle (top-right, below level text) ── */
+      const _aimBg = this.add.graphics();
+      const _drawAimBg = (hover) => {
+        _aimBg.clear();
+        _aimBg.fillStyle(hover ? 0x1e0f3a : 0x0f071e, 0.92);
+        _aimBg.fillRoundedRect(W - 122, 100, 108, 22, 5);
+        _aimBg.lineStyle(1, g._mouseAim ? 0xfbbf24 : 0x6d28d9, 0.7);
+        _aimBg.strokeRoundedRect(W - 122, 100, 108, 22, 5);
+      };
+      _drawAimBg(false);
+      const _aimTxt = this.add.text(W - 68, 111, '', {
+        fontSize: '10px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#a78bfa',
+      }).setOrigin(0.5).setDepth(5);
+      const _refreshAim = () => {
+        _aimTxt.setText(g._mouseAim ? '✦ Mouse-aim  [Tab]' : '⊕ Auto-aim  [Tab]');
+        _aimTxt.setColor(g._mouseAim ? '#fbbf24' : '#a78bfa');
+        _drawAimBg(false);
+      };
+      _refreshAim();
+      const _aimZone = this.add.zone(W - 122, 100, 108, 22).setOrigin(0).setInteractive({ useHandCursor: true }).setDepth(6);
+      _aimZone.on('pointerover',  () => _drawAimBg(true));
+      _aimZone.on('pointerout',   () => _drawAimBg(false));
+      _aimZone.on('pointerdown',  () => {
+        g._mouseAim = !g._mouseAim;
+        localStorage.setItem('hoa_mouseaim', g._mouseAim ? '1' : '0');
+        _refreshAim();
+      });
+      /* Tab key shortcut */
+      this.input.keyboard.on('keydown-TAB', (e) => {
+        e.preventDefault();
+        g._mouseAim = !g._mouseAim;
+        localStorage.setItem('hoa_mouseaim', g._mouseAim ? '1' : '0');
+        _refreshAim();
+      });
 
       /* Minimize toggle button */
       this._minimizeBtn = this.add.text(W - 14, H - 36, '▼', {
@@ -5873,7 +6579,7 @@
       shareTxt.on('pointerover', ()=>shareTxt.setColor('#a78bfa'));
       shareTxt.on('pointerout',  ()=>shareTxt.setColor('rgba(167,139,250,0.65)'));
       shareTxt.on('pointerdown', ()=>{
-        const txt = `🏆 Halls of Aurora — Wave ${this.wave} | ${this.kills} kills | Level ${this.level} | ${mm}:${ss}\nPlay at: halls-of-aurora.vercel.app`;
+        const txt = `🏆 Thornrift — Wave ${this.wave} | ${this.kills} kills | Level ${this.level} | ${mm}:${ss}\nPlay at: thornrift.com`;
         navigator.clipboard.writeText(txt).then(()=>{
           shareTxt.setText('✓  Copied to clipboard!');
           this.time.delayedCall(2200, ()=>shareTxt.setText('📋  Share Score'));
@@ -5891,8 +6597,8 @@
     init(d) { this.earned = d.souls; this.shown = d.shown ?? d.souls; this.wave = d.wave; this.kills = d.kills; this.level = d.level || 1; }
     create() {
       const meta = loadMeta();
-      meta.souls = (meta.souls || 0) + this.earned;
-      saveMeta(meta);
+      /* souls already added to meta in GameScene before _syncToSupabase() — do not re-add */
+      _syncToSupabase(); /* push the final soul count to Supabase from here as well */
 
       this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.94);
 
@@ -6053,7 +6759,7 @@
       nameBtn.on('pointerover', () => nameBtn.setColor('rgba(255,255,255,0.7)'));
       nameBtn.on('pointerout',  () => nameBtn.setColor('rgba(255,255,255,0.3)'));
       nameBtn.on('pointerdown', async () => {
-        if (confirm('Sign out of Halls of Aurora?')) {
+        if (confirm('Sign out of Thornrift?')) {
           await _sb.auth.signOut();
           localStorage.clear();
           window._player = null;
@@ -6063,221 +6769,1351 @@
     }
   }
 
-  /* ── BATTLE PASS SCENE ── */
+  /* ── BATTLE PASS SCENE v2 ── */
   class BattlePassScene extends Phaser.Scene {
     constructor() { super('BattlePass'); }
 
     create() {
-      const bp   = loadBP();
-      const bpW  = this.scale.width;
-      const bpH  = this.scale.height;
-      const cx   = bpW / 2;
-      this._scrollY = 0;
-
+      const W = this.scale.width, H = this.scale.height, cx = W / 2;
+      const HEADER_H = 196;
       this.cameras.main.setBackgroundColor('#04000d');
       this.cameras.main.fadeIn(350, 0, 0, 0);
+      const _lbEl = document.getElementById('lb-btn');
+      if (_lbEl) _lbEl.style.display = 'none';
+      this.events.once('shutdown', () => { if (_lbEl) _lbEl.style.display = 'flex'; });
 
-      /* ── background glows (fixed) ── */
-      const bgG = this.add.graphics().setScrollFactor(0);
-      bgG.fillStyle(0x4c1d95, 0.10); bgG.fillEllipse(cx * 0.5, 120, bpW * 0.8, 300);
-      bgG.fillStyle(0x7c1d12, 0.07); bgG.fillEllipse(cx * 1.6, 180, bpW * 0.6, 260);
+      const bp = loadBP();
+      this._scrollY = 0;
+      this._tipObjs = null;
+      this._tipSkinKey = null;
 
-      /* ── CARD GRID (scrollable) ── */
-      const COLS = 10;
-      const cardW = Math.max(60, Math.min(84, Math.floor((bpW - 80) / COLS) - 6));
-      const cardH = 90;
-      const gapX  = 6, gapY = 8;
-      const gridW = COLS * cardW + (COLS - 1) * gapX;
-      const startX = (bpW - gridW) / 2;
-      const startY = 196;
-
-      const TYPE_COL = {
-        elite_skin: 0xffd700, title: 0x9333ea, souls: 0xfbbf24,
-        xpboost: 0x60a5fa, meta_excl: 0xf97316,
-        border: 0x2dd4bf, trail: 0xa855f7, burst: 0xef4444, ascended: 0xffd700,
-      };
-
-      BATTLE_PASS_REWARDS.forEach((rw, i) => {
-        const col  = i % COLS, row = Math.floor(i / COLS);
-        const cx2  = startX + col * (cardW + gapX);
-        const cy2  = startY + row * (cardH + gapY);
-        const tc   = TYPE_COL[rw.type] || 0x444466;
-        const is100  = rw.level === 100;
-        const owned  = bp.owned;
-        const claimed = (bp.claimed || []).includes(rw.level);
-        const reached = bp.level >= rw.level;
-
-        /* card bg */
-        const cg = this.add.graphics();
-        let bgC = 0x0a0916, bdC = 0x221833, bdA = 0.7;
-        if (is100)   { bgC = 0x150900; bdC = 0xffd700; bdA = 0.5; }
-        else if (claimed) { bgC = 0x061510; bdC = 0x22c55e; bdA = 0.8; }
-        else if (owned && reached) { bgC = 0x130b24; bdC = tc; bdA = 0.55; }
-        else if (owned) { bgC = 0x0d0920; bdC = tc; bdA = 0.22; }
-
-        cg.fillStyle(bgC, 1); cg.fillRoundedRect(cx2, cy2, cardW, cardH, 7);
-        cg.lineStyle(is100 ? 2 : 1.5, bdC, bdA); cg.strokeRoundedRect(cx2, cy2, cardW, cardH, 7);
-
-        /* outer glow rings for level 100 */
-        if (is100) {
-          [3,6,10].forEach((off, gi) => {
-            cg.lineStyle(1, 0xffd700, 0.10 - gi * 0.03);
-            cg.strokeRoundedRect(cx2 - off, cy2 - off, cardW + off*2, cardH + off*2, 9 + off);
-          });
-        }
-
-        /* level number */
-        this.add.text(cx2 + 5, cy2 + 5, String(rw.level), {
-          fontSize: '8px', fontFamily: 'system-ui',
-          color: is100 ? '#ffd700' : claimed ? '#4ade80' : 'rgba(255,255,255,0.28)',
-        });
-
-        /* icon */
-        const iconAlpha = (!owned && !claimed) ? 0.18 : (reached || claimed ? 1 : 0.35);
-        this.add.text(cx2 + cardW / 2, cy2 + cardH / 2 - 10, rw.icon, {
-          fontSize: is100 ? '28px' : rw.type === 'elite_skin' ? '22px' : '18px',
-          fontFamily: 'system-ui',
-        }).setOrigin(0.5).setAlpha(iconAlpha);
-
-        /* name */
-        const dispName = rw.name.length > 13 ? rw.name.slice(0, 12) + '…' : rw.name;
-        const nameCol  = is100 ? '#ffd700' : claimed ? '#4ade80' : owned && reached ? '#c4b5fd' : 'rgba(255,255,255,0.22)';
-        this.add.text(cx2 + cardW / 2, cy2 + cardH - 13, dispName, {
-          fontSize: is100 ? '9px' : '7px', fontFamily: 'system-ui',
-          color: nameCol, align: 'center', wordWrap: { width: cardW - 8 },
-        }).setOrigin(0.5, 1);
-
-        /* lock */
-        if (!owned && !claimed) {
-          this.add.text(cx2 + cardW - 9, cy2 + 7, '🔒', { fontSize:'8px', fontFamily:'system-ui' }).setAlpha(0.35);
-        }
-        /* checkmark */
-        if (claimed) {
-          const ck = this.add.graphics();
-          ck.fillStyle(0x16a34a, 1); ck.fillCircle(cx2 + cardW - 8, cy2 + 8, 6);
-          this.add.text(cx2 + cardW - 8, cy2 + 8, '✓', { fontSize:'8px', fontFamily:'system-ui', color:'#fff' }).setOrigin(0.5);
-        }
-
-        /* level 100 special pulse */
-        if (is100) this.tweens.add({ targets: cg, alpha: 0.75, duration: 1100, yoyo: true, repeat: -1 });
-      });
-
-      /* ── SCROLL ── */
+      /* ── grid layout ── */
+      const COLS = 10, gapX = 7, gapY = 7, PAD = 24;
+      const cardW = Math.floor((W - PAD * 2 - gapX * (COLS - 1)) / COLS);
+      const cardH = 108;
+      const BANNER_H = 36; /* chapter divider height between rows */
+      const startX = (W - (COLS * cardW + (COLS - 1) * gapX)) / 2;
       const totalRows = Math.ceil(BATTLE_PASS_REWARDS.length / COLS);
-      const maxScroll = Math.max(0, startY + totalRows * (cardH + gapY) + 40 - bpH);
-      this._maxSc = maxScroll;
+      /* each row after row 0 gets a preceding chapter banner */
+      const totalGridH = totalRows * (cardH + gapY) + (totalRows - 1) * BANNER_H + 30;
+      this._maxSc = Math.max(0, HEADER_H + totalGridH - H);
 
-      this.input.on('wheel', (p, o, dx, dy) => {
-        this._scrollY = Phaser.Math.Clamp(this._scrollY + dy * 0.55, 0, maxScroll);
-        this.cameras.main.setScrollY(this._scrollY);
-      });
-      let _tsy = 0;
-      this.input.on('pointerdown', p => { _tsy = p.y + this._scrollY; });
-      this.input.on('pointermove', p => {
-        if (p.isDown) {
-          this._scrollY = Phaser.Math.Clamp(_tsy - p.y, 0, maxScroll);
-          this.cameras.main.setScrollY(this._scrollY);
-        }
-      });
+      /* ── scrollable container with mask ── */
+      this._cont = this.add.container(0, HEADER_H);
+      const _mG = this.add.graphics();
+      _mG.fillStyle(0xffffff, 1);
+      _mG.fillRect(0, HEADER_H, W, H - HEADER_H);
+      _mG.setVisible(false);
+      this._cont.setMask(_mG.createGeometryMask());
 
-      /* ── HEADER — fixed (scrollFactor 0), rendered ON TOP of grid ── */
-      /* header background occludes cards scrolling up */
-      const hdrBg = this.add.graphics().setScrollFactor(0).setDepth(10);
-      hdrBg.fillStyle(0x04000d, 1); hdrBg.fillRect(0, 0, bpW, 186);
-      hdrBg.lineStyle(1, 0x2a1040, 1); hdrBg.lineBetween(30, 185, bpW - 30, 185);
-
-      /* subtle colour band behind title */
-      const hdrAccent = this.add.graphics().setScrollFactor(0).setDepth(10);
-      hdrAccent.fillStyle(0x4c1d95, 0.10); hdrAccent.fillRect(0, 0, bpW, 90);
-
-      /* BATTLE PASS title */
-      this.add.text(cx, 36, 'BATTLE PASS', {
-        fontSize: '44px', fontFamily: 'system-ui', fontStyle: 'bold',
-        color: '#ffd700', stroke: '#5b21b6', strokeThickness: 10,
-      }).setOrigin(0.5).setScrollFactor(0).setDepth(11);
-
-      this.add.text(cx, 78, 'SEASON  1   ·   100 LEVELS', {
-        fontSize: '11px', fontFamily: 'system-ui', color: 'rgba(251,191,36,0.45)', letterSpacing: 4,
-      }).setOrigin(0.5).setScrollFactor(0).setDepth(11);
-
-      /* XP bar + level */
-      const lvl = bp.level || 0;
-      const xpPct = Math.min(1, (bp.xp || 0) / XP_PER_BP_LEVEL);
-      const barW = Math.min(340, bpW * 0.36), barH = 8;
-      const barX = cx - 60 - barW / 2, barY = 102;
-
-      /* Level circle */
-      const lcg = this.add.graphics().setScrollFactor(0).setDepth(11);
-      lcg.fillStyle(0x1a0a30, 1); lcg.fillCircle(cx - 60 - barW / 2 - 36, 116, 28);
-      lcg.lineStyle(3, 0x3a1a6a, 1); lcg.strokeCircle(cx - 60 - barW / 2 - 36, 116, 28);
-      lcg.lineStyle(3, 0xffd700, 1);
-      lcg.beginPath();
-      lcg.arc(cx - 60 - barW / 2 - 36, 116, 28, -Math.PI / 2, -Math.PI / 2 + xpPct * Math.PI * 2, false);
-      lcg.strokePath();
-
-      this.add.text(cx - 60 - barW / 2 - 36, 114, String(lvl), {
-        fontSize: '17px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#ffd700',
-      }).setOrigin(0.5).setScrollFactor(0).setDepth(12);
-      this.add.text(cx - 60 - barW / 2 - 36, 134, 'LVL', {
-        fontSize: '8px', fontFamily: 'system-ui', color: 'rgba(251,191,36,0.4)', letterSpacing: 2,
-      }).setOrigin(0.5).setScrollFactor(0).setDepth(12);
-
-      /* XP bar */
-      const barG = this.add.graphics().setScrollFactor(0).setDepth(11);
-      barG.fillStyle(0x150828, 1); barG.fillRoundedRect(barX, barY, barW, barH, 4);
-      if (xpPct > 0) {
-        barG.fillStyle(0xffd700, 1); barG.fillRoundedRect(barX, barY, barW * xpPct, barH, 4);
-        barG.fillStyle(0xffffff, 0.25); barG.fillRoundedRect(barX, barY, barW * xpPct, barH / 2, 4);
+      /* Restore scroll after claim-restart */
+      if (window._bpRestoreScroll) {
+        this._scrollY = Math.min(window._bpRestoreScroll, this._maxSc);
+        this._cont.y = HEADER_H - this._scrollY;
+        window._bpRestoreScroll = 0;
       }
-      this.add.text(barX + barW / 2, barY + 16, (bp.xp || 0) + ' / ' + XP_PER_BP_LEVEL + ' XP  to  Lv ' + (lvl + 1), {
-        fontSize: '10px', fontFamily: 'system-ui', color: 'rgba(251,191,36,0.5)',
-      }).setOrigin(0.5).setScrollFactor(0).setDepth(12);
 
-      /* COMING SOON button */
-      const csX = cx + 80 + barW / 2, csY = 116;
-      const csg = this.add.graphics().setScrollFactor(0).setDepth(11);
+      /* subtle grid bg glows inside container */
+      const bgG = this.add.graphics();
+      bgG.fillStyle(0x3b0764, 0.07); bgG.fillEllipse(cx * 0.5, 200, W * 0.7, 320);
+      bgG.fillStyle(0x7c1d12, 0.05); bgG.fillEllipse(cx * 1.65, 500, W * 0.55, 280);
+      this._cont.add(bgG);
+
+      /* ── chapter banners between rows ── */
+      const CHAPTER_NAMES = [
+        '', /* row 0 has no preceding banner */
+        'CHAPTER II · THE HUNT',
+        'CHAPTER III · RECKONING',
+        'CHAPTER IV · DOMINION',
+        'CHAPTER V · ASCENSION',
+        'CHAPTER VI · TRIAL BY FIRE',
+        'CHAPTER VII · THE ABYSS',
+        'CHAPTER VIII · APEX',
+        'CHAPTER IX · ETERNITY',
+        'CHAPTER X · LEGENDARY',
+      ];
+      for (let r = 1; r < totalRows; r++) {
+        /* banner sits just above row r — at Y = r*(cardH+gapY) + (r-1)*BANNER_H */
+        const bY = r * (cardH + gapY) + (r - 1) * BANNER_H;
+        const bannerG = this.add.graphics();
+        /* dim horizontal line */
+        bannerG.lineStyle(1, 0x6d28d9, 0.18);
+        bannerG.lineBetween(PAD, bY + BANNER_H / 2, W - PAD, bY + BANNER_H / 2);
+        /* two accent lines flanking the text */
+        const accentW = (W - PAD * 2) * 0.28;
+        bannerG.lineStyle(1, 0x7c3aed, 0.45);
+        bannerG.lineBetween(PAD, bY + BANNER_H / 2, PAD + accentW, bY + BANNER_H / 2);
+        bannerG.lineBetween(W - PAD - accentW, bY + BANNER_H / 2, W - PAD, bY + BANNER_H / 2);
+        this._cont.add(bannerG);
+        const bTxt = this.add.text(cx, bY + BANNER_H / 2, CHAPTER_NAMES[r] || `CHAPTER ${r + 1}`, {
+          fontSize: '9px', fontFamily: '"Cinzel", serif', fontStyle: 'bold',
+          color: '#7c3aed', letterSpacing: 3,
+        }).setOrigin(0.5);
+        this._cont.add(bTxt);
+      }
+
+      /* track the first claimable level for the "next reward" glow */
+      const _bpLevel = bp.level || 0;
+      const _nextClaimable = BATTLE_PASS_REWARDS.find(rw => (_bpLevel >= rw.level) && !((bp.claimed || []).includes(rw.level)));
+
+      /* ── build all cards ── */
+      BATTLE_PASS_REWARDS.forEach((rw, i) => {
+        const col = i % COLS, row = Math.floor(i / COLS);
+        /* Y accounts for chapter banner gaps: row 1+ each get a preceding BANNER_H */
+        const cardY = row * (cardH + gapY) + (row > 0 ? row * BANNER_H : 0);
+        this._mkCard(startX, col, cardY, cardW, cardH, gapX, gapY, rw, bp, HEADER_H, _nextClaimable);
+      });
+
+      /* ── scrollbar ── */
+      const sbTrackH = H - HEADER_H - 10;
+      const sbThumbH = Math.max(36, Math.round(sbTrackH * (H - HEADER_H) / (HEADER_H + totalGridH)));
+      this._sbTrackY = HEADER_H + 5; this._sbTrackH = sbTrackH; this._sbThumbH = sbThumbH;
+      const sbG = this.add.graphics().setDepth(12);
+      sbG.fillStyle(0x18052e, 1); sbG.fillRoundedRect(W - 13, HEADER_H + 5, 6, sbTrackH, 3);
+      this._sbThumb = this.add.graphics().setDepth(13);
+      this._drawThumb(0);
+
+      /* ── scroll input ── */
+      this.input.on('wheel', (p, o, dx, dy) => this._scrollTo(this._scrollY + dy * 0.6));
+      let _py = 0, _ps = 0;
+      this.input.on('pointerdown', p => { if (p.x < W - 18) { _py = p.y; _ps = this._scrollY; } });
+      this.input.on('pointermove', p => {
+        if (p.isDown && p.x < W - 18) this._scrollTo(_ps + (_py - p.y));
+      });
+
+      /* ── fixed header (drawn after container so it's on top) ── */
+      this._buildHeader(cx, W, H, bp, HEADER_H);
+
+      /* ── back button (solid pill, depth 20 to stay above everything) ── */
+      const _bkBg = this.add.rectangle(62, 18, 104, 28, 0x0f071e, 0.95)
+        .setStrokeStyle(1.5, 0xa78bfa, 0.75).setDepth(20).setInteractive({ useHandCursor: true });
+      const _bkT = this.add.text(62, 18, '← Back', {
+        fontSize: '13px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#a78bfa',
+      }).setOrigin(0.5).setDepth(21);
+      _bkBg.on('pointerover', () => { _bkBg.setFillColor(0x1e0f3a); _bkT.setColor('#c4b5fd'); });
+      _bkBg.on('pointerout',  () => { _bkBg.setFillColor(0x0f071e); _bkT.setColor('#a78bfa'); });
+      _bkBg.on('pointerdown', () => { this._hideTip(); this.cameras.main.fadeOut(220,0,0,0); this.time.delayedCall(240, () => this.scene.start('Menu')); });
+      this.input.keyboard.on('keydown-ESC', () => { this._hideTip(); this.cameras.main.fadeOut(220,0,0,0); this.time.delayedCall(240, () => this.scene.start('Menu')); });
+
+    }
+
+    _scrollTo(y) {
+      this._scrollY = Phaser.Math.Clamp(y, 0, this._maxSc);
+      this._cont.y = 196 - this._scrollY;
+      this._drawThumb(this._scrollY);
+    }
+
+    _drawThumb(scrollY) {
+      if (!this._sbThumb) return;
+      const pct = this._maxSc > 0 ? scrollY / this._maxSc : 0;
+      const W = this.scale.width;
+      const ty = this._sbTrackY + pct * (this._sbTrackH - this._sbThumbH);
+      this._sbThumb.clear();
+      this._sbThumb.fillStyle(0x6d28d9, 0.75);
+      this._sbThumb.fillRoundedRect(W - 13, ty, 6, this._sbThumbH, 3);
+    }
+
+    _mkCard(startX, col, cardY, cardW, cardH, gapX, gapY, rw, bp, HEADER_H, _nextClaimable) {
+      const x = startX + col * (cardW + gapX);
+      const y = cardY;
+      const ccx = x + cardW / 2, ccy = y + cardH / 2;
+      const TC = { elite_skin:0xffd700, title:0x9333ea, xpboost:0x3b82f6,
+        meta_excl:0xf97316, border:0x2dd4bf, trail:0xa855f7,
+        burst:0xef4444, echo:0x60a5fa, rune:0x10b981, ascended:0xffd700 };
+      /* type-tinted background colors (dark but distinctly hued) */
+      const TYPE_BG = { elite_skin:0x13100a, title:0x0f0a17, xpboost:0x080e1a,
+        meta_excl:0x110a04, border:0x061211, trail:0x100818,
+        echo:0x080d1c, rune:0x060f0c };
+      const tc = TC[rw.type] || 0x444466;
+      const is100 = rw.level === 100;
+      const isMilestone = rw.level % 10 === 0;
+      const owned = bp.owned;
+      const claimed = (bp.claimed || []).includes(rw.level);
+      const reached = (bp.level || 0) >= rw.level;
+      const isNext = _nextClaimable && _nextClaimable.level === rw.level;
+
+      /* card background */
+      const cg = this.add.graphics();
+      const typeBg = TYPE_BG[rw.type] || 0x0e0820;
+      let bgC = typeBg, bdC = 0x4a2080, bdA = 0.55;
+      if (is100)                 { bgC = 0x0a0818; bdC = 0xffd700; bdA = 0.85; }
+      else if (claimed)          { bgC = 0x041410; bdC = 0x22c55e; bdA = 0.9; }
+      else if (isNext)           { bgC = typeBg;   bdC = 0xfbbf24; bdA = 0.9; }
+      else if (owned && reached) { bgC = typeBg;   bdC = tc;       bdA = 0.65; }
+      else if (owned)            { bgC = typeBg;   bdC = tc;       bdA = 0.20; }
+      cg.fillStyle(bgC, 1); cg.fillRoundedRect(x, y, cardW, cardH, 7);
+      cg.lineStyle(is100 ? 2 : isMilestone ? 1.5 : 1, bdC, bdA);
+      cg.strokeRoundedRect(x, y, cardW, cardH, 7);
+      /* milestone outer ring */
+      if (isMilestone && !claimed) {
+        cg.lineStyle(1, bdC, 0.15);
+        cg.strokeRoundedRect(x - 3, y - 3, cardW + 6, cardH + 6, 10);
+      }
+      if (is100) [3, 7, 13].forEach((off, gi) => {
+        cg.lineStyle(1, 0xffd700, 0.07 - gi * 0.02);
+        cg.strokeRoundedRect(x - off, y - off, cardW + off * 2, cardH + off * 2, 9 + off);
+      });
+      /* colored accent strip at bottom of card */
+      const stripAlpha = claimed ? 0.7 : (owned && reached) ? 0.55 : 0.18;
+      cg.fillStyle(tc, stripAlpha);
+      cg.fillRoundedRect(x + 4, y + cardH - 5, cardW - 8, 3, 2);
+      this._cont.add(cg);
+
+      /* "next reward" pulsing outer glow */
+      if (isNext) {
+        const glowG = this.add.graphics();
+        glowG.lineStyle(2, 0xfbbf24, 0.35);
+        glowG.strokeRoundedRect(x - 4, y - 4, cardW + 8, cardH + 8, 10);
+        this._cont.add(glowG);
+        this.tweens.add({ targets: glowG, alpha: 0, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      }
+
+      /* ── Card visual ── */
+      const _dim = claimed ? 1.0 : (owned && reached) ? 0.9 : 0.6;
+      const _vx = ccx, _vy = ccy - 10;
+
+      if (rw.type === 'trail' || rw.type === 'ascended' || rw.type === 'elite_skin' || rw.type === 'border') {
+        /* Animated canvas — elite skin / trail dots / rainbow rings / glowing border */
+        const _cvKey = '_bpcv_' + rw.level;
+        const _cvW = cardW - 10;
+        const _cvH = rw.type === 'elite_skin' ? Math.min(cardH - 30, Math.round(_cvW * 1.28)) : rw.type === 'ascended' ? 50 : rw.type === 'border' ? 42 : 30;
+        const _cv = document.createElement('canvas'); _cv.width = _cvW; _cv.height = _cvH;
+        if (rw.type === 'elite_skin') { try { _drawOnCanvas(_cv, SKIN_ELITE[rw.value] || SKIN_ELITE.hunter, 0, false); } catch(_e){} }
+        if (this.textures.exists(_cvKey)) this.textures.remove(_cvKey);
+        const _cvTex = this.textures.addCanvas(_cvKey, _cv);
+        const _cvImg = this.add.image(_vx, _vy, _cvKey).setDepth(1).setAlpha(_dim);
+        this._cont.add(_cvImg);
+        const _TRAIL_RGB = { crimson:[239,68,68], void:[109,40,217], aurora:[6,182,212], prismatic:null };
+        let _cvT = 0;
+        const _cvDelay = rw.type === 'elite_skin' ? 40 : 40;
+        const _cvEv = this.time.addEvent({
+          delay: _cvDelay, loop: true,
+          callback: () => {
+            _cvT += rw.type === 'elite_skin' ? 0.04 : 0.06;
+            const _ctx = _cv.getContext('2d');
+            _ctx.clearRect(0, 0, _cvW, _cvH);
+            if (rw.type === 'elite_skin') {
+              try { _drawOnCanvas(_cv, SKIN_ELITE[rw.value] || SKIN_ELITE.hunter, _cvT, false); _cvTex.source[0].update(); } catch(_e){}
+              return;
+            } else if (rw.type === 'border') {
+              const _BR = { gold:[255,215,0], crimson:[239,68,68], void:[109,40,217], aurora:[6,182,212] };
+              const _bc = _BR[rw.value] || [45,212,191];
+              const [br,bg2,bb] = _bc;
+              const pulse = 0.55 + Math.sin(_cvT * 2.2) * 0.35;
+              const glowSz = 7 + Math.sin(_cvT * 2.2) * 4;
+              /* dark fill */
+              _ctx.fillStyle = 'rgba(8,3,18,0.92)';
+              _ctx.beginPath(); _ctx.roundRect(1,1,_cvW-2,_cvH-2,5); _ctx.fill();
+              /* inner colour wash */
+              const _iGrd = _ctx.createLinearGradient(0,0,0,_cvH);
+              _iGrd.addColorStop(0,'rgba('+br+','+bg2+','+bb+',0.12)');
+              _iGrd.addColorStop(0.5,'rgba('+br+','+bg2+','+bb+',0.05)');
+              _iGrd.addColorStop(1,'rgba('+br+','+bg2+','+bb+',0.12)');
+              _ctx.fillStyle=_iGrd; _ctx.beginPath(); _ctx.roundRect(2,2,_cvW-4,_cvH-4,4); _ctx.fill();
+              /* glowing border stroke */
+              _ctx.shadowColor='rgba('+br+','+bg2+','+bb+','+pulse.toFixed(2)+')';
+              _ctx.shadowBlur=glowSz;
+              _ctx.strokeStyle='rgba('+br+','+bg2+','+bb+','+(0.75+Math.sin(_cvT*1.8)*0.22).toFixed(2)+')';
+              _ctx.lineWidth=1.8;
+              _ctx.beginPath(); _ctx.roundRect(2,2,_cvW-4,_cvH-4,4); _ctx.stroke();
+              /* corner accent dots */
+              _ctx.shadowBlur=4;
+              _ctx.fillStyle='rgba('+br+','+bg2+','+bb+','+pulse.toFixed(2)+')';
+              [[3,3],[_cvW-3,3],[3,_cvH-3],[_cvW-3,_cvH-3]].forEach(function(_p){
+                _ctx.beginPath(); _ctx.arc(_p[0],_p[1],2,0,Math.PI*2); _ctx.fill();
+              });
+              _ctx.shadowBlur=0; _ctx.shadowColor='transparent';
+              _cvTex.source[0].update();
+              return;
+            } else if (rw.type === 'trail') {
+              for (let d = 0; d < 6; d++) {
+                const ox = ((_cvT * 26 + d * (_cvW / 5.5)) % (_cvW + 12)) - 6;
+                const oy = _cvH / 2 + Math.sin(_cvT * 3 + d * 0.9) * (_cvH * 0.32);
+                let r2=168, g2=85, b2=247;
+                if (rw.value === 'prismatic') {
+                  const h2=((_cvT*0.45+d*0.18)%1);
+                  const i2=Math.floor(h2*6),f2=h2*6-i2,q2=1-f2,tv2=f2;
+                  switch(i2%6){case 0:r2=255;g2=Math.round(tv2*255);b2=0;break;case 1:r2=Math.round(q2*255);g2=255;b2=0;break;case 2:r2=0;g2=255;b2=Math.round(tv2*255);break;case 3:r2=0;g2=Math.round(q2*255);b2=255;break;case 4:r2=Math.round(tv2*255);g2=0;b2=255;break;default:r2=255;g2=0;b2=Math.round(q2*255);break;}
+                } else { const _rgb=_TRAIL_RGB[rw.value]||[168,85,247]; r2=_rgb[0]; g2=_rgb[1]; b2=_rgb[2]; }
+                const sz=4.5-d*0.5, al=0.92-d*0.12;
+                const _grd=_ctx.createRadialGradient(ox,oy,0,ox,oy,sz*3.2);
+                _grd.addColorStop(0,'rgba('+r2+','+g2+','+b2+','+al.toFixed(2)+')');
+                _grd.addColorStop(1,'rgba('+r2+','+g2+','+b2+',0)');
+                _ctx.fillStyle=_grd; _ctx.beginPath(); _ctx.arc(ox,oy,sz*3.2,0,Math.PI*2); _ctx.fill();
+                _ctx.fillStyle='rgba(255,255,255,'+(al*0.85).toFixed(2)+')';
+                _ctx.beginPath(); _ctx.arc(ox,oy,sz*0.45,0,Math.PI*2); _ctx.fill();
+              }
+            } else {
+              const acx=_cvW/2, acy=_cvH/2, pulse=_cvH*0.28+Math.sin(_cvT*2.1)*_cvH*0.08;
+              [[239,68,68],[249,115,22],[255,215,0],[34,197,94],[59,130,246],[168,85,247]].forEach(function(_c,ci){
+                const sz=pulse-ci*(_cvH*0.04); if(sz<=0) return;
+                const _g=_ctx.createRadialGradient(acx,acy,0,acx,acy,sz+5);
+                _g.addColorStop(0,'rgba('+_c[0]+','+_c[1]+','+_c[2]+','+(0.72-ci*0.08).toFixed(2)+')');
+                _g.addColorStop(1,'rgba('+_c[0]+','+_c[1]+','+_c[2]+',0)');
+                _ctx.fillStyle=_g; _ctx.beginPath(); _ctx.arc(acx,acy,sz+5,0,Math.PI*2); _ctx.fill();
+              });
+              const _cg=_ctx.createRadialGradient(acx,acy,0,acx,acy,5);
+              _cg.addColorStop(0,'rgba(255,255,255,0.95)'); _cg.addColorStop(1,'rgba(255,215,0,0)');
+              _ctx.fillStyle=_cg; _ctx.beginPath(); _ctx.arc(acx,acy,5,0,Math.PI*2); _ctx.fill();
+            }
+            _cvTex.source[0].update();
+          }
+        });
+        if (!this._cvCleanup) this._cvCleanup = [];
+        this._cvCleanup.push(function(){ _cvEv.remove(); try { this.textures.remove(_cvKey); } catch(_e){} }.bind(this));
+
+      } else {
+        /* Static Phaser Graphics visual per type */
+        const _vg = this.add.graphics().setAlpha(_dim);
+        if (rw.type === 'title') {
+          _vg.fillStyle(0x3b0764, 0.55); _vg.fillRoundedRect(_vx - 26, _vy - 10, 52, 18, 5);
+          _vg.lineStyle(1.5, 0xa855f7, 0.9); _vg.strokeRoundedRect(_vx - 26, _vy - 10, 52, 18, 5);
+        } else if (rw.type === 'echo') {
+          _vg.fillStyle(0x1d4ed8, 0.18); _vg.fillCircle(_vx, _vy, 24);
+          _vg.fillStyle(0x3b82f6, 0.35); _vg.fillCircle(_vx, _vy, 16);
+          _vg.fillStyle(0x60a5fa, 0.9); _vg.fillCircle(_vx, _vy, 9);
+          _vg.fillStyle(0xffffff, 0.95); _vg.fillCircle(_vx, _vy, 4);
+        } else if (rw.type === 'rune') {
+          _vg.fillStyle(0x065f46, 0.25); _vg.fillCircle(_vx, _vy, 18);
+          _vg.lineStyle(1.5, 0x10b981, 1);
+          _vg.beginPath(); _vg.moveTo(_vx, _vy-15); _vg.lineTo(_vx+11, _vy); _vg.lineTo(_vx, _vy+15); _vg.lineTo(_vx-11, _vy); _vg.closePath(); _vg.strokePath();
+          _vg.fillStyle(0x10b981, 0.3); _vg.fillTriangle(_vx, _vy-15, _vx+11, _vy, _vx-11, _vy);
+          _vg.fillStyle(0x34d399, 0.95); _vg.fillCircle(_vx, _vy, 4);
+        } else if (rw.type === 'xpboost') {
+          _vg.fillStyle(0x1e3a8a, 0.28); _vg.fillCircle(_vx, _vy, 18);
+          _vg.fillStyle(0x60a5fa, 1); _vg.fillTriangle(_vx - 4, _vy - 14, _vx + 9, _vy - 2, _vx - 4, _vy - 2);
+          _vg.fillStyle(0x93c5fd, 1); _vg.fillTriangle(_vx + 4, _vy + 2, _vx - 9, _vy + 2, _vx + 4, _vy + 14);
+        } else if (rw.type === 'meta_excl') {
+          _vg.fillStyle(0x7c2d12, 0.28); _vg.fillCircle(_vx, _vy, 18);
+          _vg.fillStyle(0xfb923c, 0.95); _vg.fillTriangle(_vx, _vy - 15, _vx + 11, _vy + 7, _vx - 11, _vy + 7);
+          _vg.fillStyle(0xfed7aa, 0.95); _vg.fillCircle(_vx, _vy + 2, 5);
+        } else {
+          _vg.fillStyle(0x4a2080, 0.45); _vg.fillCircle(_vx, _vy, 14);
+          _vg.fillStyle(0xa78bfa, 0.85); _vg.fillCircle(_vx, _vy, 7);
+        }
+        this._cont.add(_vg);
+
+        /* For titles: overlay the actual title text with a shimmer tween */
+        if (rw.type === 'title') {
+          const _tT = this.add.text(_vx, _vy, rw.value, {
+            fontSize: '7px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#c4b5fd',
+          }).setOrigin(0.5).setAlpha(_dim);
+          this._cont.add(_tT);
+          this.tweens.add({ targets: _tT, alpha: _dim * 0.45, duration: 1400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        }
+      }
+
+      /* level number — prominent, milestone levels get gold badge */
+      const lvColor = is100 ? '#ffd700' : isMilestone ? '#e2b84a' : claimed ? '#4ade80' : isNext ? '#fbbf24' : 'rgba(255,255,255,0.32)';
+      const lvSize  = is100 ? '11px' : isMilestone ? '10px' : '9px';
+      const lvT = this.add.text(x + 6, y + 6, String(rw.level), {
+        fontSize: lvSize, fontFamily: '"Cinzel", serif', fontStyle: isMilestone ? 'bold' : 'normal',
+        color: lvColor,
+      });
+      this._cont.add(lvT);
+
+      /* name label — always visible */
+      const nc = is100 ? '#ffd700' : claimed ? '#4ade80' : (owned && reached) ? '#c4b5fd' : 'rgba(255,255,255,0.65)';
+      const nm = rw.name.length > 13 ? rw.name.slice(0, 12) + '…' : rw.name;
+      const nmT = this.add.text(ccx, y + cardH - 12, nm, {
+        fontSize: is100 ? '9px' : '7px', fontFamily: 'system-ui',
+        color: nc, align: 'center', wordWrap: { width: cardW - 8 },
+      }).setOrigin(0.5, 1);
+      this._cont.add(nmT);
+
+      /* corner badge: lock for locked, check for claimed */
+      if (!owned && !claimed) {
+        this._cont.add(this.add.text(x + cardW - 7, y + 6, '🔒', {
+          fontSize: '9px', fontFamily: 'system-ui',
+        }).setOrigin(1, 0).setAlpha(0.6));
+      } else if (claimed) {
+        const ckG = this.add.graphics();
+        ckG.fillStyle(0x16a34a, 1); ckG.fillCircle(x + cardW - 8, y + 8, 6);
+        this._cont.add(ckG);
+        this._cont.add(this.add.text(x + cardW - 8, y + 8, '✓', {
+          fontSize: '8px', fontFamily: 'system-ui', color: '#fff',
+        }).setOrigin(0.5));
+      }
+
+      /* hover / click zone */
+      const _claimable = owned && reached && !claimed;
+      const hz = this.add.zone(x, y, cardW, cardH).setOrigin(0).setInteractive({ useHandCursor: _claimable });
+      this._cont.add(hz);
+      hz.on('pointerover', (pointer) => {
+        if (pointer.y < 196) return;
+        this._showTip(pointer.x, pointer.y, rw, this.scale.width, this.scale.height);
+      });
+      hz.on('pointerout', () => this._hideTip());
+      if (_claimable) {
+        /* Show "CLAIM" label at bottom of card */
+        const _clT = this.add.text(ccx, y + cardH - 5, 'CLAIM', {
+          fontSize: '7px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#fbbf24',
+        }).setOrigin(0.5, 1).setAlpha(0.85);
+        this._cont.add(_clT);
+        this.tweens.add({ targets: _clT, alpha: 0.4, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+
+        hz.on('pointerdown', () => {
+          this._hideTip();
+          const _bp = loadBP();
+          if (!(_bp.claimed || []).includes(rw.level)) {
+            _bp.claimed = (_bp.claimed || []).concat([rw.level]);
+            if (rw.type === 'echo')         addToInventory('echo_' + rw.value, 1);
+            else if (rw.type === 'rune')    addToInventory('rune_' + rw.value, 1);
+            else if (rw.type === 'xpboost') addToInventory('xpboost_' + (rw.value * 100).toFixed(0), 1);
+            saveBP(_bp);
+          }
+          window._bpRestoreScroll = this._scrollY;
+          this.scene.restart();
+        });
+      }
+    }
+
+    _drawPreview(g, cx, cy, rw) {
+      const EC = { hunter:0x4ade80, knight:0x94a3b8, wizard:0xc084fc, necromancer:0x7c3aed, rogue:0x475569, paladin:0xfbbf24, berserker:0xef4444 };
+      const BC = { gold:0xffd700, crimson:0xef4444, void:0x7c3aed, aurora:0x06b6d4 };
+      const TR = { crimson:0xef4444, void:0x6d28d9, aurora:0x06b6d4, prismatic:0xf0abfc };
+      const BU = { gold:0xffd700, aurora:0x06b6d4, prismatic:0xf0abfc, divine:0xf8fafc };
+      if (rw.type === 'elite_skin') {
+        const c = EC[rw.value] || 0xffd700;
+        g.fillStyle(c, 0.18); g.fillCircle(cx, cy, 22);
+        g.fillStyle(c, 0.95); g.fillCircle(cx, cy - 12, 6);                /* head */
+        g.fillRoundedRect(cx - 5, cy - 5, 10, 12, 2);                       /* body */
+        g.fillStyle(c, 0.65);
+        g.fillRoundedRect(cx - 7, cy + 6, 5, 9, 1);                         /* leg L */
+        g.fillRoundedRect(cx + 2, cy + 6, 5, 9, 1);                         /* leg R */
+        g.fillStyle(0xffd700, 1); g.fillTriangle(cx - 7, cy - 20, cx, cy - 28, cx + 7, cy - 20); /* crown */
+      } else if (rw.type === 'trail') {
+        /* canvas animation handles this — nothing to draw here */
+      } else if (rw.type === 'burst') {
+        const c = BU[rw.value] || 0xef4444;
+        for (let r = 0; r < 3; r++) { g.lineStyle(1.5, c, 1 - r * 0.3); g.strokeCircle(cx, cy, 5 + r * 7); }
+        g.fillStyle(c, 0.95); g.fillCircle(cx, cy, 5);
+      } else if (rw.type === 'border') {
+        const c = BC[rw.value] || 0x2dd4bf;
+        g.fillStyle(c, 0.1); g.fillRoundedRect(cx - 16, cy - 20, 32, 28, 3);
+        g.lineStyle(2, c, 0.9); g.strokeRoundedRect(cx - 16, cy - 20, 32, 28, 3);
+      } else if (rw.type === 'echo') {
+        g.fillStyle(0x1d4ed8, 0.3); g.fillCircle(cx, cy, 20);
+        g.fillStyle(0x60a5fa, 0.85); g.fillCircle(cx, cy, 10);
+        g.fillStyle(0xffffff, 0.95); g.fillCircle(cx, cy, 5);
+      } else if (rw.type === 'rune') {
+        g.fillStyle(0x065f46, 0.25); g.fillCircle(cx, cy, 18);
+        g.lineStyle(1.5, 0x10b981, 0.95);
+        g.beginPath(); g.moveTo(cx, cy - 14); g.lineTo(cx + 10, cy); g.lineTo(cx, cy + 14); g.lineTo(cx - 10, cy); g.closePath(); g.strokePath();
+        g.fillStyle(0x10b981, 0.3); g.fillTriangle(cx, cy - 14, cx + 10, cy, cx - 10, cy);
+      } else if (rw.type === 'xpboost') {
+        g.fillStyle(0x1e40af, 0.25); g.fillCircle(cx, cy, 18);
+        g.fillStyle(0x60a5fa, 0.95); g.fillTriangle(cx - 4, cy - 14, cx + 9, cy - 2, cx - 4, cy - 2);
+        g.fillStyle(0x93c5fd, 0.95); g.fillTriangle(cx + 4, cy + 2, cx - 9, cy + 2, cx + 4, cy + 14);
+      } else if (rw.type === 'meta_excl') {
+        g.fillStyle(0x7c2d12, 0.3); g.fillCircle(cx, cy, 18);
+        g.fillStyle(0xfb923c, 0.9); g.fillTriangle(cx, cy - 15, cx + 11, cy + 7, cx - 11, cy + 7);
+        g.fillStyle(0xfed7aa, 0.95); g.fillCircle(cx, cy + 1, 6);
+      } else if (rw.type === 'title') {
+        g.fillStyle(0x581c87, 0.25); g.fillRoundedRect(cx - 20, cy - 12, 40, 22, 5);
+        g.lineStyle(1.5, 0xa855f7, 0.75); g.strokeRoundedRect(cx - 20, cy - 12, 40, 22, 5);
+      } else if (rw.type === 'ascended') {
+        /* canvas animation handles this — nothing to draw here */
+      }
+    }
+
+    _showTip(px, py, rw, W, H) {
+      this._hideTip();
+      const TW = 218, TH = 168;
+      let tx = px + 16, ty = py - TH / 2;
+      if (tx + TW > W - 20) tx = px - TW - 16;
+      ty = Phaser.Math.Clamp(ty, 196 + 4, H - TH - 4);
+      const TC = { elite_skin:0xffd700, title:0x9333ea, xpboost:0x3b82f6,
+        meta_excl:0xf97316, border:0x2dd4bf, trail:0xa855f7,
+        burst:0xef4444, echo:0x60a5fa, rune:0x10b981, ascended:0xffd700 };
+      const TLBL = { elite_skin:'ELITE SKIN', title:'TITLE', xpboost:'XP BOOST',
+        meta_excl:'EXCLUSIVE UPGRADE', border:'CARD BORDER', trail:'MOVEMENT TRAIL',
+        burst:'DEATH BURST', echo:'POWER ECHO', rune:'PERMANENT RUNE', ascended:'ASCENDED' };
+      const tc = TC[rw.type] || 0x7c3aed;
+      const tcHex = '#' + tc.toString(16).padStart(6, '0');
+      const objs = [];
+
+      /* panel */
+      const bg = this.add.graphics().setDepth(100);
+      bg.fillStyle(0x060211, 0.97); bg.fillRoundedRect(tx, ty, TW, TH, 10);
+      bg.lineStyle(1.5, tc, 0.72); bg.strokeRoundedRect(tx, ty, TW, TH, 10);
+      objs.push(bg);
+
+      /* top color band */
+      const band = this.add.graphics().setDepth(101);
+      band.fillStyle(tc, 0.13); band.fillRoundedRect(tx + 1.5, ty + 1.5, TW - 3, 30, { tl: 8, tr: 8, bl: 0, br: 0 });
+      objs.push(band);
+
+      /* type label */
+      objs.push(this.add.text(tx + TW / 2, ty + 16, TLBL[rw.type] || rw.type.toUpperCase(), {
+        fontSize: '8px', fontFamily: 'system-ui', fontStyle: 'bold', color: tcHex,
+      }).setOrigin(0.5).setDepth(102));
+
+      /* divider */
+      const dv = this.add.graphics().setDepth(101);
+      dv.lineStyle(1, tc, 0.3); dv.lineBetween(tx + 12, ty + 31, tx + TW - 12, ty + 31);
+      objs.push(dv);
+
+      /* large preview (left column) */
+      if (rw.type === 'elite_skin') {
+        /* Render the actual animated SKIN_ELITE character */
+        const _tipCv = document.createElement('canvas'); _tipCv.width = 72; _tipCv.height = 92;
+        _drawOnCanvas(_tipCv, SKIN_ELITE[rw.value] || SKIN_ELITE.hunter, 0, false);
+        const _tkey = '_bptip_' + rw.value + '_' + Date.now();
+        if (this.textures.exists('_bptip_' + rw.value)) this.textures.remove('_bptip_' + rw.value);
+        const _tex = this.textures.addCanvas('_bptip_' + rw.value, _tipCv);
+        const _img = this.add.image(tx + 52, ty + 98, '_bptip_' + rw.value).setDepth(102).setOrigin(0.5, 0.5);
+        objs.push(_img);
+        let _tipT = 0;
+        const _tipTimer = this.time.addEvent({
+          delay: 40, loop: true,
+          callback: () => {
+            _tipT += 0.04;
+            try {
+              _drawOnCanvas(_tipCv, SKIN_ELITE[rw.value] || SKIN_ELITE.hunter, _tipT, false);
+              _tex.source[0].update();
+            } catch {}
+          },
+        });
+        objs.push({ destroy: () => { _tipTimer.remove(); try { this.textures.remove('_bptip_' + rw.value); } catch {} } });
+      } else if (rw.type === 'trail') {
+        const _tipCv = document.createElement('canvas'); _tipCv.width = 90; _tipCv.height = 60;
+        const _tipKey = '_bptip_trail_' + rw.level;
+        if (this.textures.exists(_tipKey)) this.textures.remove(_tipKey);
+        const _tipTex = this.textures.addCanvas(_tipKey, _tipCv);
+        const _tipImg = this.add.image(tx + 52, ty + 100, _tipKey).setDepth(102).setOrigin(0.5, 0.5)
+          .setBlendMode(Phaser.BlendModes.ADD);
+        objs.push(_tipImg);
+        const _T_RGB = { crimson:[239,68,68], void:[109,40,217], aurora:[6,182,212], prismatic:null };
+        let _tipT = 0;
+        const _tipEv = this.time.addEvent({
+          delay: 40, loop: true,
+          callback: () => {
+            _tipT += 0.055;
+            const _c2d = _tipCv.getContext('2d');
+            _c2d.clearRect(0, 0, 90, 60);
+            for (let d = 0; d < 7; d++) {
+              const ox = ((_tipT * 32 + d * 14) % 110) - 10;
+              const oy = 30 + Math.sin(_tipT * 3 + d * 0.9) * 14;
+              let r2 = 168, g2 = 85, b2 = 247;
+              if (rw.value === 'prismatic') {
+                const h2 = ((_tipT * 0.45 + d * 0.17) % 1);
+                const i2 = Math.floor(h2*6), f2 = h2*6-i2, q2 = 1-f2, tv2 = f2;
+                switch(i2%6){case 0:r2=255;g2=Math.round(tv2*255);b2=0;break;case 1:r2=Math.round(q2*255);g2=255;b2=0;break;case 2:r2=0;g2=255;b2=Math.round(tv2*255);break;case 3:r2=0;g2=Math.round(q2*255);b2=255;break;case 4:r2=Math.round(tv2*255);g2=0;b2=255;break;default:r2=255;g2=0;b2=Math.round(q2*255);break;}
+              } else {
+                const _rgb2 = _T_RGB[rw.value] || [168,85,247];
+                r2=_rgb2[0]; g2=_rgb2[1]; b2=_rgb2[2];
+              }
+              const sz = 6.5 - d * 0.7, al = 0.95 - d * 0.1;
+              const _grd = _c2d.createRadialGradient(ox, oy, 0, ox, oy, sz * 3.5);
+              _grd.addColorStop(0,   'rgba(' + r2 + ',' + g2 + ',' + b2 + ',' + al.toFixed(2) + ')');
+              _grd.addColorStop(0.4, 'rgba(' + r2 + ',' + g2 + ',' + b2 + ',' + (al * 0.3).toFixed(2) + ')');
+              _grd.addColorStop(1,   'rgba(' + r2 + ',' + g2 + ',' + b2 + ',0)');
+              _c2d.fillStyle = _grd; _c2d.beginPath(); _c2d.arc(ox, oy, sz * 3.5, 0, Math.PI * 2); _c2d.fill();
+              _c2d.fillStyle = 'rgba(255,255,255,' + (al * 0.85).toFixed(2) + ')';
+              _c2d.beginPath(); _c2d.arc(ox, oy, sz * 0.45, 0, Math.PI * 2); _c2d.fill();
+            }
+            _tipTex.source[0].update();
+          }
+        });
+        objs.push({ destroy: () => { _tipEv.remove(); try { this.textures.remove(_tipKey); } catch(_e) {} } });
+      } else if (rw.type === 'title') {
+        const _tipCv = document.createElement('canvas'); _tipCv.width = 84; _tipCv.height = 42;
+        const _tipKey = '_bptip_title_' + rw.level;
+        if (this.textures.exists(_tipKey)) this.textures.remove(_tipKey);
+        const _tipTex = this.textures.addCanvas(_tipKey, _tipCv);
+        const _tipImg = this.add.image(tx + 52, ty + 100, _tipKey).setDepth(102).setOrigin(0.5, 0.5);
+        objs.push(_tipImg);
+        let _tipT = 0;
+        const _tipEv = this.time.addEvent({
+          delay: 40, loop: true,
+          callback: () => {
+            _tipT += 0.04;
+            const _c2d = _tipCv.getContext('2d');
+            _c2d.clearRect(0, 0, 84, 42);
+            const pulse = 0.45 + Math.sin(_tipT * 2) * 0.3;
+            _c2d.strokeStyle = 'rgba(167,139,250,' + pulse.toFixed(2) + ')';
+            _c2d.lineWidth = 1.5;
+            _c2d.beginPath(); _c2d.roundRect(6, 9, 72, 24, 5); _c2d.stroke();
+            _c2d.fillStyle = 'rgba(88,28,135,' + (0.25 + Math.sin(_tipT) * 0.1).toFixed(2) + ')';
+            _c2d.beginPath(); _c2d.roundRect(6, 9, 72, 24, 5); _c2d.fill();
+            const sx = ((_tipT * 30) % 90) - 15;
+            const _shGrd = _c2d.createLinearGradient(sx - 10, 0, sx + 10, 0);
+            _shGrd.addColorStop(0, 'rgba(255,255,255,0)');
+            _shGrd.addColorStop(0.5, 'rgba(255,255,255,0.22)');
+            _shGrd.addColorStop(1, 'rgba(255,255,255,0)');
+            _c2d.fillStyle = _shGrd;
+            _c2d.beginPath(); _c2d.roundRect(6, 9, 72, 24, 5); _c2d.fill();
+            _c2d.fillStyle = 'rgba(196,181,253,' + (0.85 + Math.sin(_tipT * 1.5) * 0.15).toFixed(2) + ')';
+            _c2d.font = 'bold 9px system-ui'; _c2d.textAlign = 'center'; _c2d.textBaseline = 'middle';
+            _c2d.fillText(rw.value, 42, 21);
+            _tipTex.source[0].update();
+          }
+        });
+        objs.push({ destroy: () => { _tipEv.remove(); try { this.textures.remove(_tipKey); } catch(_e) {} } });
+      } else if (rw.type === 'ascended') {
+        const _tipCv = document.createElement('canvas'); _tipCv.width = 90; _tipCv.height = 90;
+        const _tipKey = '_bptip_ascended';
+        if (this.textures.exists(_tipKey)) this.textures.remove(_tipKey);
+        const _tipTex = this.textures.addCanvas(_tipKey, _tipCv);
+        const _tipImg = this.add.image(tx + 52, ty + 95, _tipKey).setDepth(102).setOrigin(0.5, 0.5)
+          .setBlendMode(Phaser.BlendModes.ADD);
+        objs.push(_tipImg);
+        let _tipT = 0;
+        const _tipEv = this.time.addEvent({
+          delay: 16, loop: true,
+          callback: () => {
+            _tipT += 0.05;
+            const _c2d = _tipCv.getContext('2d');
+            _c2d.clearRect(0, 0, 90, 90);
+            const acx = 45, acy = 45, pulse = 18 + Math.sin(_tipT * 2.1) * 5;
+            const _aRGB = [[239,68,68],[249,115,22],[255,215,0],[34,197,94],[59,130,246],[168,85,247]];
+            _aRGB.forEach(function(_c, ci) {
+              const sz = pulse - ci * 2.5;
+              if (sz <= 0) return;
+              const _g = _c2d.createRadialGradient(acx, acy, 0, acx, acy, sz + 12);
+              _g.addColorStop(0,   'rgba(' + _c[0] + ',' + _c[1] + ',' + _c[2] + ',' + (0.7 - ci * 0.08).toFixed(2) + ')');
+              _g.addColorStop(0.5, 'rgba(' + _c[0] + ',' + _c[1] + ',' + _c[2] + ',0.22)');
+              _g.addColorStop(1,   'rgba(' + _c[0] + ',' + _c[1] + ',' + _c[2] + ',0)');
+              _c2d.fillStyle = _g; _c2d.beginPath(); _c2d.arc(acx, acy, sz + 12, 0, Math.PI * 2); _c2d.fill();
+            });
+            const _cg = _c2d.createRadialGradient(acx, acy, 0, acx, acy, 10);
+            _cg.addColorStop(0, 'rgba(255,255,255,0.95)'); _cg.addColorStop(1, 'rgba(255,215,0,0)');
+            _c2d.fillStyle = _cg; _c2d.beginPath(); _c2d.arc(acx, acy, 10, 0, Math.PI * 2); _c2d.fill();
+            _tipTex.source[0].update();
+          }
+        });
+        objs.push({ destroy: () => { _tipEv.remove(); try { this.textures.remove(_tipKey); } catch(_e) {} } });
+      } else {
+        const prvG = this.add.graphics().setDepth(102).setPosition(tx + 52, ty + 100).setScale(2.0);
+        this._drawPreview(prvG, 0, 0, rw);
+        objs.push(prvG);
+      }
+
+      /* reward name */
+      objs.push(this.add.text(tx + 102, ty + 46, rw.name, {
+        fontSize: rw.level === 100 ? '13px' : '11px', fontFamily: 'system-ui', fontStyle: 'bold',
+        color: tcHex, wordWrap: { width: TW - 110 },
+      }).setOrigin(0, 0).setDepth(102));
+
+      /* description */
+      if (rw.desc) {
+        objs.push(this.add.text(tx + 102, ty + 68, rw.desc, {
+          fontSize: '9px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.52)',
+          wordWrap: { width: TW - 112 }, lineSpacing: 2,
+        }).setOrigin(0, 0).setDepth(102));
+      }
+
+      /* level badge */
+      objs.push(this.add.text(tx + TW - 10, ty + TH - 10, 'Lv ' + rw.level, {
+        fontSize: '9px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.28)',
+      }).setOrigin(1, 1).setDepth(102));
+
+      this._tipObjs = objs;
+    }
+
+    _hideTip() {
+      if (this._tipObjs) { this._tipObjs.forEach(o => o.destroy()); this._tipObjs = null; }
+    }
+
+    _buildHeader(cx, W, H, bp, HEADER_H) {
+      /* solid bg to occlude cards that scroll under it */
+      const hBg = this.add.graphics().setDepth(10);
+      hBg.fillStyle(0x04000d, 1); hBg.fillRect(0, 0, W, HEADER_H);
+      const hAcc = this.add.graphics().setDepth(10);
+      hAcc.fillStyle(0x3b0764, 0.12); hAcc.fillRect(0, 0, W, 100);
+      hAcc.lineStyle(1, 0x2a0f42, 1); hAcc.lineBetween(28, HEADER_H - 1, W - 28, HEADER_H - 1);
+
+      /* ── Title row ── */
+      this.add.text(cx, 30, 'BATTLE PASS', {
+        fontSize: '34px', fontFamily: 'Cinzel, serif', fontStyle: 'bold',
+        color: '#ffd700', stroke: '#4c1d95', strokeThickness: 8,
+      }).setOrigin(0.5).setDepth(11);
+      this.add.text(cx, 64, 'SEASON  1   ·   100 LEVELS', {
+        fontSize: '10px', fontFamily: 'system-ui', color: 'rgba(251,191,36,0.38)', letterSpacing: 5,
+      }).setOrigin(0.5).setDepth(11);
+
+      /* ── XP section — modern wide layout ── */
+      const lvl = bp.level || 0;
+      const xpNeeded = getXpForLevel(Math.min(lvl + 1, 100));
+      const xpPct = lvl >= 100 ? 1 : Math.min(1, (bp.xp || 0) / xpNeeded);
+
+      /* Total layout width shared between XP area and buttons */
+      const totalW   = Math.min(860, W - 80);
+      const btnAreaW = 380;                          /* reserved for buttons on right */
+      const xpAreaW  = totalW - btnAreaW - 24;
+      const areaX    = cx - totalW / 2;             /* left edge of whole area */
+
+      /* Level badge */
+      const badgeX = areaX + 38, badgeY = 108;
+      const bdg = this.add.graphics().setDepth(11);
       /* outer glow */
-      [14,10,6,0].forEach((pad, gi) => {
-        csg.fillStyle(0xffd700, [0.03, 0.05, 0.08, 0][gi]);
-        csg.fillRoundedRect(csX - 100 - pad, csY - 22 - pad, 200 + pad*2, 44 + pad*2, 12 + pad);
+      [16, 10, 4].forEach((pad, gi) => {
+        bdg.fillStyle(0xffd700, [0.04, 0.08, 0.14][gi]);
+        bdg.fillCircle(badgeX, badgeY, 34 + pad);
       });
+      bdg.fillStyle(0x0d0520, 1); bdg.fillCircle(badgeX, badgeY, 34);
+      bdg.lineStyle(2.5, 0xffd700, 0.9); bdg.strokeCircle(badgeX, badgeY, 34);
+      /* XP arc */
+      if (xpPct > 0) {
+        bdg.lineStyle(3, 0xffd700, 1);
+        bdg.beginPath();
+        bdg.arc(badgeX, badgeY, 34, -Math.PI / 2, -Math.PI / 2 + xpPct * Math.PI * 2, false);
+        bdg.strokePath();
+      }
+      this.add.text(badgeX, badgeY - 5, String(lvl), {
+        fontSize: '24px', fontFamily: 'Cinzel, serif', fontStyle: 'bold', color: '#ffd700',
+      }).setOrigin(0.5).setDepth(12);
+      this.add.text(badgeX, badgeY + 18, 'LEVEL', {
+        fontSize: '7px', fontFamily: 'system-ui', color: 'rgba(251,191,36,0.5)', letterSpacing: 3,
+      }).setOrigin(0.5).setDepth(12);
+
+      /* XP bar — wide, sits right of badge */
+      const barX  = areaX + 84, barY = 98;
+      const barW  = xpAreaW - 84, barH = 14;
+      const barG  = this.add.graphics().setDepth(11);
+      /* bar track */
+      barG.fillStyle(0x1a0d30, 1); barG.fillRoundedRect(barX, barY, barW, barH, 7);
+      barG.lineStyle(1, 0x3b1a6e, 0.7); barG.strokeRoundedRect(barX, barY, barW, barH, 7);
       /* fill */
-      csg.fillStyle(0x1a0830, 1); csg.fillRoundedRect(csX - 100, csY - 22, 200, 44, 12);
-      csg.lineStyle(1.5, 0xffd700, 0.8); csg.strokeRoundedRect(csX - 100, csY - 22, 200, 44, 12);
+      if (xpPct > 0) {
+        const fillW = Math.max(14, barW * xpPct);
+        barG.fillStyle(0x7c3aed, 1); barG.fillRoundedRect(barX, barY, fillW, barH, 7);
+        barG.fillStyle(0xffd700, 1); barG.fillRoundedRect(barX + fillW - 6, barY + 2, 6, barH - 4, 3);
+        /* shine */
+        barG.fillStyle(0xffffff, 0.18); barG.fillRoundedRect(barX, barY, fillW, barH / 2, 7);
+      }
+      /* XP labels */
+      this.add.text(barX, barY - 14, 'SEASON XP', {
+        fontSize: '9px', fontFamily: 'system-ui', fontStyle: 'bold',
+        color: 'rgba(196,181,253,0.7)', letterSpacing: 2,
+      }).setOrigin(0, 0.5).setDepth(12);
+      const xpLabel = lvl >= 100 ? 'MAX LEVEL' : `${bp.xp || 0} / ${xpNeeded} XP`;
+      this.add.text(barX + barW, barY - 14, xpLabel, {
+        fontSize: '9px', fontFamily: 'system-ui', color: 'rgba(251,191,36,0.65)',
+      }).setOrigin(1, 0.5).setDepth(12);
+      /* next level label below bar */
+      if (lvl < 100) {
+        this.add.text(barX + barW / 2, barY + barH + 8, `Level ${lvl + 1} →`, {
+          fontSize: '9px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.25)',
+        }).setOrigin(0.5).setDepth(12);
+      }
 
-      const csTop = this.add.text(csX, csY - 7, '⚔  BATTLE PASS', {
-        fontSize: '13px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#ffd700',
-      }).setOrigin(0.5).setScrollFactor(0).setDepth(12);
-      const csBot = this.add.text(csX, csY + 10, 'COMING SOON', {
-        fontSize: '9px', fontFamily: 'system-ui', color: 'rgba(251,191,36,0.55)', letterSpacing: 3,
-      }).setOrigin(0.5).setScrollFactor(0).setDepth(12);
-      this.tweens.add({ targets: [csTop, csBot, csg], alpha: 0.6, duration: 950, yoyo: true, repeat: -1 });
+      /* ── Purchase / Owned panel — right side ── */
+      const csX = areaX + totalW - btnAreaW / 2, csY = 108;
+      const _scene = this;
 
-      /* hint text */
-      this.add.text(cx, 166, 'Your XP is already being tracked. Claim rewards when Battle Pass launches.', {
-        fontSize: '10px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.25)',
-      }).setOrigin(0.5).setScrollFactor(0).setDepth(11);
+      if (bp.owned) {
+        /* OWNED state */
+        const og = this.add.graphics().setDepth(11);
+        /* subtle green glow */
+        [18, 12, 6, 0].forEach((pad, gi) => {
+          og.fillStyle(0x16a34a, [0.04, 0.07, 0.12, 0][gi]);
+          og.fillRoundedRect(csX - 90 - pad, csY - 21 - pad, 180 + pad * 2, 42 + pad * 2, 12 + pad);
+        });
+        og.fillStyle(0x052e16, 1); og.fillRoundedRect(csX - 90, csY - 21, 180, 42, 11);
+        og.lineStyle(1.5, 0x16a34a, 0.85); og.strokeRoundedRect(csX - 90, csY - 21, 180, 42, 11);
+        this.add.text(csX, csY - 5, '✓  BATTLE PASS', {
+          fontSize: '13px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#4ade80',
+        }).setOrigin(0.5).setDepth(12);
+        this.add.text(csX, csY + 11, bp.premium ? 'PREMIUM OWNER' : 'ACTIVE — SEASON 1', {
+          fontSize: '8px', fontFamily: 'system-ui', color: bp.premium ? '#ffd700' : 'rgba(74,222,128,0.55)', letterSpacing: 2,
+        }).setOrigin(0.5).setDepth(12);
+        this.add.text(cx, 162, 'Earn XP every run to level up and claim exclusive rewards', {
+          fontSize: '10px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.28)',
+        }).setOrigin(0.5).setDepth(11);
+      } else {
+        /* NOT OWNED — two purchase buttons side by side */
+        const _mkBtn = (bx, label, sublabel, tier, bgCol, borderCol, textCol, glowCol) => {
+          /* glow layer behind button */
+          const glowG = _scene.add.graphics().setDepth(10);
+          const _drawGlow = (strong) => {
+            glowG.clear();
+            if (strong) {
+              [20, 13, 7].forEach((pad, gi) => {
+                glowG.fillStyle(glowCol, [0.06, 0.10, 0.16][gi]);
+                glowG.fillRoundedRect(bx - 82 - pad, csY - 21 - pad, 164 + pad * 2, 42 + pad * 2, 12 + pad);
+              });
+            } else {
+              [14, 8, 3].forEach((pad, gi) => {
+                glowG.fillStyle(glowCol, [0.03, 0.06, 0.10][gi]);
+                glowG.fillRoundedRect(bx - 82 - pad, csY - 21 - pad, 164 + pad * 2, 42 + pad * 2, 12 + pad);
+              });
+            }
+          };
+          _drawGlow(false);
 
-      /* ── BACK BUTTON ── */
-      const back = this.add.text(22, 18, '← Back', {
-        fontSize: '14px', fontFamily: 'system-ui', color: 'rgba(167,139,250,0.55)',
-      }).setScrollFactor(0).setDepth(13).setInteractive({ useHandCursor: true });
-      back.on('pointerover', () => back.setColor('#a78bfa'));
-      back.on('pointerout',  () => back.setColor('rgba(167,139,250,0.55)'));
-      back.on('pointerdown', () => {
-        this.cameras.main.fadeOut(220, 0, 0, 0);
-        this.time.delayedCall(240, () => this.scene.start('Menu'));
-      });
+          const bg = _scene.add.graphics().setDepth(11).setInteractive(
+            new Phaser.Geom.Rectangle(bx - 82, csY - 21, 164, 42),
+            Phaser.Geom.Rectangle.Contains
+          );
+          const _draw = (hover) => {
+            bg.clear();
+            bg.fillStyle(bgCol, hover ? 1 : 0.88);
+            bg.fillRoundedRect(bx - 82, csY - 21, 164, 42, 10);
+            bg.lineStyle(hover ? 2.5 : 1.5, borderCol, hover ? 1 : 0.85);
+            bg.strokeRoundedRect(bx - 82, csY - 21, 164, 42, 10);
+          };
+          _draw(false);
+          const t1 = _scene.add.text(bx, csY - 5, label, {
+            fontSize: '12px', fontFamily: 'system-ui', fontStyle: 'bold', color: textCol,
+          }).setOrigin(0.5).setDepth(12);
+          const t2 = _scene.add.text(bx, csY + 11, sublabel, {
+            fontSize: '9px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.55)', letterSpacing: 1,
+          }).setOrigin(0.5).setDepth(12);
+          bg.on('pointerover',  () => { _draw(true);  _drawGlow(true);  });
+          bg.on('pointerout',   () => { _draw(false); _drawGlow(false); });
+          bg.on('pointerdown', async () => {
+            if (!window._player) {
+              t2.setText('Log in to purchase').setColor('#fca5a5');
+              return;
+            }
+            t1.setText('…'); t2.setText('Redirecting to checkout');
+            try {
+              /* user_id is resolved server-side from the JWT — do not send it in body */
+              const { data: { session: _sess } } = await _sb.auth.getSession();
+              const { data, error } = await _sb.functions.invoke('create-checkout', {
+                body: { tier },
+                headers: { Authorization: `Bearer ${_sess?.access_token}` },
+              });
+              if (error || !data?.url) throw new Error(error?.message || 'No URL');
+              window.location.href = data.url;
+            } catch (e) {
+              t1.setText('⚠ Error'); t2.setText('Please try again').setColor('#fca5a5');
+            }
+          });
+          return { bg, t1, t2 };
+        };
 
-      /* keyboard back */
-      this.input.keyboard.on('keydown-ESC', () => {
-        this.cameras.main.fadeOut(220, 0, 0, 0);
-        this.time.delayedCall(240, () => this.scene.start('Menu'));
-      });
+        /* Battle Pass — $4.99  (purple glow) */
+        _mkBtn(csX - 90, '⚔  Battle Pass  $4.99', 'Season 1 · All 100 levels', 'standard',
+          0x1e0f3a, 0x7c3aed, '#c4b5fd', 0x7c3aed);
+
+        /* Battle Pass Premium — $9.99  (gold glow) */
+        _mkBtn(csX + 90, '★  Premium  $9.99', 'Instant Levels 1–25', 'premium',
+          0x1a0e00, 0xfbbf24, '#fde68a', 0xfbbf24);
+
+        this.add.text(cx, 162, 'Unlock to start claiming Echoes, Runes, Elite Skins & Titles', {
+          fontSize: '10px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.28)',
+        }).setOrigin(0.5).setDepth(11);
+      }
+
+      /* scroll hint fades away */
+      if (this._maxSc > 0) {
+        const sh = this.add.text(cx, HEADER_H - 14, '↓  scroll or drag to see all 100 rewards', {
+          fontSize: '9px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.2)', letterSpacing: 1,
+        }).setOrigin(0.5).setDepth(11);
+        this.tweens.add({ targets: sh, alpha: 0, delay: 2200, duration: 700, onComplete: () => sh.destroy() });
+      }
     }
   }
 
+  /* ── INVENTORY SCENE ── */
+  class InventoryScene extends Phaser.Scene {
+    constructor() { super('Inventory'); }
+
+    create() {
+      const W = this.scale.width, H = this.scale.height, cx = W / 2;
+      this.cameras.main.setBackgroundColor('#04000d').fadeIn(300, 0, 0, 0);
+      const _lbEl = document.getElementById('lb-btn');
+      if (_lbEl) _lbEl.style.display = 'none';
+      this.events.once('shutdown', function() {
+        if (_lbEl) _lbEl.style.display = 'flex';
+        if (this._cvCleanup) { this._cvCleanup.forEach(function(fn) { fn(); }); this._cvCleanup = null; }
+      }, this);
+
+      /* Background glow */
+      const bg = this.add.graphics();
+      bg.fillStyle(0x064e3b, 0.08); bg.fillEllipse(cx * 0.6, H * 0.4, W * 0.7, H * 0.5);
+      bg.fillStyle(0x1e3a5f, 0.06); bg.fillEllipse(cx * 1.5, H * 0.6, W * 0.5, H * 0.4);
+
+      /* ── Header ── */
+      const GRID_TOP = 116;
+      const hBg = this.add.graphics().setDepth(10);
+      hBg.fillStyle(0x04000d, 1); hBg.fillRect(0, 0, W, GRID_TOP);
+      hBg.lineStyle(1, 0x064e3b, 0.6); hBg.lineBetween(28, GRID_TOP - 1, W - 28, GRID_TOP - 1);
+
+      this.add.text(cx, 24, '🎒  INVENTORY', {
+        fontSize: '22px', fontFamily: 'system-ui', fontStyle: 'bold',
+        color: '#34d399', stroke: '#064e3b', strokeThickness: 6,
+      }).setOrigin(0.5).setDepth(11);
+
+      /* ── Tabs ── */
+      this._activeTab = 'items';
+      const TAB_Y = 58, TAB_W = 130, TAB_H = 30;
+      const _mkTab = (label, key, tx) => {
+        const isActive = this._activeTab === key;
+        const tbg = this.add.rectangle(tx, TAB_Y, TAB_W, TAB_H, isActive ? 0x064e3b : 0x0a0818)
+          .setStrokeStyle(1, isActive ? 0x34d399 : 0x1a3a2a, 0.9).setInteractive({ useHandCursor: true }).setDepth(11);
+        const ttx = this.add.text(tx, TAB_Y, label, {
+          fontSize: '11px', fontFamily: 'system-ui', fontStyle: 'bold',
+          color: isActive ? '#34d399' : 'rgba(255,255,255,0.4)',
+        }).setOrigin(0.5).setDepth(12);
+        if (!isActive) {
+          tbg.on('pointerover', () => tbg.setFillColor(0x0d1a14));
+          tbg.on('pointerout', () => tbg.setFillColor(0x0a0818));
+          tbg.on('pointerdown', () => { window._invTab = key; this.scene.restart(); });
+        }
+        return { tbg, ttx };
+      };
+      _mkTab('⚗  ITEMS', 'items', cx - TAB_W / 2 - 4);
+      _mkTab('✨  COSMETICS', 'cosmetics', cx + TAB_W / 2 + 4);
+      if (window._invTab) { this._activeTab = window._invTab; window._invTab = null; }
+
+      /* ── Subheader text (items tab only) ── */
+      this._activeBar = null;
+      if (this._activeTab === 'items') {
+        const _inv = loadInventory();
+        const _invTotal = Object.values(_inv).reduce((a,b)=>a+b,0);
+        this.add.text(cx, 90, _invTotal > 0 ? _invTotal + ' consumable item' + (_invTotal!==1?'s':'') + ' ready — activate at run start' : 'No items yet — claim rewards from the Battle Pass', {
+          fontSize: '9px', fontFamily: 'system-ui', color: 'rgba(52,211,153,0.55)',
+        }).setOrigin(0.5).setDepth(11);
+        this._activeBar = this.add.text(cx, 102, '', {
+          fontSize: '9px', fontFamily: 'system-ui', color: '#34d399',
+          wordWrap: { width: W - 48 }, align: 'center',
+        }).setOrigin(0.5, 0).setDepth(11);
+        this._refreshActive();
+      }
+
+      /* ── Scrollable container ── */
+      const COLS = Math.max(2, Math.floor((W - 32) / 148));
+      const cardW = Math.floor((W - 32 - (COLS - 1) * 10) / COLS);
+      const cardH = 138;
+      const gapX = 10, gapY = 10;
+      const sx = (W - (COLS * cardW + (COLS - 1) * gapX)) / 2;
+
+      this._cont = this.add.container(0, GRID_TOP);
+      const _mG = this.add.graphics();
+      _mG.fillStyle(0xffffff, 1);
+      _mG.fillRect(0, GRID_TOP, W, H - GRID_TOP);
+      _mG.setVisible(false);
+      this._cont.setMask(_mG.createGeometryMask());
+
+      this._scrollY = 0;
+      if (this._activeTab === 'cosmetics') this._buildCosmetics();
+      else this._buildGrid(sx, cardW, cardH, gapX, gapY, COLS);
+
+      /* ── Scroll ── */
+      this.input.on('wheel', (p, o, dx, dy) => this._scr(dy * 0.55));
+      let _py = 0, _ps = 0;
+      this.input.on('pointerdown', p => { _py = p.y; _ps = this._scrollY; });
+      this.input.on('pointermove', p => { if (p.isDown) this._scr(_ps + (_py - p.y) - this._scrollY, true); });
+
+      /* ── Back button ── */
+      const bkBg = this.add.rectangle(72, 28, 110, 34, 0x0f071e, 0.92)
+        .setStrokeStyle(1.5, 0x34d399, 0.6).setInteractive({ useHandCursor: true }).setDepth(12);
+      this.add.text(72, 28, '← Back', { fontSize: '13px', fontFamily: 'system-ui', fontStyle: 'bold', color: '#34d399' }).setOrigin(0.5).setDepth(13);
+      bkBg.on('pointerover', () => bkBg.setFillColor(0x0a1a12));
+      bkBg.on('pointerout',  () => bkBg.setFillColor(0x0f071e));
+      bkBg.on('pointerdown', () => { this.cameras.main.fadeOut(220, 0, 0, 0); this.time.delayedCall(240, () => this.scene.start('Menu')); });
+      this.input.keyboard.on('keydown-ESC', () => { this.cameras.main.fadeOut(220, 0, 0, 0); this.time.delayedCall(240, () => this.scene.start('Menu')); });
+    }
+
+    _buildGrid(sx, cardW, cardH, gapX, gapY, COLS) {
+      const W = this.scale.width, H = this.scale.height, cx = W / 2;
+      const inv = loadInventory();
+      /* Build item info lookup from BATTLE_PASS_REWARDS */
+      const catalog = {};
+      BATTLE_PASS_REWARDS.forEach(rw => {
+        let iid = null;
+        if (rw.type === 'echo')    iid = 'echo_' + rw.value;
+        else if (rw.type === 'rune')    iid = 'rune_' + rw.value;
+        else if (rw.type === 'xpboost') iid = 'xpboost_' + (rw.value * 100).toFixed(0);
+        if (iid) catalog[iid] = { name: rw.name, desc: rw.desc || '', icon: rw.icon, type: rw.type };
+      });
+      const entries = Object.entries(inv).filter(([, q]) => q > 0);
+
+      if (entries.length === 0) {
+        const emG = this.add.graphics();
+        emG.fillStyle(0x0d0920, 0.8); emG.fillRoundedRect(cx - 160, 20, 320, 80, 10);
+        this.add.text(W / 2, 60, 'Your inventory is empty', {
+          fontSize: '14px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.35)',
+        }).setOrigin(0.5);
+        this.add.text(W / 2, 82, 'Earn items by leveling up your Battle Pass', {
+          fontSize: '11px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.22)',
+        }).setOrigin(0.5);
+        this._cont.add(emG);
+        this._maxSc = 0;
+        return;
+      }
+
+      const TYPE_COL = { echo: 0x60a5fa, rune: 0x10b981, xpboost: 0x3b82f6 };
+
+      entries.forEach(([itemId, qty], i) => {
+        const info = catalog[itemId] || { name: itemId, desc: '', icon: '?', type: 'echo' };
+        const col = i % COLS, row = Math.floor(i / COLS);
+        const x = sx + col * (cardW + gapX);
+        const y = row * (cardH + gapY);
+        const ccx = x + cardW / 2;
+        const tc = TYPE_COL[info.type] || 0x60a5fa;
+        const tcHex = '#' + tc.toString(16).padStart(6, '0');
+
+        /* Card bg */
+        const cg = this.add.graphics();
+        cg.fillStyle(0x08031a, 1); cg.fillRoundedRect(x, y, cardW, cardH, 8);
+        cg.lineStyle(1.5, tc, 0.55); cg.strokeRoundedRect(x, y, cardW, cardH, 8);
+        cg.fillStyle(tc, 0.06); cg.fillRoundedRect(x + 1, y + 1, cardW - 2, 28, { tl: 7, tr: 7, bl: 0, br: 0 });
+        this._cont.add(cg);
+
+        /* Type label */
+        const TLBL = { echo: 'POWER ECHO', rune: 'RUN ITEM', xpboost: 'XP BOOST' };
+        this._cont.add(this.add.text(ccx, y + 14, TLBL[info.type] || 'ITEM', {
+          fontSize: '7px', fontFamily: 'system-ui', fontStyle: 'bold', color: tcHex, letterSpacing: 1,
+        }).setOrigin(0.5));
+
+        /* Icon */
+        this._cont.add(this.add.text(ccx, y + 44, info.icon, {
+          fontSize: '26px', fontFamily: 'system-ui',
+        }).setOrigin(0.5));
+
+        /* Name */
+        this._cont.add(this.add.text(ccx, y + 70, info.name, {
+          fontSize: '10px', fontFamily: 'system-ui', fontStyle: 'bold',
+          color: '#ffffff', wordWrap: { width: cardW - 12 }, align: 'center',
+        }).setOrigin(0.5, 0));
+
+        /* Desc */
+        this._cont.add(this.add.text(ccx, y + 86, info.desc, {
+          fontSize: '9px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.45)',
+          wordWrap: { width: cardW - 14 }, align: 'center', lineSpacing: 1,
+        }).setOrigin(0.5, 0));
+
+        /* Qty badge */
+        const qBg = this.add.graphics();
+        qBg.fillStyle(0x1a0a30, 1); qBg.fillCircle(x + cardW - 12, y + 12, 10);
+        qBg.lineStyle(1.5, tc, 0.8); qBg.strokeCircle(x + cardW - 12, y + 12, 10);
+        this._cont.add(qBg);
+        const qT = this.add.text(x + cardW - 12, y + 12, 'x' + qty, {
+          fontSize: '9px', fontFamily: 'system-ui', fontStyle: 'bold', color: tcHex,
+        }).setOrigin(0.5);
+        this._cont.add(qT);
+
+        /* Use button */
+        const active = getRunItems();
+        const alreadyQueued = active.includes(itemId);
+        const useBg = this.add.rectangle(ccx, y + cardH - 16, cardW - 16, 22, alreadyQueued ? 0x064e3b : 0x1a0a30)
+          .setStrokeStyle(1, alreadyQueued ? 0x34d399 : tc, 0.9)
+          .setInteractive({ useHandCursor: true });
+        const useT = this.add.text(ccx, y + cardH - 16, alreadyQueued ? '✓ Queued' : '▶  Use', {
+          fontSize: '10px', fontFamily: 'system-ui', fontStyle: 'bold',
+          color: alreadyQueued ? '#34d399' : tcHex,
+        }).setOrigin(0.5);
+        this._cont.add(useBg);
+        this._cont.add(useT);
+
+        useBg.on('pointerover', () => useBg.setFillColor(alreadyQueued ? 0x065f46 : 0x250d3a));
+        useBg.on('pointerout',  () => useBg.setFillColor(alreadyQueued ? 0x064e3b : 0x1a0a30));
+        useBg.on('pointerdown', (pointer) => {
+          if (pointer.y < 124) return; /* behind header */
+          if (alreadyQueued) return;
+          const used = useFromInventory(itemId);
+          if (used) {
+            useT.setText('✓ Queued'); useT.setColor('#34d399');
+            useBg.setFillColor(0x064e3b); useBg.setStrokeStyle(1, 0x34d399, 0.9);
+            /* Update qty display */
+            const newQty = (loadInventory()[itemId] || 0);
+            qT.setText('x' + newQty);
+            if (newQty <= 0) { cg.setAlpha(0.3); useT.setText('Empty'); }
+            this._refreshActive();
+          }
+        });
+      });
+
+      const totalRows = Math.ceil(entries.length / COLS);
+      this._maxSc = Math.max(0, totalRows * (cardH + gapY) + 20 - (this.scale.height - 124));
+    }
+
+    _scr(delta, abs = false) {
+      this._scrollY = Phaser.Math.Clamp(abs ? delta : this._scrollY + delta, 0, this._maxSc || 0);
+      this._cont.y = 124 - this._scrollY;
+    }
+
+    _refreshActive() {
+      if (!this._activeBar) return;
+      const items = getRunItems();
+      if (items.length === 0) {
+        this._activeBar.setText('No items queued — use items below to activate them next run');
+        this._activeBar.setColor('rgba(255,255,255,0.22)');
+      } else {
+        const names = items.map(id => {
+          const rw = BATTLE_PASS_REWARDS.find(r =>
+            (r.type === 'echo' && 'echo_' + r.value === id) ||
+            (r.type === 'rune' && 'rune_' + r.value === id) ||
+            (r.type === 'xpboost' && 'xpboost_' + (r.value * 100).toFixed(0) === id)
+          );
+          return rw ? rw.name : id;
+        });
+        this._activeBar.setText('⚡ Active next run: ' + names.join('  ·  '));
+        this._activeBar.setColor('#34d399');
+      }
+    }
+
+    _buildCosmetics() {
+      const W = this.scale.width, H = this.scale.height, cx = W / 2;
+      const bp = loadBP();
+      const claimed = bp.claimed || [];
+
+      /* Helper: equip state */
+      const getEqTrail  = () => localStorage.getItem('hoa_eq_trail')  || null;
+      const getEqAura   = () => localStorage.getItem('hoa_eq_aura')   || null;
+      const getEqTitle  = () => localStorage.getItem('hoa_eq_title')  || null;
+      const getEqBorder = () => localStorage.getItem('hoa_eq_border') || null;
+      const getEqSkin   = (cls) => localStorage.getItem('hoa_eq_skin_' + cls) === '1';
+      const setEqTrail  = (v) => { if (v) localStorage.setItem('hoa_eq_trail',  v); else localStorage.removeItem('hoa_eq_trail'); };
+      const setEqAura   = (v) => { if (v) localStorage.setItem('hoa_eq_aura',   v); else localStorage.removeItem('hoa_eq_aura'); };
+      const setEqTitle  = (v) => { if (v) localStorage.setItem('hoa_eq_title',  v); else localStorage.removeItem('hoa_eq_title'); };
+      const setEqBorder = (v) => { if (v) localStorage.setItem('hoa_eq_border', v); else localStorage.removeItem('hoa_eq_border'); };
+      const setEqSkin   = (cls, on) => { if (on) localStorage.setItem('hoa_eq_skin_' + cls, '1'); else localStorage.removeItem('hoa_eq_skin_' + cls); };
+
+      /* Gather unlocked cosmetics from claimed levels */
+      const skins   = BATTLE_PASS_REWARDS.filter(r => r.type === 'elite_skin' && claimed.includes(r.level));
+      const trails  = BATTLE_PASS_REWARDS.filter(r => r.type === 'trail'      && claimed.includes(r.level));
+      const auras   = BATTLE_PASS_REWARDS.filter(r => r.type === 'ascended'   && claimed.includes(r.level));
+      const titles  = BATTLE_PASS_REWARDS.filter(r => r.type === 'title'      && claimed.includes(r.level));
+      const borders = BATTLE_PASS_REWARDS.filter(r => r.type === 'border'     && claimed.includes(r.level));
+
+      const CARD_W = 148, CARD_H = 110, GAP = 10;
+      let yOff = 10; /* offset inside container */
+
+      const _section = (label, color) => {
+        const sg = this.add.graphics();
+        sg.fillStyle(0x0a0818, 0.7); sg.fillRoundedRect(cx - W * 0.44, yOff, W * 0.88, 22, 4);
+        sg.lineStyle(1, color, 0.5); sg.strokeRoundedRect(cx - W * 0.44, yOff, W * 0.88, 22, 4);
+        this._cont.add(sg);
+        this._cont.add(this.add.text(cx, yOff + 11, label, {
+          fontSize: '10px', fontFamily: 'system-ui', fontStyle: 'bold',
+          color: Phaser.Display.Color.IntegerToColor(color).rgba,
+        }).setOrigin(0.5));
+        yOff += 30;
+      };
+
+      const _cosCard = (rw, isEquipped, onEquip) => {
+        const COLS = Math.max(2, Math.floor((W - 32) / (CARD_W + GAP)));
+        /* cards laid out in rows — track col/row via closure counter handled outside */
+        return { rw, isEquipped, onEquip };
+      };
+
+      /* Render a row of cosmetic cards */
+      const _renderCards = (items, isEq, onEquip, onUnequip) => {
+        if (items.length === 0) {
+          this._cont.add(this.add.text(cx, yOff + 16, 'None unlocked yet — claim Battle Pass rewards to unlock', {
+            fontSize: '10px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.25)',
+          }).setOrigin(0.5));
+          yOff += 40;
+          return;
+        }
+        const COLS = Math.max(2, Math.floor((W - 32) / (CARD_W + GAP)));
+        const cW = Math.floor((W - 32 - (COLS - 1) * GAP) / COLS);
+        const startX = (W - (COLS * cW + (COLS - 1) * GAP)) / 2;
+        items.forEach((rw, i) => {
+          const col = i % COLS, row = Math.floor(i / COLS);
+          const x = startX + col * (cW + GAP), y = yOff + row * (CARD_H + GAP);
+          const equipped = isEq(rw);
+          const tc = equipped ? 0x34d399 : 0x4a2080;
+
+          /* Card bg */
+          const cg = this.add.graphics();
+          cg.fillStyle(equipped ? 0x041a10 : 0x0a0818, 1);
+          cg.fillRoundedRect(x, y, cW, CARD_H, 6);
+          cg.lineStyle(1.5, tc, equipped ? 0.9 : 0.5);
+          cg.strokeRoundedRect(x, y, cW, CARD_H, 6);
+          this._cont.add(cg);
+
+          /* Icon / name */
+          this._cont.add(this.add.text(x + cW / 2, y + 20, rw.icon || '✨', {
+            fontSize: '22px', fontFamily: 'system-ui',
+          }).setOrigin(0.5));
+          this._cont.add(this.add.text(x + cW / 2, y + 46, rw.name, {
+            fontSize: '9px', fontFamily: 'system-ui', fontStyle: 'bold',
+            color: equipped ? '#34d399' : '#c4b5fd', align: 'center',
+            wordWrap: { width: cW - 10 },
+          }).setOrigin(0.5));
+          this._cont.add(this.add.text(x + cW / 2, y + 62, rw.desc ? rw.desc.slice(0, 50) + (rw.desc.length > 50 ? '…' : '') : '', {
+            fontSize: '7px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.35)',
+            wordWrap: { width: cW - 10 }, align: 'center',
+          }).setOrigin(0.5));
+
+          /* Equip / Unequip button */
+          const btnBg = this.add.rectangle(x + cW / 2, y + CARD_H - 16, cW - 16, 22,
+            equipped ? 0x1a0808 : 0x1a0a30)
+            .setStrokeStyle(1, equipped ? 0xf87171 : 0x6d28d9, 0.9)
+            .setInteractive({ useHandCursor: true });
+          const btnT = this.add.text(x + cW / 2, y + CARD_H - 16,
+            equipped ? '✕  Unequip' : '▶  Equip', {
+            fontSize: '10px', fontFamily: 'system-ui', fontStyle: 'bold',
+            color: equipped ? '#f87171' : '#a78bfa',
+          }).setOrigin(0.5);
+          this._cont.add(btnBg);
+          this._cont.add(btnT);
+
+          if (equipped) {
+            btnBg.on('pointerover', () => btnBg.setFillColor(0x2a0c0c));
+            btnBg.on('pointerout',  () => btnBg.setFillColor(0x1a0808));
+            btnBg.on('pointerdown', () => { onUnequip(rw); window._invTab = 'cosmetics'; this.scene.restart(); });
+          } else {
+            btnBg.on('pointerover', () => btnBg.setFillColor(0x250d3a));
+            btnBg.on('pointerout',  () => btnBg.setFillColor(0x1a0a30));
+            btnBg.on('pointerdown', () => { onEquip(rw); window._invTab = 'cosmetics'; this.scene.restart(); });
+          }
+        });
+        const rows = Math.ceil(items.length / Math.max(2, Math.floor((W - 32) / (CARD_W + GAP))));
+        yOff += rows * (CARD_H + GAP) + 8;
+      };
+
+      /* ── Elite Skins ── */
+      _section('👑  ELITE SKINS  —  one per class', 0xffd700);
+      _renderCards(skins,
+        (rw) => getEqSkin(rw.value),
+        (rw) => setEqSkin(rw.value, true),
+        (rw) => setEqSkin(rw.value, false)
+      );
+
+      /* ── Trails ── */
+      _section('✨  TRAILS  —  one active at a time', 0xa855f7);
+      _renderCards(trails,
+        (rw) => getEqTrail() === rw.value,
+        (rw) => setEqTrail(rw.value),
+        ()   => setEqTrail(null)
+      );
+
+      /* ── Auras ── */
+      _section('🌟  AURAS  —  one active at a time', 0xfbbf24);
+      _renderCards(auras,
+        (rw) => getEqAura() === rw.value,
+        (rw) => setEqAura(rw.value),
+        ()   => setEqAura(null)
+      );
+
+      /* ── Titles ── */
+      _section('🏷️  TITLES  —  one active at a time', 0x38bdf8);
+      _renderCards(titles,
+        (rw) => getEqTitle() === rw.value,
+        (rw) => setEqTitle(rw.value),
+        ()   => setEqTitle(null)
+      );
+
+      /* ── Card Frames ── */
+      _section('🖼️  CARD FRAMES  —  one active at a time', 0xf97316);
+      _renderCards(borders,
+        (rw) => getEqBorder() === rw.value,
+        (rw) => setEqBorder(rw.value),
+        ()   => setEqBorder(null)
+      );
+
+      this._maxSc = Math.max(0, yOff + 20 - (H - 116));
+    }
+  }
+
+  /* ── GooeyNav: standalone overlay, no Phaser DOM integration ── */
+  (function initGooeyNav() {
+    const nav = document.getElementById('gooey-menu-nav');
+    if (!nav) return;
+
+    const noise = n => n / 2 - Math.random() * n;
+    const getXY = (dist, idx, total) => {
+      const a = ((360 + noise(8)) / total) * idx * (Math.PI / 180);
+      return [dist * Math.cos(a), dist * Math.sin(a)];
+    };
+    const COLORS = [1, 2, 3, 1, 2, 3, 1, 4];
+    const PC = 15, PD = [90, 10], PR = 100, AT = 600, TV = 300;
+
+    const items = [
+      { label: '🏆  Achievements', scene: 'Achievements' },
+      { label: '🎒  Inventory',     scene: 'Inventory' },
+    ];
+
+    nav.innerHTML = '';
+    nav.className = 'gooey-nav-container';
+
+    const navEl = document.createElement('nav');
+    const ul = document.createElement('ul');
+    const filterEl = document.createElement('span');
+    filterEl.className = 'effect filter';
+    const textEl = document.createElement('span');
+    textEl.className = 'effect text';
+    navEl.appendChild(ul);
+    nav.appendChild(navEl);
+    nav.appendChild(filterEl);
+    nav.appendChild(textEl);
+
+    let activeIndex = -1;
+
+    const updatePos = li => {
+      const cr = nav.getBoundingClientRect();
+      const pr = li.getBoundingClientRect();
+      Object.assign(filterEl.style, { left: (pr.x - cr.x) + 'px', top: (pr.y - cr.y) + 'px', width: pr.width + 'px', height: pr.height + 'px' });
+      Object.assign(textEl.style,   { left: (pr.x - cr.x) + 'px', top: (pr.y - cr.y) + 'px', width: pr.width + 'px', height: pr.height + 'px' });
+      textEl.innerText = li.innerText;
+    };
+
+    const makeParticles = () => {
+      filterEl.querySelectorAll('.gooey-particle').forEach(p => p.remove());
+      filterEl.style.setProperty('--time', (AT * 2 + TV) + 'ms');
+      filterEl.classList.remove('active');
+      for (let i = 0; i < PC; i++) {
+        const t = AT * 2 + noise(TV * 2);
+        const rot = noise(PR / 10);
+        const rotate = rot > 0 ? (rot + PR / 20) * 10 : (rot - PR / 20) * 10;
+        const p = { start: getXY(PD[0], PC - i, PC), end: getXY(PD[1] + noise(7), PC - i, PC),
+                    scale: 1 + noise(0.2), color: COLORS[Math.floor(Math.random() * COLORS.length)], rotate, time: t };
+        setTimeout(() => {
+          const particle = document.createElement('span'); particle.className = 'gooey-particle';
+          particle.style.setProperty('--start-x', p.start[0] + 'px'); particle.style.setProperty('--start-y', p.start[1] + 'px');
+          particle.style.setProperty('--end-x',   p.end[0]   + 'px'); particle.style.setProperty('--end-y',   p.end[1]   + 'px');
+          particle.style.setProperty('--time', p.time + 'ms'); particle.style.setProperty('--scale', p.scale);
+          particle.style.setProperty('--color', 'var(--color-' + p.color + ')'); particle.style.setProperty('--rotate', p.rotate + 'deg');
+          const point = document.createElement('span'); point.className = 'gooey-point';
+          particle.appendChild(point); filterEl.appendChild(particle);
+          requestAnimationFrame(() => filterEl.classList.add('active'));
+          setTimeout(() => { try { filterEl.removeChild(particle); } catch {} }, p.time);
+        }, 30);
+      }
+    };
+
+    items.forEach((item, idx) => {
+      const li = document.createElement('li');
+      const a = document.createElement('a'); a.href = '#'; a.textContent = item.label;
+      a.onclick = e => e.preventDefault();
+      li.appendChild(a);
+      li.addEventListener('click', () => {
+        if (activeIndex === idx) return;
+        activeIndex = idx;
+        ul.querySelectorAll('li').forEach((el, i) => el.classList.toggle('active', i === idx));
+        updatePos(li);
+        textEl.classList.remove('active'); void textEl.offsetWidth; textEl.classList.add('active');
+        makeParticles();
+        setTimeout(() => { if (window._gooeyNavigate) window._gooeyNavigate(item.scene); }, 220);
+      });
+      ul.appendChild(li);
+    });
+
+    window._showGooeyNav = (invCount) => {
+      /* update inventory label */
+      const lis = ul.querySelectorAll('li');
+      if (lis[1]) lis[1].querySelector('a').textContent = '🎒  Inventory' + (invCount > 0 ? ' (' + invCount + ')' : '');
+      activeIndex = -1;
+      ul.querySelectorAll('li').forEach(el => el.classList.remove('active'));
+      filterEl.classList.remove('active');
+      nav.style.opacity = '0';
+      nav.style.transition = 'opacity 0.5s';
+      nav.style.display = 'flex';
+      setTimeout(() => { nav.style.opacity = '1'; }, 800);
+    };
+    window._hideGooeyNav = () => {
+      nav.style.opacity = '0';
+      setTimeout(() => { nav.style.display = 'none'; }, 500);
+    };
+  })();
+
   window._phaserStarted = false;
+  /* ── Handle Stripe return after Battle Pass purchase ── */
+  (function _handleBpPurchaseReturn() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('bp_purchased') !== '1') return;
+    window._bpJustPurchased = params.get('tier') || 'standard';
+    history.replaceState({}, '', window.location.pathname); /* clean URL */
+  })();
+
   function _startPhaser() {
     window._phaserStarted = true;
     new Phaser.Game({
@@ -6290,7 +8126,7 @@
       mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [MenuScene, ClassSelectScene, SkinPickerScene, GameScene, UIScene, LevelUpScene, SummaryScene, MetaScene, PauseMenuScene, AchievementsScene, BattlePassScene],
+    scene: [MenuScene, ClassSelectScene, SkinPickerScene, GameScene, UIScene, LevelUpScene, SummaryScene, MetaScene, PauseMenuScene, AchievementsScene, BattlePassScene, InventoryScene],
     });
   }
 
@@ -6300,7 +8136,7 @@
     if (session) {
       const { data: profile } = await _sb.from('game_players').select('name').eq('id', session.user.id).single();
       if (profile) {
-        window._player = { id: session.user.id, name: profile.name };
+        window._player = { id: session.user.id, name: profile.name, email: (session.user.email || '').toLowerCase() };
         localStorage.setItem('hoa_name', profile.name);
         await _loadPlayerDataFromSupabase(session.user.id);
         _startPhaser();

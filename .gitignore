@@ -1,0 +1,31 @@
+# Vercel
+.vercel
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Temp/patch scripts
+_tmp_*.js
+patch-*.js
+fix-*.js
+extract-*.js
+
+# Media files (large binaries)
+*.mp4
+*.mov
+*.avi
+
+# OS
+desktop.ini
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key

@@ -15,16 +15,16 @@ const originalJs = lastMatch[1];
 
 const result = JavaScriptObfuscator.obfuscate(originalJs, {
   compact: true,
-  controlFlowFlattening: false, // keeping false — Phaser loops break with flattening
+  controlFlowFlattening: false, // Phaser loops break with flattening
   deadCodeInjection: false,
   stringArray: true,
   stringArrayEncoding: ['base64'],
   stringArrayThreshold: 0.75,
-  renameGlobals: false,       // keep Phaser globals intact
-  selfDefending: true,        // breaks if code is reformatted in devtools
-  disableConsoleOutput: true, // silences console.log/warn/error
-  debugProtection: true,      // triggers infinite loop if debugger is opened
-  debugProtectionInterval: 2000,
+  renameGlobals: false,         // keep Phaser globals intact
+  selfDefending: false,         // removed: breaks legitimate debugging
+  disableConsoleOutput: false,  // removed: hides real errors in production
+  debugProtection: false,       // removed: DoS risk against own devtools
+  debugProtectionInterval: 0,
   identifierNamesGenerator: 'hexadecimal',
 });
 
@@ -35,4 +35,7 @@ const out = src.slice(0, lastMatch.index) +
 
 fs.mkdirSync('dist', { recursive: true });
 fs.writeFileSync(path.join('dist', 'index.html'), out, 'utf8');
+// Copy logo asset
+const logoSrc = 'transparentlogo.png';
+if (fs.existsSync(logoSrc)) fs.copyFileSync(logoSrc, path.join('dist', 'logo.png'));
 console.log('Built dist/index.html (' + Math.round(out.length / 1024) + ' KB)');
