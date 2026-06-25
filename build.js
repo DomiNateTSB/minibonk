@@ -38,4 +38,6 @@ fs.writeFileSync(path.join('dist', 'index.html'), out, 'utf8');
 // Copy logo asset — source from assets/ so it's tracked in git
 const logoSrc = fs.existsSync('assets/logo.png') ? 'assets/logo.png' : 'transparentlogo.png';
 if (fs.existsSync(logoSrc)) fs.copyFileSync(logoSrc, path.join('dist', 'logo.png'));
+// Copy admin panel
+if (fs.existsSync('admin.html')) fs.copyFileSync('admin.html', path.join('dist', 'admin.html'));
 console.log('Built dist/index.html (' + Math.round(out.length / 1024) + ' KB)');

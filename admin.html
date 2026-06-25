@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Thornrift — Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.108.2/dist/umd/supabase.min.js"
+  integrity="sha384-JWEyvHh+lRf0sN/WWY+QTQwX+CyWqmNg4tkc8GQzAMEtR2wGNrCJlvnu1lHD1kDm"
+  crossorigin="anonymous"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #07030f; --surface: #0d0820; --surface2: #120c28;
+    --border: rgba(124,58,237,0.2); --accent: #7c3aed; --accent2: #a78bfa;
+    --gold: #fbbf24; --green: #34d399; --red: #f87171; --blue: #60a5fa;
+    --text: rgba(255,255,255,0.88); --muted: rgba(255,255,255,0.38);
+    --font: system-ui, -apple-system, sans-serif;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+  /* ── Auth screen ── */
+  #auth-screen {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; flex-direction: column; gap: 16px;
+  }
+  #auth-screen h1 { font-size: 22px; color: var(--accent2); letter-spacing: 2px; }
+  #auth-screen p { color: var(--muted); font-size: 13px; }
+  .auth-field {
+    width: 300px; padding: 10px 14px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-size: 14px; outline: none;
+  }
+  .auth-field:focus { border-color: var(--accent); }
+  .btn {
+    padding: 10px 24px; border-radius: 8px; border: none; cursor: pointer;
+    font-size: 13px; font-weight: 700; font-family: var(--font); transition: opacity .15s;
+  }
+  .btn:hover { opacity: .85; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-sm { padding: 5px 14px; font-size: 11px; border-radius: 6px; }
+  .btn-danger { background: rgba(239,68,68,.15); color: var(--red); border: 1px solid rgba(239,68,68,.3); }
+  #auth-error { color: var(--red); font-size: 12px; }
+
+  /* ── Layout ── */
+  #app { display: none; }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px; border-bottom: 1px solid var(--border);
+    background: var(--surface); position: sticky; top: 0; z-index: 10;
+  }
+  header h1 { font-size: 15px; letter-spacing: 3px; color: var(--accent2); }
+  header span { font-size: 11px; color: var(--muted); }
+  main { padding: 28px; max-width: 1400px; margin: 0 auto; }
+
+  /* ── Section titles ── */
+  .section-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 3px;
+    color: var(--muted); text-transform: uppercase; margin: 32px 0 14px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Overview cards ── */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 20px;
+  }
+  .card-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .card-value { font-size: 28px; font-weight: 700; }
+  .card-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .c-purple .card-value { color: var(--accent2); }
+  .c-gold   .card-value { color: var(--gold); }
+  .c-green  .card-value { color: var(--green); }
+  .c-red    .card-value { color: var(--red); }
+  .c-blue   .card-value { color: var(--blue); }
+
+  /* ── Charts ── */
+  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 900px) { .charts { grid-template-columns: 1fr; } }
+  .chart-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 20px;
+  }
+  .chart-box h3 { font-size: 12px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .bar-label { font-size: 11px; width: 110px; flex-shrink: 0; color: var(--text); }
+  .bar-track { flex: 1; height: 8px; background: rgba(255,255,255,.06); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width .6s ease; }
+  .bar-count { font-size: 11px; color: var(--muted); width: 36px; text-align: right; flex-shrink: 0; }
+  .day-row { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+  .day-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .day-bar-wrap { flex: 1; width: 100%; display: flex; align-items: flex-end; }
+  .day-bar { width: 100%; border-radius: 3px 3px 0 0; background: var(--accent); min-height: 2px; transition: height .4s; }
+  .day-date { font-size: 9px; color: var(--muted); white-space: nowrap; }
+  .day-num { font-size: 10px; color: var(--accent2); font-weight: 700; }
+
+  /* ── Tables ── */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .table-header { padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+  .table-header h3 { font-size: 12px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { padding: 10px 16px; text-align: left; font-size: 10px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--border); background: var(--surface2); }
+  td { padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(124,58,237,.05); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+  .badge-gold    { background: rgba(251,191,36,.15); color: var(--gold); border: 1px solid rgba(251,191,36,.3); }
+  .badge-purple  { background: rgba(124,58,237,.15); color: var(--accent2); border: 1px solid rgba(124,58,237,.3); }
+  .badge-green   { background: rgba(52,211,153,.12); color: var(--green); border: 1px solid rgba(52,211,153,.25); }
+  .badge-red     { background: rgba(248,113,113,.12); color: var(--red); border: 1px solid rgba(248,113,113,.25); }
+  .badge-muted   { background: rgba(255,255,255,.06); color: var(--muted); border: 1px solid rgba(255,255,255,.1); }
+  .mono { font-family: monospace; font-size: 11px; color: var(--muted); }
+
+  /* ── Search ── */
+  .search-wrap { padding: 10px 18px; border-bottom: 1px solid var(--border); }
+  .search-input {
+    width: 100%; padding: 7px 12px; background: var(--bg);
+    border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); font-size: 12px; outline: none; font-family: var(--font);
+  }
+  .search-input:focus { border-color: var(--accent); }
+
+  /* ── Loading / error ── */
+  .loading { text-align: center; padding: 60px; color: var(--muted); font-size: 13px; }
+  .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; margin-right: 10px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .refresh-info { font-size: 10px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- Auth -->
+<div id="auth-screen">
+  <h1>⚔ THORNRIFT ADMIN</h1>
+  <p>Admin access only</p>
+  <input id="a-email" class="auth-field" type="email" placeholder="Email" />
+  <input id="a-pass"  class="auth-field" type="password" placeholder="Password" />
+  <button class="btn btn-primary" onclick="doLogin()">Sign in</button>
+  <div id="auth-error"></div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <header>
+    <h1>⚔ THORNRIFT ADMIN</h1>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <span id="hdr-email"></span>
+      <span class="refresh-info" id="refresh-info"></span>
+      <button class="btn btn-sm btn-danger" onclick="doLogout()">Sign out</button>
+    </div>
+  </header>
+  <main id="main">
+    <div class="loading"><span class="spinner"></span>Loading dashboard…</div>
+  </main>
+</div>
+
+<script>
+const SB_URL = 'https://biclaeemulhkdejyeysv.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJpY2xhZWVtdWxoa2RlanlleXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxOTkzODIsImV4cCI6MjA5Nzc3NTM4Mn0.VkFCPzroqgPgUkxXfLjrWbWBXoOONV6OFHBuyrRm7l0';
+const ADMIN_IDS = ['c59e044b-932b-4278-9da6-338d621ecbbc','382ac6b8-823e-42c9-b582-98bd5065bf8f'];
+const FN_URL = SB_URL + '/functions/v1/admin-stats';
+
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+async function doLogin() {
+  const email = document.getElementById('a-email').value.trim();
+  const pass  = document.getElementById('a-pass').value;
+  const err   = document.getElementById('auth-error');
+  err.textContent = '';
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { err.textContent = error.message; return; }
+  if (!ADMIN_IDS.includes(data.user?.id)) {
+    await sb.auth.signOut();
+    err.textContent = 'Access denied — admin only.';
+    return;
+  }
+  showApp(data.user);
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  location.reload();
+}
+
+async function showApp(user) {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('hdr-email').textContent = user.email;
+  await loadDashboard();
+  // Auto-refresh every 60s
+  setInterval(loadDashboard, 60000);
+}
+
+async function loadDashboard() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  const t0 = Date.now();
+  try {
+    const res = await fetch(FN_URL, {
+      headers: { Authorization: 'Bearer ' + session.access_token, 'Content-Type': 'application/json' }
+    });
+    const d = await res.json();
+    if (d.error) { document.getElementById('main').innerHTML = `<div class="loading" style="color:var(--red)">${d.error}</div>`; return; }
+    renderDashboard(d);
+    document.getElementById('refresh-info').textContent = 'Updated ' + new Date().toLocaleTimeString() + ' · ' + (Date.now()-t0) + 'ms';
+  } catch(e) {
+    document.getElementById('main').innerHTML = `<div class="loading" style="color:var(--red)">Failed to load: ${e.message}</div>`;
+  }
+}
+
+const CLASS_COLORS = {
+  hunter:'#3b82f6', knight:'#f59e0b', wizard:'#8b5cf6',
+  necromancer:'#6366f1', rogue:'#10b981', paladin:'#f97316', berserker:'#ef4444'
+};
+const CLASS_EMOJI = {
+  hunter:'🏹', knight:'⚔️', wizard:'🔮', necromancer:'💀', rogue:'🗡️', paladin:'🛡️', berserker:'🪓'
+};
+
+function fmt(n) { return n?.toLocaleString() ?? '0'; }
+function fmtDate(s) { if (!s) return '—'; return new Date(s).toLocaleDateString('sv-SE'); }
+function fmtDateFull(s) { if (!s) return '—'; const d = new Date(s); return d.toLocaleDateString('sv-SE') + ' ' + d.toLocaleTimeString('sv-SE', {hour:'2-digit',minute:'2-digit'}); }
+function ago(s) {
+  if (!s) return '—';
+  const diff = (Date.now() - new Date(s)) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
+}
+
+function renderDashboard(d) {
+  const { overview, classCounts, bpBuyers, players, leaderboard, leaderboard1hp, signupsByDay } = d;
+
+  // Signup chart data
+  const days = Object.entries(signupsByDay);
+  const maxSignups = Math.max(...days.map(([,v]) => v), 1);
+
+  // Class chart
+  const classOrder = ['hunter','knight','wizard','necromancer','rogue','paladin','berserker'];
+  const maxClass = Math.max(...classOrder.map(c => classCounts[c] || 0), 1);
+
+  const html = `
+  <!-- Overview -->
+  <div class="section-title">Overview</div>
+  <div class="cards">
+    <div class="card c-purple">
+      <div class="card-label">Total Players</div>
+      <div class="card-value">${fmt(overview.totalUsers)}</div>
+      <div class="card-sub">registered accounts</div>
+    </div>
+    <div class="card c-gold">
+      <div class="card-label">Battle Pass</div>
+      <div class="card-value">${fmt(overview.bpOwners)}</div>
+      <div class="card-sub">${fmt(overview.bpPremium)} premium · ${fmt(overview.bpOwners - overview.bpPremium)} standard</div>
+    </div>
+    <div class="card c-green">
+      <div class="card-label">Total Runs</div>
+      <div class="card-value">${fmt(overview.totalRuns)}</div>
+      <div class="card-sub">across all players</div>
+    </div>
+    <div class="card c-red">
+      <div class="card-label">Total Kills</div>
+      <div class="card-value">${fmt(overview.totalKills)}</div>
+      <div class="card-sub">${fmt(overview.totalBossKills)} boss kills</div>
+    </div>
+    <div class="card c-blue">
+      <div class="card-label">Conversion Rate</div>
+      <div class="card-value">${overview.totalUsers ? Math.round(overview.bpOwners/overview.totalUsers*100) : 0}%</div>
+      <div class="card-sub">players who bought BP</div>
+    </div>
+    <div class="card c-purple">
+      <div class="card-label">Avg Runs / Player</div>
+      <div class="card-value">${overview.totalUsers ? (overview.totalRuns/overview.totalUsers).toFixed(1) : '0'}</div>
+      <div class="card-sub">retention indicator</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="section-title">Analytics</div>
+  <div class="charts">
+    <div class="chart-box">
+      <h3>Class Popularity — unique players</h3>
+      ${classOrder.map(c => `
+        <div class="bar-row">
+          <div class="bar-label">${CLASS_EMOJI[c] || ''} ${c.charAt(0).toUpperCase()+c.slice(1)}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${Math.round(((classCounts[c]||0)/maxClass)*100)}%;background:${CLASS_COLORS[c]};"></div>
+          </div>
+          <div class="bar-count">${classCounts[c]||0}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="chart-box">
+      <h3>New signups — last 7 days</h3>
+      <div class="day-row">
+        ${days.map(([date, count]) => `
+          <div class="day-col">
+            <div class="day-num">${count}</div>
+            <div class="day-bar-wrap">
+              <div class="day-bar" style="height:${Math.round((count/maxSignups)*56)+2}px;"></div>
+            </div>
+            <div class="day-date">${date.slice(5)}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  </div>
+
+  <!-- Battle Pass Buyers -->
+  <div class="section-title">Battle Pass Buyers (${bpBuyers.length})</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Email</th><th>Tier</th><th>Best Wave</th><th>Total Runs</th><th>Joined</th>
+      </tr></thead>
+      <tbody>
+        ${bpBuyers.length === 0
+          ? '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;">No purchases yet</td></tr>'
+          : bpBuyers.map(u => `
+          <tr>
+            <td>${u.email ?? '—'}</td>
+            <td>${u.bp_premium
+              ? '<span class="badge badge-gold">⭐ PREMIUM</span>'
+              : '<span class="badge badge-purple">STANDARD</span>'}</td>
+            <td>${u.best_wave || '—'}</td>
+            <td>${u.total_runs || '—'}</td>
+            <td>${fmtDate(u.created_at)}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Leaderboards -->
+  <div class="section-title">Leaderboard — Top 20</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+    <div class="table-wrap">
+      <div class="table-header"><h3>Normal Mode</h3></div>
+      <table>
+        <thead><tr><th>#</th><th>Player</th><th>Class</th><th>Wave</th><th>Kills</th><th>Level</th></tr></thead>
+        <tbody>
+          ${leaderboard.map((r,i) => `<tr>
+            <td style="color:var(--muted)">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td>
+            <td><strong>${r.name ?? '—'}</strong></td>
+            <td>${CLASS_EMOJI[r.class_name]||''} ${r.class_name||'—'}</td>
+            <td style="color:var(--green);font-weight:700">${r.wave}</td>
+            <td>${fmt(r.kills)}</td>
+            <td>${r.level}</td>
+          </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">No entries yet</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <div class="table-header"><h3>☠ 1HP Mode</h3></div>
+      <table>
+        <thead><tr><th>#</th><th>Player</th><th>Class</th><th>Wave</th><th>Kills</th></tr></thead>
+        <tbody>
+          ${leaderboard1hp.map((r,i) => `<tr>
+            <td style="color:var(--muted)">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td>
+            <td><strong>${r.name ?? '—'}</strong></td>
+            <td>${CLASS_EMOJI[r.class_name]||''} ${r.class_name||'—'}</td>
+            <td style="color:var(--red);font-weight:700">${r.wave}</td>
+            <td>${fmt(r.kills)}</td>
+          </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">No entries yet</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- All Players -->
+  <div class="section-title">All Players (${players.length})</div>
+  <div class="table-wrap">
+    <div class="search-wrap">
+      <input class="search-input" id="player-search" placeholder="Search by email…" oninput="filterPlayers()" />
+    </div>
+    <table id="players-table">
+      <thead><tr>
+        <th>Email</th><th>BP</th><th>Best Wave</th><th>Runs</th><th>Kills</th><th>Souls</th><th>Joined</th><th>Last Seen</th>
+      </tr></thead>
+      <tbody id="players-body">
+        ${renderPlayers(players)}
+      </tbody>
+    </table>
+  </div>
+  `;
+
+  document.getElementById('main').innerHTML = html;
+  // Store players globally for search
+  window._adminPlayers = players;
+}
+
+function renderPlayers(list) {
+  if (!list.length) return '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">No players</td></tr>';
+  return list.map(u => `<tr>
+    <td>${u.email ?? '—'}</td>
+    <td>${u.bp_premium
+      ? '<span class="badge badge-gold">⭐ Premium</span>'
+      : u.bp_owned
+        ? '<span class="badge badge-purple">Standard</span>'
+        : '<span class="badge badge-muted">—</span>'}</td>
+    <td>${u.best_wave || '—'}</td>
+    <td>${fmt(u.total_runs) || '—'}</td>
+    <td>${fmt(u.total_kills) || '—'}</td>
+    <td style="color:var(--gold)">${u.souls ? fmt(u.souls) : '—'}</td>
+    <td>${fmtDate(u.created_at)}</td>
+    <td style="color:var(--muted)">${ago(u.last_sign_in)}</td>
+  </tr>`).join('');
+}
+
+function filterPlayers() {
+  const q = document.getElementById('player-search').value.toLowerCase();
+  const filtered = (window._adminPlayers || []).filter(u => (u.email || '').toLowerCase().includes(q));
+  document.getElementById('players-body').innerHTML = renderPlayers(filtered);
+}
+
+// Check existing session on load
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session && ADMIN_IDS.includes(session.user.id)) {
+    showApp(session.user);
+  }
+})();
+
+document.getElementById('a-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>
