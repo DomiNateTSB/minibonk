@@ -1945,6 +1945,13 @@
       const cx = W / 2, cy = H / 2;
       const logoW = Math.min(440, W * 0.65);
 
+      /* Show Log Out button */
+      if (window._player) {
+        const _lb = document.getElementById('logout-btn');
+        if (_lb) _lb.style.display = 'block';
+        this.events.once('shutdown', () => { if (_lb) _lb.style.display = 'none'; });
+      }
+
       /* ── Battle Pass purchase return handler ── */
       if (window._bpJustPurchased) {
         const _purchasedTier = window._bpJustPurchased;
