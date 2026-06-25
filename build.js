@@ -39,5 +39,7 @@ fs.writeFileSync(path.join('dist', 'index.html'), out, 'utf8');
 const logoSrc = fs.existsSync('assets/logo.png') ? 'assets/logo.png' : 'transparentlogo.png';
 if (fs.existsSync(logoSrc)) fs.copyFileSync(logoSrc, path.join('dist', 'logo.png'));
 // Copy admin panel
-if (fs.existsSync('admin.html')) fs.copyFileSync('admin.html', path.join('dist', 'admin.html'));
+if (fs.existsSync('admin.html'))   fs.copyFileSync('admin.html',   path.join('dist', 'admin.html'));
+if (fs.existsSync('terms.html'))   fs.copyFileSync('terms.html',   path.join('dist', 'terms.html'));
+if (fs.existsSync('privacy.html')) fs.copyFileSync('privacy.html', path.join('dist', 'privacy.html'));
 console.log('Built dist/index.html (' + Math.round(out.length / 1024) + ' KB)');
