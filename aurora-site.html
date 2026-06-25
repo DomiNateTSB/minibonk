@@ -2677,6 +2677,10 @@
       this._ebTime = 0;
       this._ebCards = [];
 
+      /* Always hide menu pill overlays — they belong to MenuScene only */
+      const _menuPills = document.getElementById('menu-pills-ov');
+      if (_menuPills) _menuPills.style.display = 'none';
+
       this.add.text(W/2, 50, 'CHOOSE YOUR CLASS', {
         fontSize:'26px', fontFamily:'system-ui', color:'#e2e8f0',
         fontStyle:'bold', letterSpacing:6,
