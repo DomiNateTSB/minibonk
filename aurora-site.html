@@ -2706,29 +2706,68 @@
       }).setOrigin(0.5);
       buildRow(row2Keys, row2Cy);
 
-      /* ── 1HP Mode toggle ── */
+      /* ── 1HP Mode toggle — pill with border-glow ── */
       const is1hp = () => localStorage.getItem('hoa_1hp') === '1';
-      const oneBg = this.add.rectangle(W/2, H - 36, 220, 28, 0x7f1d1d, 0.3).setInteractive();
-      const oneBorder = this.add.graphics();
-      const oneLabel = this.add.text(W/2, H - 56, '', {
-        fontSize:'13px', fontFamily:'system-ui', fontStyle:'bold', color:'#fca5a5',
-      }).setOrigin(0.5);
-      const refreshOne = () => {
-        const on = is1hp();
-        oneBg.setFillStyle(on ? 0x7f1d1d : 0x1e1e2e, on ? 0.7 : 0.4);
-        oneBorder.clear();
-        oneBorder.lineStyle(on ? 2 : 1, on ? 0xef4444 : 0x4b5563, on ? 0.9 : 0.5);
-        oneBorder.strokeRect(W/2 - 110, H - 51, 220, 28);
-        oneLabel.setText(on ? '☠  1HP MODE  —  ACTIVE' : '☠  1HP MODE  —  click to enable');
-        oneLabel.setColor(on ? '#fca5a5' : '#6b7280');
+
+      const _1hpOv = document.createElement('div');
+      _1hpOv.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:15;';
+      document.body.appendChild(_1hpOv);
+
+      const _GPOS = ['80% 55%','69% 34%','8% 6%','41% 38%','86% 85%','82% 18%','51% 4%'];
+      const _GKEYS = ['one','two','three','four','five','six','seven'];
+      const _CMAP = [0,1,2,0,1,2,1];
+
+      const _applyVars1hp = (el, on) => {
+        const colors = on ? ['#ef4444','#b91c1c','#fca5a5'] : ['#6b2020','#3a0a0a','#9b5555'];
+        const bg = on ? 'rgba(30,4,4,0.95)' : 'rgba(14,4,4,0.88)';
+        el.style.setProperty('--card-bg', bg);
+        const h = 0, s = on ? 85 : 40, l = on ? 58 : 28;
+        const b = `${h}deg ${s}% ${l}%`;
+        [[100,''],[60,'-60'],[50,'-50'],[40,'-40'],[30,'-30'],[20,'-20'],[10,'-10']]
+          .forEach(([o,k]) => el.style.setProperty(`--glow-color${k}`, `hsl(${b} / ${o}%)`));
+        _GKEYS.forEach((k,i) => el.style.setProperty(`--gradient-${k}`,
+          `radial-gradient(at ${_GPOS[i]}, ${colors[Math.min(_CMAP[i],colors.length-1)]} 0px, transparent 50%)`));
+        el.style.setProperty('--gradient-base', `linear-gradient(${colors[0]} 0 100%)`);
       };
-      refreshOne();
-      oneBg.on('pointerdown', () => {
-        localStorage.setItem('hoa_1hp', is1hp() ? '0' : '1');
-        refreshOne();
+
+      const _1hpCard = document.createElement('div');
+      _1hpCard.className = 'border-glow-card';
+      _1hpCard.style.cssText = `position:absolute;left:50%;bottom:38px;transform:translateX(-50%);width:240px;pointer-events:all;cursor:pointer;`;
+      _1hpCard.style.setProperty('--border-radius', '100px');
+      _1hpCard.style.setProperty('--glow-padding', '22px');
+      _1hpCard.style.setProperty('--edge-sensitivity', '12');
+      _1hpCard.style.setProperty('--cone-spread', '18');
+      const _1hpEdge = document.createElement('span'); _1hpEdge.className = 'edge-light';
+      const _1hpInner = document.createElement('div'); _1hpInner.className = 'border-glow-inner';
+      _1hpInner.style.cssText = 'padding:.55em 1.3em;text-align:center;';
+      _1hpCard.appendChild(_1hpEdge); _1hpCard.appendChild(_1hpInner);
+
+      const _refresh1hp = () => {
+        const on = is1hp();
+        _applyVars1hp(_1hpCard, on);
+        _1hpInner.innerHTML = `<span style="font-family:system-ui;font-size:13px;font-weight:700;letter-spacing:1px;color:${on ? '#fca5a5' : '#9b5555'};">☠&nbsp; 1HP MODE &nbsp;—&nbsp; ${on ? '<span style="color:#ef4444">ACTIVE</span>' : 'click to enable'}</span>`;
+      };
+      _refresh1hp();
+
+      _1hpCard.addEventListener('pointermove', e => {
+        const r = _1hpCard.getBoundingClientRect();
+        const x = e.clientX-r.left, y = e.clientY-r.top;
+        const ecx = r.width/2, ecy = r.height/2, dx = x-ecx, dy = y-ecy;
+        const kx = dx ? ecx/Math.abs(dx) : Infinity, ky = dy ? ecy/Math.abs(dy) : Infinity;
+        const edge = Math.min(Math.max(1/Math.min(kx,ky),0),1);
+        let ang = Math.atan2(dy,dx)*180/Math.PI+90; if(ang<0) ang+=360;
+        _1hpCard.style.setProperty('--edge-proximity',(edge*100).toFixed(2));
+        _1hpCard.style.setProperty('--cursor-angle',ang.toFixed(2)+'deg');
       });
-      oneBg.on('pointerover', () => oneBg.setStrokeStyle(1, 0xef4444));
-      oneBg.on('pointerout',  () => oneBg.setStrokeStyle(0));
+      _1hpCard.addEventListener('pointerleave', () => _1hpCard.style.setProperty('--edge-proximity','0'));
+      _1hpCard.addEventListener('click', () => {
+        localStorage.setItem('hoa_1hp', is1hp() ? '0' : '1');
+        _refresh1hp();
+      });
+
+      _1hpOv.appendChild(_1hpCard);
+      this.events.once('shutdown', () => _1hpOv.remove());
+      this.events.once('destroy',  () => _1hpOv.remove());
 
       this.add.text(W/2, H - 14, 'ESC — back to menu   ·   Unlock advanced classes by playing and completing achievements', {
         fontSize:'10px', fontFamily:'system-ui', color:'#374151',
