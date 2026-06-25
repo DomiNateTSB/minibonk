@@ -224,13 +224,14 @@
   <!-- GooeyNav overlay for menu Achievements + Inventory buttons -->
   <div id="gooey-menu-nav" style="display:none;position:fixed;left:50%;transform:translateX(-50%);top:calc(50% + 215px);z-index:10;"></div>
 
-  <!-- Log Out button — shown only in Menu scene -->
-  <div id="logout-btn" style="display:none;position:fixed;bottom:16px;right:16px;z-index:50;">
-    <button onclick="(async()=>{ if(!confirm('Sign out of Thornrift?')) return; await window._sb.auth.signOut(); localStorage.clear(); window._player=null; location.reload(); })()" style="background:rgba(15,7,30,0.85);border:1px solid rgba(124,58,237,0.3);color:rgba(167,139,250,0.55);font-family:system-ui;font-size:11px;font-weight:600;padding:6px 14px;border-radius:20px;cursor:pointer;letter-spacing:0.5px;transition:all .15s;backdrop-filter:blur(4px);"
-      onmouseover="this.style.color='#c4b5fd';this.style.borderColor='rgba(124,58,237,0.7)'"
-      onmouseout="this.style.color='rgba(167,139,250,0.55)';this.style.borderColor='rgba(124,58,237,0.3)'">
-      → Log Out
-    </button>
+  <!-- Log Out button — hidden during gameplay -->
+  <div id="logout-btn" style="display:none;position:fixed;top:14px;right:58px;z-index:200;">
+    <div onclick="(async()=>{ if(!confirm('Sign out of Thornrift?')) return; await window._sb.auth.signOut(); localStorage.clear(); window._player=null; location.reload(); })()"
+      style="background:rgba(15,7,30,0.88);border:1px solid rgba(124,58,237,0.5);border-radius:8px;padding:7px 12px;cursor:pointer;font-family:system-ui;font-size:11px;font-weight:600;color:rgba(167,139,250,0.75);letter-spacing:0.5px;backdrop-filter:blur(6px);transition:border-color .15s,color .15s;user-select:none;"
+      onmouseenter="this.style.borderColor='rgba(167,139,250,0.9)';this.style.color='#c4b5fd'"
+      onmouseleave="this.style.borderColor='rgba(124,58,237,0.5)';this.style.color='rgba(167,139,250,0.75)'">
+      Log Out
+    </div>
   </div>
 
   <!-- Touch controls (shown only during gameplay on touch devices) -->
@@ -703,8 +704,10 @@
     }
     /* Load all player data into localStorage cache */
     await _loadPlayerDataFromSupabase(user.id);
-    /* Hide auth overlay, let the game start */
+    /* Hide auth overlay, show logout btn, let the game start */
     document.getElementById('auth-overlay').style.display = 'none';
+    const _lb = document.getElementById('logout-btn');
+    if (_lb) _lb.style.display = 'block';
     if (!window._phaserStarted) { _startPhaser(); }
   }
 
@@ -1972,11 +1975,10 @@
       const cx = W / 2, cy = H / 2;
       const logoW = Math.min(440, W * 0.65);
 
-      /* Show Log Out button */
+      /* Show Log Out button (hidden during game, shown everywhere else) */
       if (window._player) {
         const _lb = document.getElementById('logout-btn');
         if (_lb) _lb.style.display = 'block';
-        this.events.once('shutdown', () => { if (_lb) _lb.style.display = 'none'; });
       }
 
       /* ── Battle Pass purchase return handler ── */
@@ -2851,6 +2853,11 @@
     create() {
       this.cameras.main.setBackgroundColor('rgba(6,0,15,0.88)');
       this._eid = 0;
+
+      /* Hide Log Out during gameplay */
+      const _lbtn = document.getElementById('logout-btn');
+      if (_lbtn) _lbtn.style.display = 'none';
+      this.events.once('shutdown', () => { if (_lbtn && window._player) _lbtn.style.display = 'block'; });
 
       const playerClass = localStorage.getItem('hoa_class') || 'hunter';
       const clsDef = CLASSES[playerClass] || CLASSES.hunter;
