@@ -1141,7 +1141,7 @@
 
   function loadBP()  {
     if (window._player && window._player.id === 'c59e044b-932b-4278-9da6-338d621ecbbc') {
-      try { const _s = JSON.parse(localStorage.getItem('hoa_bp') || '{}'); return { level:100, xp:0, claimed:_s.claimed||[], owned:true }; } catch(_e) { return { level:100, xp:0, claimed:[], owned:true }; }
+      try { const _s = JSON.parse(localStorage.getItem('hoa_bp') || '{}'); return { level:100, xp:0, claimed:_s.claimed||[], owned:true, premium:true }; } catch(_e) { return { level:100, xp:0, claimed:[], owned:true, premium:true }; }
     }
     try { return JSON.parse(localStorage.getItem('hoa_bp')) || { level:0, xp:0, claimed:[], owned:false }; } catch { return { level:0, xp:0, claimed:[], owned:false }; }
   }
