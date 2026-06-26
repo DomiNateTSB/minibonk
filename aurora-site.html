@@ -2867,6 +2867,10 @@
       if (_lbtn) _lbtn.style.display = 'none';
       this.events.once('shutdown', () => { if (_lbtn && window._player) _lbtn.style.display = 'block'; });
 
+      /* Remove any lingering menu pill overlays — should already be gone but guard anyway */
+      const _pills = document.getElementById('menu-pills-ov');
+      if (_pills) _pills.remove();
+
       const playerClass = localStorage.getItem('hoa_class') || 'hunter';
       const clsDef = CLASSES[playerClass] || CLASSES.hunter;
 
