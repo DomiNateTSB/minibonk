@@ -2116,10 +2116,10 @@
 
         /* Battle Pass */
         _pill(
-          '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="font-family:\'Cinzel\',serif;font-weight:700;font-size:13px;color:#ffd700;letter-spacing:3px;">⚔&nbsp; Battle Pass</div><div style="font-family:\'Cinzel\',serif;font-size:7.5px;color:rgba(251,191,36,0.7);letter-spacing:5px;">BUY NOW</div></div>',
+          '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="font-family:\'Cinzel\',serif;font-weight:700;font-size:13px;color:#ffd700;letter-spacing:3px;">⚔&nbsp; Battle Pass</div><div style="font-family:\'Cinzel\',serif;font-size:7.5px;color:rgba(251,191,36,0.5);letter-spacing:5px;">COMING SOON</div></div>',
           145, 0, 230,
           43, 85, 60, ['#fbbf24','#d97706','#fde68a'], 'rgba(14,6,2,0.92)',
-          () => { this.cameras.main.fadeOut(250,0,0,0); this.time.delayedCall(270,()=>this.scene.start('BattlePass')); }
+          () => {}
         );
 
         /* Achievements + Inventory pills */
@@ -7810,16 +7810,18 @@
           return { bg, t1, t2 };
         };
 
-        /* Battle Pass — $4.99  (purple glow) */
-        _mkBtn(csX - 90, '⚔  Battle Pass  $4.99', 'Season 1 · All 100 levels', 'standard',
-          0x1e0f3a, 0x7c3aed, '#c4b5fd', 0x7c3aed);
+        /* Battle Pass — Coming Soon */
+        this.add.text(cx, 118, 'COMING SOON', {
+          fontSize: '18px', fontFamily: '\'Cinzel\', serif', fontStyle: 'bold',
+          color: '#ffd700', alpha: 0.7, letterSpacing: 8,
+        }).setOrigin(0.5).setDepth(11).setAlpha(0.7);
 
-        /* Battle Pass Premium — $9.99  (gold glow) */
-        _mkBtn(csX + 90, '★  Premium  $9.99', 'Instant Levels 1–25', 'premium',
-          0x1a0e00, 0xfbbf24, '#fde68a', 0xfbbf24);
+        this.add.text(cx, 142, 'Battle Pass purchases are not yet available.', {
+          fontSize: '11px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.4)',
+        }).setOrigin(0.5).setDepth(11);
 
-        this.add.text(cx, 162, 'Unlock to start claiming Echoes, Runes, Elite Skins & Titles', {
-          fontSize: '10px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.28)',
+        this.add.text(cx, 158, 'Check back soon — earn XP now and be ready for Season 1.', {
+          fontSize: '10px', fontFamily: 'system-ui', color: 'rgba(255,255,255,0.25)',
         }).setOrigin(0.5).setDepth(11);
       }
 
